@@ -1,1 +1,9 @@
-{}
+{
+  "app/components/ClientNavbar.tsx -> ./Navbar": {
+    "id": "app/components/ClientNavbar.tsx -> ./Navbar",
+    "files": [
+      "static/css/_app-pages-browser_src_app_components_Navbar_tsx.css",
+      "static/chunks/_app-pages-browser_src_app_components_Navbar_tsx.js"
+    ]
+  }
+}
