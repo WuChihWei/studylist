@@ -1,0 +1,91 @@
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/profile/profile.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+.profile_profileContainer__4OeWo {
+  padding: 2rem 5%;
+  min-height: 100vh;
+  background: #f9f9f9;
+}
+
+.profile_title__Qm44E {
+  color: #1E90FF;
+  margin-bottom: 1rem;
+}
+
+.profile_bio__K9aVx {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.profile_mediaSection__AQ55M {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile_mediaCategory__g988G {
+  margin-bottom: 2rem;
+}
+
+.profile_mediaTitle__SREyU {
+  color: #1E90FF;
+  margin-bottom: 1rem;
+}
+
+.profile_subTitle__owK4e {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.profile_mediaList__QlrwW {
+  list-style-type: none;
+  padding: 0;
+}
+
+.profile_mediaItem__qcZ3F {
+  margin: 0.5rem 0;
+  background: #f0f0f0;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profile_importSection__FyonS {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #f0f0f0;
+  border-radius: 8px;
+}
+
+.profile_importTitle__IKKnY {
+  color: #1E90FF;
+  margin-bottom: 1rem;
+}
+
+.profile_importForm__KUO5z {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile_importInput__rHXFG {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.profile_importType__sMO_8 {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.profile_importButton__L9yB0 {
+  background: #007BFF;
+  color: white;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
