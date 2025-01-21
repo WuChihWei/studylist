@@ -92,10 +92,6 @@ Desktop.ini
 # 忽略 node_modules
 node_modules/
 
-
-# Ignore environment variable files
+# Firebase
+firebase-service-account.json
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
