@@ -1,91 +1,75 @@
+"use client";
+import { useState } from 'react';
+import { useUserData } from '../../hooks/useUserData';
 import styles from './profile.module.css';
 
-const fakeData = {
-  name: "Leonardo da Vinci",
-  bio: "Hi! I'm Eric, a content creator known for engaging and quality content across blogs, social media, and more. Eager to bring your brand's story to life!",
-  books: [
-    { title: "Name of Book 1", rating: 12 },
-    { title: "Name of Book 2", rating: 12 },
-    { title: "Name of Book 3", rating: 12 },
-    { title: "Name of Book 4", rating: 12 },
-  ],
-  videos: [
-    { title: "Name of Video 1", rating: 12 },
-    { title: "Name of Video 2", rating: 12 },
-    { title: "Name of Video 3", rating: 12 },
-    { title: "Name of Video 4", rating: 12 },
-  ],
-  podcasts: [
-    { title: "Name of Podcast 1", rating: 12 },
-    { title: "Name of Podcast 2", rating: 12 },
-    { title: "Name of Podcast 3", rating: 12 },
-    { title: "Name of Podcast 4", rating: 12 },
-  ],
-};
-
 export default function ProfilePage() {
+  const { userData, loading, addMaterial } = useUserData();
+  const [newMaterial, setNewMaterial] = useState({
+    title: '',
+    type: '',
+    rating: 5
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = await addMaterial({
+      ...newMaterial,
+      dateAdded: new Date()
+    });
+
+    if (success) {
+      setNewMaterial({ title: '', type: '', rating: 5 });
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (!userData) return <div>Please log in</div>;
+
   return (
-    
     <div className={styles.profileContainer}>
-        
-      <h1 className={styles.title}>{fakeData.name}</h1>
-      <p className={styles.bio}>{fakeData.bio}</p>
+      <h1>{userData.name}</h1>
+      
       <div className={styles.importSection}>
-        <h2 className={styles.importTitle}>Import Material</h2>
-        <form className={styles.importForm}>
+        <h2>Import Material</h2>
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
+            value={newMaterial.title}
+            onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
             placeholder="Material Title"
-            className={styles.importInput}
             required
           />
-          <select className={styles.importType} required>
+          <select
+            value={newMaterial.type}
+            onChange={(e) => setNewMaterial({...newMaterial, type: e.target.value})}
+            required
+          >
             <option value="">Select Type</option>
             <option value="book">Book</option>
             <option value="video">Video</option>
             <option value="podcast">Podcast</option>
           </select>
-          <button type="submit" className={styles.importButton}>Import</button>
+          <button type="submit">Add Material</button>
         </form>
       </div>
-      <div className={styles.mediaSection}>
-        <h2 className={styles.mediaTitle}>Media</h2>
 
-        <section className={styles.mediaCategory}>
-          <h3 className={styles.subTitle}>Books</h3>
-          <ul className={styles.mediaList}>
-            {fakeData.books.map((book, index) => (
-              <li key={index} className={styles.mediaItem}>
-                {book.title} - Rating: {book.rating}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className={styles.mediaCategory}>
-          <h3 className={styles.subTitle}>Videos</h3>
-          <ul className={styles.mediaList}>
-            {fakeData.videos.map((video, index) => (
-              <li key={index} className={styles.mediaItem}>
-                {video.title} - Rating: {video.rating}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className={styles.mediaCategory}>
-          <h3 className={styles.subTitle}>Podcasts</h3>
-          <ul className={styles.mediaList}>
-            {fakeData.podcasts.map((podcast, index) => (
-              <li key={index} className={styles.mediaItem}>
-                {podcast.title} - Rating: {podcast.rating}
-              </li>
-            ))}
-          </ul>
-        </section>
+      <div className={styles.materialsSection}>
+        {['book', 'video', 'podcast'].map(type => (
+          <div key={type}>
+            <h3>{type.charAt(0).toUpperCase() + type.slice(1)}s</h3>
+            <ul>
+              {userData.materials
+                .filter(m => m.type === type)
+                .map((material, index) => (
+                  <li key={index}>
+                    {material.title} - Rating: {material.rating}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
       </div>
-
-      
     </div>
   );
 }

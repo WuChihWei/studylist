@@ -26,20 +26,27 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
-      const trimmedEmail = email.trim();
-      const trimmedPassword = password.trim();
-      console.log("Attempting to log in with:", trimmedEmail, trimmedPassword);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
       
-      const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, trimmedPassword);
-      console.log("User UID:", userCredential.user.uid);
-
+      // 获取用户数据
+      const response = await fetch(`http://localhost:5000/api/users/${userCredential.user.uid}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      
+      const userData = await response.json();
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
       setIsLoggedIn(true);
-      localStorage.setItem('isLoggedIn', 'true'); // Store login state
-      setShowPopup(true);
+      localStorage.setItem('isLoggedIn', 'true');
       router.push('/profile');
     } catch (error: any) {
-      console.error("Error logging in:", error);
-      setError('An error occurred. Please try again later.');
+      console.error("Error:", error);
+      setError(error.message);
     }
   };
 

@@ -5,17 +5,46 @@ import { auth } from '../firebase/firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 import styles from './signup.module.css';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const SignupPage = () => {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      // Add name to user profile if needed
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
+
+      try {
+        const response = await fetch(`http://localhost:5001/api/users/${userCredential.user.uid}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            firebaseUID: userCredential.user.uid,
+            name: name,
+            email: email,
+            materials: []
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        setShowPopup(true);
+      } catch (fetchError) {
+        console.error("Error updating user data:", fetchError);
+        // 即使数据库更新失败，用户仍然在 Firebase 中创建
+        setShowPopup(true); 
+      }
     } catch (error) {
       console.error("Error signing up:", error);
     }
@@ -86,6 +115,16 @@ const SignupPage = () => {
           Already have an account? Log in
         </Link>
       </div>
+
+      {showPopup && (
+        <div className={styles.popup}>
+          <p>Registration successful!</p>
+          <button onClick={() => {
+            setShowPopup(false);
+            router.push('/profile'); // 跳转到用户资料页面
+          }}>Continue</button>
+        </div>
+      )}
     </div>
   );
 };
