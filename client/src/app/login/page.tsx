@@ -30,7 +30,7 @@ const LoginPage = () => {
       const token = await userCredential.user.getIdToken();
       
       // 获取用户数据
-      const response = await fetch(`http://localhost:5000/api/users/${userCredential.user.uid}`, {
+      const response = await fetch(`http://localhost:5001/api/users/${userCredential.user.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

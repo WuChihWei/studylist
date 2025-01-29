@@ -4,20 +4,22 @@ import {
   updateUser, 
   deleteUser,
   getUserMaterials,
-  createUser
+  createUser,
+  addMaterial
 } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
-// 使用认证中间件保护路由
-router.use(authMiddleware);
+// Public routes (no auth required)
+router.post('/', createUser);
 
-// Define your routes
+// Protected routes
+router.use(authMiddleware);
 router.get('/:firebaseUID', getUserByFirebaseUID);
 router.put('/:firebaseUID', updateUser);
 router.delete('/:firebaseUID', deleteUser);
 router.get('/:firebaseUID/materials', getUserMaterials);
-router.post('/:firebaseUID', createUser);
+router.post('/:firebaseUID/materials', addMaterial);
 
 export default router;

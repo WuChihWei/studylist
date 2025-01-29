@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
+import stripeRoutes from './routes/stripeRoutes';
 
 dotenv.config();
 
@@ -13,10 +14,19 @@ const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000', // 前端地址
+  origin: 'http://localhost:3001', // 前端地址
   credentials: true
 }));
 app.use(express.json());
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, {
+    body: req.body,
+    params: req.params,
+    headers: req.headers
+  });
+  next();
+});
 
 const mongoUri = process.env.MONGODB_URI;
 
@@ -40,6 +50,19 @@ mongoose.connect(mongoUri)
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/stripe', stripeRoutes);
+
+// Add before other routes
+app.get('/test', (req, res) => {
+  res.json({ message: 'Server is running' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    server: 'running',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

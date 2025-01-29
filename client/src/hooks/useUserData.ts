@@ -12,7 +12,7 @@ export const useUserData = () => {
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const response = await fetch(`http://localhost:5000/api/users/${user.uid}`, {
+      const response = await fetch(`http://localhost:5001/api/users/${user.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -34,14 +34,14 @@ export const useUserData = () => {
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const response = await fetch(`http://localhost:5000/api/users/${user.uid}`, {
+      const response = await fetch(`http://localhost:5001/api/users/${user.uid}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          materials: [...userData.materials, materialData]
+          materials: [...(userData?.materials || []), materialData]
         })
       });
 

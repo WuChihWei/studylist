@@ -5,7 +5,7 @@ export interface Material {
     dateAdded?: Date;
   }
   
-  export interface User {
+export interface User {
     firebaseUID: string;
     name: string;
     email: string;

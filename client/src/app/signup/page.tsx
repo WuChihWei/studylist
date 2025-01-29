@@ -13,40 +13,58 @@ const SignupPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('Starting signup process...');
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
-
+      
+      console.log('Firebase signup successful, token:', token);
+      
       try {
-        const response = await fetch(`http://localhost:5001/api/users/${userCredential.user.uid}`, {
+        const response = await fetch('http://localhost:5001/api/users', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({
             firebaseUID: userCredential.user.uid,
-            name: name,
+            name: name || 'New User',
             email: email,
             materials: []
-          })
+          }),
+          credentials: 'include'
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.text();
+          console.error('Server response:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: errorData
+          });
+          throw new Error(`Server error: ${response.status}`);
         }
-        
+
+        const responseData = await response.json();
+        console.log('Server response success:', responseData);
+
+        localStorage.setItem('userData', JSON.stringify(responseData));
+        localStorage.setItem('isLoggedIn', 'true');
+
         setShowPopup(true);
+        router.replace('/profile');
       } catch (fetchError) {
-        console.error("Error updating user data:", fetchError);
-        // 即使数据库更新失败，用户仍然在 Firebase 中创建
-        setShowPopup(true); 
+        console.error('Network or server error:', fetchError);
+        throw fetchError;
       }
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error('Signup error:', error);
+      setError(error.message);
     }
   };
 

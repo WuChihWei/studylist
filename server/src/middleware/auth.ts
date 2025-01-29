@@ -3,7 +3,7 @@ import admin from 'firebase-admin';
 import path from 'path';
 
 // 使用相對路徑從 server 根目錄讀取
-const serviceAccount = require('../firebase-service-account.json');
+const serviceAccount = require('../../firebase-service-account.json');
 
 if (!admin.apps.length) {
   admin.initializeApp({

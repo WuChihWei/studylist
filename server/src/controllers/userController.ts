@@ -118,3 +118,56 @@ export const createUser = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const addMaterial = async (req: Request, res: Response) => {
+  try {
+    const { firebaseUID } = req.params;
+    const { type, title, rating } = req.body;
+
+    // 驗證必要欄位
+    if (!type || !title || rating === undefined) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        required: ['type', 'title', 'rating']
+      });
+    }
+
+    // 驗證類型是否合法
+    if (!['webpage','book', 'video', 'podcast'].includes(type)) {
+      return res.status(400).json({ 
+        error: 'Invalid material type',
+        allowedTypes: ['webpage','book', 'video', 'podcast']
+      });
+    }
+
+    const newMaterial = {
+      type,
+      title,
+      rating,
+      dateAdded: new Date()
+    };
+
+    const updatedUser = await User.findOneAndUpdate(
+      { firebaseUID },
+      { $push: { materials: newMaterial } },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(201).json({
+      message: 'Material added successfully',
+      material: newMaterial,
+      materials: updatedUser.materials
+    });
+
+  } catch (error) {
+    console.error('Error adding material:', error);
+    res.status(500).json({ 
+      error: 'Server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
