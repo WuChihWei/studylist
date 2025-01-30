@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { useUserData } from '../../hooks/useUserData';
 import styles from './profile.module.css';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { userData, loading, addMaterial } = useUserData();
   const [newMaterial, setNewMaterial] = useState({
     title: '',
     type: '',
+    url: '',
     rating: 5
   });
 
@@ -19,7 +21,7 @@ export default function ProfilePage() {
     });
 
     if (success) {
-      setNewMaterial({ title: '', type: '', rating: 5 });
+      setNewMaterial({ title: '', type: '', url: '', rating: 5 });
     }
   };
 
@@ -28,44 +30,71 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.profileContainer}>
-      <h1>{userData.name}</h1>
-      
-      <div className={styles.importSection}>
-        <h2>Import Material</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={newMaterial.title}
-            onChange={(e) => setNewMaterial({...newMaterial, title: e.target.value})}
-            placeholder="Material Title"
-            required
+      <div className={styles.profileHeader}>
+        {/* <div className={styles.profileInfo}>
+          <Image
+            src="/avatar-placeholder.png"
+            alt="Profile"
+            width={80}
+            height={80}
+            className={styles.avatar}
           />
-          <select
-            value={newMaterial.type}
-            onChange={(e) => setNewMaterial({...newMaterial, type: e.target.value})}
-            required
-          >
-            <option value="">Select Type</option>
-            <option value="book">Book</option>
-            <option value="video">Video</option>
-            <option value="podcast">Podcast</option>
-          </select>
-          <button type="submit">Add Material</button>
-        </form>
+          <div>
+            <h1>{userData.name}</h1>
+            <a href={`davinc.in/${userData.name.toLowerCase()}`} className={styles.profileLink}>
+              davinc.in/{userData.name.toLowerCase()}
+            </a>
+            <p className={styles.bio}>
+              Hi! I'm Eric, a content creator known for engaging and quality content across blogs, social media, and more. Eager to bring your brand's story to life!
+            </p>
+          </div>
+        </div> */}
+      </div>
+
+      <div className={styles.contentTabs}>
+        <button className={`${styles.tab} ${styles.active}`}>Media</button>
+        <button className={styles.tab}>Subject1</button>
+        <button className={styles.tab}>Subject2</button>
       </div>
 
       <div className={styles.materialsSection}>
-        {['book', 'video', 'podcast'].map(type => (
-          <div key={type}>
-            <h3>{type.charAt(0).toUpperCase() + type.slice(1)}s</h3>
-            <ul>
+        {['webpage', 'book', 'video', 'podcast'].map(type => (
+          <div key={type} className={styles.materialCategory}>
+            <div className={styles.categoryHeader}>
+              <span className={styles.categoryIcon}>
+                {type === 'webpage' && '🌐'}
+                {type === 'book' && '📚'}
+                {type === 'video' && '🎥'}
+                {type === 'podcast' && '🎧'}
+              </span>
+              <h2>{type.charAt(0).toUpperCase() + type.slice(1)}</h2>
+            </div>
+            <ul className={styles.materialsList}>
               {userData.materials
                 .filter(m => m.type === type)
                 .map((material, index) => (
-                  <li key={index}>
-                    {material.title} - Rating: {material.rating}
+                  <li key={index} className={styles.materialItem}>
+                    <span className={styles.materialIcon}>📄</span>
+                    <div className={styles.materialInfo}>
+                      <span className={styles.materialTitle}>{material.title}</span>
+                      <a href={material.url} 
+                         target="_blank" 
+                         rel="noopener noreferrer" 
+                         className={styles.materialUrl}>
+                        {material.url}
+                      </a>
+                    </div>
+                    <span className={styles.materialRating}>
+                      <span className={styles.ratingNumber}>12</span>
+                      <button className={styles.ratingButton}>👍</button>
+                      <button className={styles.ratingButton}>👎</button>
+                      <button className={styles.moreButton}>+</button>
+                    </span>
                   </li>
                 ))}
+              <li className={styles.addMaterial}>
+                <button className={styles.addButton}>+ Add New Material...</button>
+              </li>
             </ul>
           </div>
         ))}

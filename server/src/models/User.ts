@@ -11,9 +11,10 @@ const userSchema = new mongoose.Schema({
   materials: [{
     type: {
       type: String,
-      enum: ['book', 'video', 'podcast']
+      enum: [ 'webpage', 'book', 'video', 'podcast']
     },
     title: String,
+    url: String,
     rating: Number,
     dateAdded: Date
   }],

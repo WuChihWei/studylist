@@ -122,27 +122,29 @@ export const createUser = async (req: Request, res: Response) => {
 export const addMaterial = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
-    const { type, title, rating } = req.body;
+    const { type, title, url, rating } = req.body;
 
-    // 驗證必要欄位
-    if (!type || !title || rating === undefined) {
+    // Validate required fields
+    if (!type || !title || !url || rating === undefined) {
       return res.status(400).json({ 
         error: 'Missing required fields',
-        required: ['type', 'title', 'rating']
+        required: ['type', 'title', 'url', 'rating']
       });
     }
 
-    // 驗證類型是否合法
-    if (!['webpage','book', 'video', 'podcast'].includes(type)) {
-      return res.status(400).json({ 
-        error: 'Invalid material type',
-        allowedTypes: ['webpage','book', 'video', 'podcast']
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (e) {
+      return res.status(400).json({
+        error: 'Invalid URL format'
       });
     }
 
     const newMaterial = {
       type,
       title,
+      url,
       rating,
       dateAdded: new Date()
     };

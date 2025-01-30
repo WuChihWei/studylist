@@ -2,90 +2,165 @@
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/profile/profile.module.css ***!
   \******************************************************************************************************************************************************************************************************************************************************************************/
 .profile_profileContainer__4OeWo {
-  padding: 2rem 5%;
-  min-height: 100vh;
-  background: #f9f9f9;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
 }
 
-.profile_title__Qm44E {
-  color: #1E90FF;
-  margin-bottom: 1rem;
+.profile_profileHeader__Xf6f4 {
+  margin-bottom: 2rem;
+}
+
+.profile_profileInfo__PPaP1 {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.profile_avatar__f2UDF {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile_profileLink__jOPwB {
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  display: block;
+  margin: 0.5rem 0;
 }
 
 .profile_bio__K9aVx {
+  color: #333;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+.profile_contentTabs__o47Cg {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.profile_tab__qxma7 {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
   color: #666;
+}
+
+.profile_tab__qxma7.profile_active__q9BRI {
+  color: #000;
+  font-weight: 500;
+  border-bottom: 2px solid #007bff;
+}
+
+.profile_materialCategory__jjqia {
   margin-bottom: 2rem;
 }
 
-.profile_mediaSection__AQ55M {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.profile_mediaCategory__g988G {
-  margin-bottom: 2rem;
-}
-
-.profile_mediaTitle__SREyU {
-  color: #1E90FF;
+.profile_categoryHeader__1uuZn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.profile_subTitle__owK4e {
-  color: #333;
-  margin-bottom: 0.5rem;
+.profile_categoryIcon__pjiEC {
+  font-size: 1.5rem;
 }
 
-.profile_mediaList__QlrwW {
-  list-style-type: none;
+.profile_materialsList__U4aJ3 {
+  list-style: none;
   padding: 0;
 }
 
-.profile_mediaItem__qcZ3F {
-  margin: 0.5rem 0;
-  background: #f0f0f0;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.profile_importSection__FyonS {
-  margin-top: 2rem;
-  padding: 1rem;
-  background: #f0f0f0;
+.profile_materialItem__uMNLO {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  margin-bottom: 0.5rem;
   border-radius: 8px;
 }
 
-.profile_importTitle__IKKnY {
-  color: #1E90FF;
-  margin-bottom: 1rem;
+.profile_materialIcon__pCCNG {
+  margin-right: 1rem;
 }
 
-.profile_importForm__KUO5z {
+.profile_materialInfo__Ry3Dv {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  flex: 1 1;
 }
 
-.profile_importInput__rHXFG {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
+.profile_materialTitle__ygU1r {
+  flex: 1 1;
+}
+
+.profile_materialRating__Yob4B {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile_ratingNumber__a5zEm {
+  background: #eee;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
 }
 
-.profile_importType__sMO_8 {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.profile_importButton__L9yB0 {
-  background: #007BFF;
-  color: white;
-  padding: 0.5rem;
+.profile_ratingButton__yYLh1 {
+  background: none;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
+  padding: 0.25rem;
+}
+
+.profile_moreButton__hS8Eh {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 1.2rem;
+}
+
+.profile_addMaterial__k2_JF {
+  padding: 0.75rem;
+}
+
+.profile_addButton__7pPss {
+  width: 100%;
+  padding: 0.75rem;
+  background: none;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profile_addButton__7pPss:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.profile_materialUrl__Z3i5A {
+  font-size: 0.8rem;
+  color: #666;
+  text-decoration: none;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile_materialUrl__Z3i5A:hover {
+  text-decoration: underline;
+  color: #007bff;
 }
