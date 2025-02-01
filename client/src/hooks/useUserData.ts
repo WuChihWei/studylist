@@ -1,11 +1,49 @@
 import { useState, useEffect } from 'react';
-import { auth } from '../app/firebase/firebaseConfig';
 import { User } from '../types/User';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useFirebase } from '../app/firebase/FirebaseProvider';
+
+interface MaterialInput {
+  type: string;
+  title: string;
+  url?: string | null;
+  rating?: number;
+  dateAdded?: Date;
+}
+
+interface MaterialPayload {
+  type: 'webpage' | 'book' | 'video' | 'podcast';
+  title: string;
+  url: string | null;
+  rating: number;
+  dateAdded: string;
+}
 
 export const useUserData = () => {
+  const { auth } = useFirebase();
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (auth.currentUser) {
+        await fetchUserData(auth.currentUser);
+      }
+    };
+
+    fetchData();
+    
+    // Listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchUserData(user);
+      } else {
+        setUserData(null);
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
 
   const fetchUserData = async (currentUser: any) => {
     try {
@@ -15,7 +53,7 @@ export const useUserData = () => {
       }
 
       const token = await currentUser.getIdToken();
-      const response = await fetch(`http://localhost:5001/api/users/${currentUser.uid}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/users/${currentUser.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -24,11 +62,9 @@ export const useUserData = () => {
       if (!response.ok) throw new Error('Failed to fetch user data');
       const data: User = await response.json();
       setUserData(data);
-      // Store user data in localStorage
       localStorage.setItem('userData', JSON.stringify(data));
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // If there's an error, try to get data from localStorage
       const storedData = localStorage.getItem('userData');
       if (storedData) {
         setUserData(JSON.parse(storedData));
@@ -38,57 +74,86 @@ export const useUserData = () => {
     }
   };
 
-  const addMaterial = async (materialData) => {
+  const addMaterial = async (materialData: MaterialInput) => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
+      if (!materialData.type || !materialData.title) {
+        throw new Error('Missing required fields');
+      }
+
+      const payload: MaterialPayload = {
+        type: materialData.type as MaterialPayload['type'],
+        title: materialData.title,
+        url: materialData.url?.trim() || null,
+        rating: materialData.rating || 5,
+        dateAdded: new Date().toISOString()
+      };
+
+      console.log('Sending payload:', payload);
+      console.log('User ID:', user.uid);
+
       const token = await user.getIdToken();
-      const response = await fetch(`http://localhost:5001/api/users/${user.uid}`, {
-        method: 'PUT',
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/users/${user.uid}/materials`;
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          materials: [...(userData?.materials || []), materialData]
-        })
+        credentials: 'include',
+        body: JSON.stringify(payload)
       });
 
-      if (!response.ok) throw new Error('Failed to add material');
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
-      // Update localStorage when materials change
-      localStorage.setItem('userData', JSON.stringify(updatedUser));
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          console.error('Error response body:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          console.error('Failed to parse error response:', e);
+          const rawText = await response.text();
+          console.error('Raw response:', rawText);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const responseData = await response.json();
+      console.log('Success response:', responseData);
+
+      // Update local state with new data
+      setUserData(prev => prev ? {
+        ...prev,
+        materials: responseData.materials
+      } : null);
+
+      // Update localStorage
+      const storedData = localStorage.getItem('userData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        localStorage.setItem('userData', JSON.stringify({
+          ...parsedData,
+          materials: responseData.materials
+        }));
+      }
+
       return true;
     } catch (error) {
-      console.error('Error adding material:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       return false;
     }
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        fetchUserData(user);
-      } else {
-        // User is signed out
-        setUserData(null);
-        localStorage.removeItem('userData');
-        setLoading(false);
-      }
-    });
-
-    // Try to load data from localStorage on initial mount
-    const storedData = localStorage.getItem('userData');
-    if (storedData) {
-      setUserData(JSON.parse(storedData));
-      setLoading(false);
-    }
-
-    return () => unsubscribe();
-  }, []);
 
   return { userData, loading, fetchUserData, addMaterial };
 };

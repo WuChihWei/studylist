@@ -125,27 +125,29 @@ export const addMaterial = async (req: Request, res: Response) => {
     const { type, title, url, rating } = req.body;
 
     // Validate required fields
-    if (!type || !title || !url || rating === undefined) {
+    if (!type || !title) {
       return res.status(400).json({ 
         error: 'Missing required fields',
-        required: ['type', 'title', 'url', 'rating']
+        required: ['type', 'title']
       });
     }
 
-    // Validate URL format
-    try {
-      new URL(url);
-    } catch (e) {
-      return res.status(400).json({
-        error: 'Invalid URL format'
-      });
+    // Validate URL format only if URL is provided
+    if (url) {
+      try {
+        new URL(url);
+      } catch (e) {
+        return res.status(400).json({
+          error: 'Invalid URL format'
+        });
+      }
     }
 
     const newMaterial = {
       type,
       title,
-      url,
-      rating,
+      url: url || null,
+      rating: rating || 5,
       dateAdded: new Date()
     };
 
