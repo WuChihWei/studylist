@@ -19,7 +19,7 @@
   padding: 1.5rem;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile_avatarSection__fZnTm {
@@ -49,8 +49,8 @@
 .profile_topicSection__3EBgX {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  /* padding: 1.5rem; */
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .profile_topicHeader__8AiRT {
@@ -89,17 +89,22 @@
 .profile_materialColumn__UKzte {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+  
 }
 
 .profile_materialSection__ut3O_ {
   background: #ffffff;
   border-radius: 8px;
-  padding: 1rem;
+  /* padding: 0.4rem; */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgb(237, 237, 237);
+  
 }
 
 .profile_materialHeader__khZ2W {
-  margin-bottom: 1rem;
+  /* margin-bottom: 0.6rem; */
+  
 }
 
 .profile_materialIcon__pCCNG {
@@ -109,42 +114,52 @@
 .profile_materialItems__MNmAz {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  /* gap: 0.6rem; */
+  /* padding: 0.6rem; */
 }
 
 .profile_materialRow__u_Tqv {
   display: flex;
   align-items: center;
-  padding: 0.75rem;
-  background: #f8f9fa;
+  padding: 0.6rem 0.6rem 0rem 0.6rem;
+  /* background: #f8f9fa; */
   border-radius: 6px;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .profile_materialNumber__7D5qb {
   color: #666;
-  font-size: 0.9rem;
-  min-width: 1rem;
+  font-size: 1rem;
+  min-width: 0.8rem;
+  font-weight: 600;
 }
 
 .profile_materialPreview__9su_N {
-  width: 32px;
-  height: 32px;
+  width: 50px;
+  height: 50px;
   background: #eee;
   border-radius: 4px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile_iconContainer__mEwvt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile_previewImage__72dMR {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  color: #666;
+  font-size: 1rem;
 }
 
 .profile_materialName__iKT8H {
   flex: 1 1;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #333;
+  font-weight: 600;
 }
 
 .profile_moreButton__hS8Eh {
@@ -161,7 +176,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 0.75rem;
+  /* padding: 0.75rem; */
   border: 1px dashed #dee2e6;
   background: none;
   color: #666;
@@ -177,22 +192,19 @@
 }
 
 .profile_form__Pq_Ec {
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .profile_form__Pq_Ec input {
-  padding: 0.5rem;
-  border: 1px solid #dee2e6;
+  padding: 1rem;
+  border: 1px solid #ddd;
   border-radius: 4px;
 }
 
 .profile_form__Pq_Ec button {
-  padding: 0.5rem;
+  padding: 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -209,19 +221,62 @@
 }
 
 .profile_addForm__ENNT0 {
-  padding: 1rem;
-  background: #f8f9fa;
+  /* margin-top: 0.5rem; */
+  width: 100%;
+}
+
+.profile_inputGroup__ZvGry {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-top: 1px solid #dee2e6;
+  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.04); /* 上緣陰影 */
+  /* padding: 0.5rem; */
   border-radius: 6px;
+}
+
+.profile_nameGroup__b1Jbx {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  width: 100%;
 }
 
 .profile_addInput__n_OXg {
-  padding: 0.5rem;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  width: 100%;
+  flex: 1 1;
+  border: none;
+  padding: 0.5rem 0.5rem 0;
+  outline: none;
+  font-size: 1rem;
+  font-weight: 600;
+  co: #e4e4e4;
+  background: transparent;
+}
+
+.profile_urlInput__9_dB7 {
+  flex: 1 1;
+  border: none;
+  padding:  0 0.5rem 0.5rem;
+  outline: none;
+  font-size: 0.8rem;
+  color: #c9c9c9;
+  background: transparent;
+  /* background-color: #955858 */
+}
+
+.profile_uploadButton__Qsq70 {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile_uploadButton__Qsq70:hover {
+  color: #007bff;
 }
 
 .profile_formButtons__4cITz {
@@ -246,4 +301,10 @@
 .profile_cancelButton__l62qO {
   background: #6c757d;
   color: white;
+}
+
+.profile_addInput__n_OXg::placeholder,
+.profile_urlInput__9_dB7::placeholder {
+  color: #c9c9c9; /* 你想要的顏色 */
+  opacity: 1; /* 確保顏色不透明 */
 }

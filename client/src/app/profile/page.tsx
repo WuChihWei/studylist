@@ -4,6 +4,7 @@ import { useUserData } from '../../hooks/useUserData';
 import { Material } from '../../types/User';
 import styles from './profile.module.css';
 import Image from 'next/image';
+import { FaImage } from 'react-icons/fa';
 
 export default function ProfilePage() {
   const { userData, loading, addMaterial } = useUserData();
@@ -32,7 +33,7 @@ export default function ProfilePage() {
   
   const materials = userData.materials || [];
 
-  const MaterialList = ({ type, icon, materials }: { type: string; icon: string; materials: Material[] }) => {
+  const MaterialList = ({ type, materials }: { type: string; materials: Material[] }) => {
     const [showAddForm, setShowAddForm] = useState(false);
 
     const handleAddMaterial = async (e: React.FormEvent) => {
@@ -70,9 +71,7 @@ export default function ProfilePage() {
 
     return (
       <div className={styles.materialSection}>
-        <div className={styles.materialHeader}>
-          <span className={styles.materialIcon}>{icon}</span>
-        </div>
+        <div className={styles.materialHeader}></div>
         <div className={styles.materialItems}>
           {materials
             .filter(m => m.type === type)
@@ -80,54 +79,41 @@ export default function ProfilePage() {
               <div key={index} className={styles.materialRow}>
                 <span className={styles.materialNumber}>{index + 1}</span>
                 <div className={styles.materialPreview}>
-                  <Image
-                    src="/placeholder-preview.png"
-                    alt="Preview"
-                    width={32}
-                    height={32}
-                    className={styles.previewImage}
-                  />
+                  <div className={styles.iconContainer}>
+                    <FaImage size={20} color="#666" />
+                  </div>
                 </div>
                 <span className={styles.materialName}>{material.title}</span>
                 <button className={styles.moreButton}>⋮</button>
               </div>
             ))}
           
-          {showAddForm ? (
-            <form onSubmit={handleAddMaterial} className={styles.addForm}>
+          <form onSubmit={handleAddMaterial} className={styles.addForm}>
+            <div className={styles.inputGroup}>
+              <div className={styles.nameGroup}>
               <input
                 type="text"
                 name="title"
-                placeholder={`Name of ${type}`}
+                placeholder={`Add New Material...`}
                 required
                 className={styles.addInput}
               />
               <input
                 type="url"
                 name="url"
-                placeholder="URL (optional)"
-                className={styles.addInput}
+                placeholder="url..."
+                className={styles.urlInput}
               />
-              <div className={styles.formButtons}>
-                <button type="submit" className={styles.submitButton}>Add</button>
-                <button 
-                  type="button" 
-                  onClick={() => setShowAddForm(false)}
-                  className={styles.cancelButton}
-                >
-                  Cancel
-                </button>
               </div>
-            </form>
-          ) : (
-            <button 
-              className={styles.addMaterialButton}
-              onClick={() => setShowAddForm(true)}
-            >
-              <span className={styles.plusIcon}>+</span>
-              Add New Material...
-            </button>
-          )}
+              
+              <div>
+              <button type="submit" className={styles.uploadButton}>
+                +
+              </button>
+              </div>
+
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -171,13 +157,21 @@ export default function ProfilePage() {
 
         {/* Materials Grid - Two Columns */}
         <div className={styles.materialsGrid}>
-          <div className={styles.materialColumn}>
-            <MaterialList type="webpage" icon="🌐" materials={materials} />
-            <MaterialList type="video" icon="🎥" materials={materials} />
+          <div className={styles.materialColumn}>  
+            🌐 Website
+            <MaterialList type="webpage"  materials={materials} />
+            </div>
+            <div className={styles.materialColumn}>
+            🎥 Video
+            <MaterialList type="video" materials={materials} />
           </div>
           <div className={styles.materialColumn}>
-            <MaterialList type="podcast" icon="🎧" materials={materials} />
-            <MaterialList type="book" icon="📚" materials={materials} />
+            🎧 Podcast
+            <MaterialList type="podcast" materials={materials} />
+            </div>
+            <div className={styles.materialColumn}>
+            📚 Book
+            <MaterialList type="book" materials={materials} />
           </div>
         </div>
       </div>
