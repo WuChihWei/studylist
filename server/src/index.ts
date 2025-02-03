@@ -4,6 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
+import topicsRouter from './routes/topics';
+import { Request, Response, NextFunction } from 'express';
 
 dotenv.config();
 
@@ -53,6 +55,7 @@ mongoose.connect(mongoUri)
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/users/:firebaseUID/topics', topicsRouter);
 
 // Add before other routes
 app.get('/test', (req, res) => {
@@ -63,6 +66,16 @@ app.get('/health', (req, res) => {
   res.json({
     server: 'running',
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// 添加全局錯誤處理中間件
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({
+    error: 'Server error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 

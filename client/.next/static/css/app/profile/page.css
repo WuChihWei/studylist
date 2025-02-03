@@ -32,6 +32,7 @@
 .profile_avatar__f2UDF {
   border-radius: 50%;
   object-fit: cover;
+  background-color: blue;
 }
 
 .profile_profileLink__jOPwB {
@@ -307,4 +308,118 @@
 .profile_urlInput__9_dB7::placeholder {
   color: #c9c9c9; /* 你想要的顏色 */
   opacity: 1; /* 確保顏色不透明 */
+}
+
+.profile_editButton__oGUfC {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.profile_editInput__FHQhW {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.profile_editBio__47qBU {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.profile_editButtons__GfXZk {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.profile_topicTabWrapper__pa_4x {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile_editTopicButton__mU9Lp {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.profile_addTopicButton__5HBYO {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile_editTopicInput__eaJOG {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.profile_topicEditContainer__DfaQl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile_topicEditInput__CzBVC {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.profile_iconButton__pbXQD {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.profile_iconButton__pbXQD:hover {
+  background-color: #f5f5f5;
+}
+
+.profile_confirmButton__DeWoB {
+  color: #4CAF50;
+}
+
+.profile_cancelButton__l62qO {
+  color: #f44336;
+}
+
+.profile_topicNameContainer__pbBIz {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

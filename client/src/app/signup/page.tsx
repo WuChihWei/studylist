@@ -25,7 +25,7 @@ const SignupPage = () => {
       console.log('Firebase signup successful, token:', token);
       
       try {
-        const response = await fetch('http://localhost:5001/api/users', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/users`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -85,53 +85,58 @@ const SignupPage = () => {
         <p>To create the most motivating learning methods</p>
         <button className={styles.howItWorks}>How it works</button>
       </div>
-      
-      <div className={styles.signupSection}>
-        <h2>Hello!</h2>
-        <p className={styles.welcomeText}>Sign Up Get Started</p>
-        
-        <button onClick={handleFacebookSignup} className={styles.facebookButton}>
-          <span className={styles.icon}>f</span>
-          Sign Up With Facebook
-        </button>
-        
-        <button onClick={handleGoogleSignup} className={styles.googleButton}>
-          <span className={styles.icon}>G</span>
-          Sign Up With Google
-        </button>
 
-        <div className={styles.divider}>
-          <span>or</span>
+      <div className={styles.rightSection}>
+        <div className={styles.signupBox}>
+          <h2>Hello!</h2>
+          <p>Sign Up Get Started</p>
+
+          <div className={styles.socialButtons}>
+            <button onClick={handleGoogleSignup} className={styles.googleButton}>
+              Sign Up With Google
+            </button>
+            <button onClick={handleFacebookSignup} className={styles.facebookButton}>
+              Sign Up With Facebook
+            </button>
+          </div>
+
+          <div className={styles.divider}>or</div>
+
+          <form onSubmit={handleSignup} className={styles.form}>
+            <input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className={styles.input}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={styles.input}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={styles.input}
+              required
+            />
+            <button type="submit" className={styles.registerButton}>
+              Register
+            </button>
+          </form>
+
+          {error && <div className={styles.error}>{error}</div>}
+          
+          <p className={styles.loginLink}>
+            Already have an account? <Link href="/login">Log in</Link>
+          </p>
         </div>
-
-        <form onSubmit={handleSignup} className={styles.form}>
-          {/* <input
-            type="text"
-            placeholder="ID Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          /> */}
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className={styles.signupButton}>Register</button>
-        </form>
-        
-        <Link href="/login" className={styles.loginLink}>
-          Already have an account? Log in
-        </Link>
       </div>
 
       {showPopup && (
@@ -139,8 +144,10 @@ const SignupPage = () => {
           <p>Registration successful!</p>
           <button onClick={() => {
             setShowPopup(false);
-            router.push('/profile'); // 跳转到用户资料页面
-          }}>Continue</button>
+            router.push('/profile');
+          }}>
+            Continue
+          </button>
         </div>
       )}
     </div>

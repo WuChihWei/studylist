@@ -1,70 +1,139 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserData } from '../../hooks/useUserData';
-import { Material } from '../../types/User';
+import { Material, Categories } from '../../types/User';
 import styles from './profile.module.css';
 import Image from 'next/image';
-import { FaImage } from 'react-icons/fa';
+import { FaImage, FaEdit, FaPlus, FaCheck, FaTimes } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
-  const { userData, loading, addMaterial } = useUserData();
-  const [activeTab, setActiveTab] = useState('topic1');
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial } = useUserData();
+  const [activeTab, setActiveTab] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedBio, setEditedBio] = useState('');
+  const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
+  const [editedTopicName, setEditedTopicName] = useState('');
   const [newMaterial, setNewMaterial] = useState({
     title: '',
     type: '',
     url: '',
     rating: 5
   });
+  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const success = await addMaterial({
-      ...newMaterial,
-      dateAdded: new Date()
-    });
-
-    if (success) {
-      setNewMaterial({ title: '', type: '', url: '', rating: 5 });
+  // 在組件加載後設置第一個 topic 的 ID 作為 activeTab
+  useEffect(() => {
+    if (userData && userData.topics && userData.topics.length > 0) {
+      const firstTopicId = userData.topics[0]._id;
+      if (firstTopicId) {
+        setActiveTab(firstTopicId);
+      }
     }
+  }, [userData]);
+
+  useEffect(() => {
+    if (userData) {
+      setEditedName(userData.name || '');
+      setEditedBio(userData.bio || 'Introduce yourself');
+    }
+  }, [userData]);
+
+  // 處理個人資料編輯
+  const handleEditProfile = () => {
+    router.push('/profile/edit');
+  };
+
+  const handleSaveProfile = async () => {
+    console.log('Saving profile with:', { editedName, editedBio });
+    const success = await updateProfile({ 
+      name: editedName, 
+      bio: editedBio 
+    });
+    
+    console.log('Save result:', success);
+    if (success) {
+      setIsEditing(false);
+      // 更新本地顯示
+      if (userData) {
+        setEditedName(userData.name || '');
+        setEditedBio(userData.bio || 'Introduce yourself');
+      }
+    } else {
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  // 處理Topic編輯
+  const handleEditTopic = (topicId: string, currentName: string) => {
+    setEditingTopicId(topicId);
+    setEditedTopicName(currentName);
+  };
+
+  const handleSaveTopicName = async (topicId: string) => {
+    if (await updateTopicName(topicId, editedTopicName)) {
+      setEditingTopicId(null);
+    }
+  };
+
+  // 處理新增Topic
+  const handleAddTopic = async () => {
+    try {
+      const newTopicName = `Topic ${(userData?.topics?.length || 0) + 1}`;
+      const success = await addTopic(newTopicName);
+      
+      if (!success) {
+        console.error('Failed to add topic');
+        // 可以在這裡添加一些用戶提示，比如 toast 通知
+      }
+    } catch (error) {
+      console.error('Error adding topic:', error);
+    }
+  };
+
+  // 新增取消編輯功能
+  const handleCancelEditTopic = () => {
+    setEditingTopicId(null);
+    setEditedTopicName('');
   };
 
   if (loading) return <div>Loading...</div>;
   if (!userData) return <div>Please log in</div>;
   
-  const materials = userData.materials || [];
 
-  const MaterialList = ({ type, materials }: { type: string; materials: Material[] }) => {
-    const [showAddForm, setShowAddForm] = useState(false);
+  const MaterialList = ({ type }: { type: keyof Categories }) => {
+    const currentTopic = userData?.topics?.find(t => t._id === activeTab);
+    
+    if (!currentTopic) {
+      return <div>Please select a topic</div>;
+    }
 
-    const handleAddMaterial = async (e: React.FormEvent) => {
+    const materialsForType = currentTopic.categories[type] || [];
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const form = e.target as HTMLFormElement;
+      const form = e.currentTarget;
       const formData = new FormData(form);
-      
       const title = formData.get('title') as string;
       const url = formData.get('url') as string;
-      
-      if (!title || !type) {
-        alert('Please fill in all required fields');
+
+      if (!title.trim()) {
+        alert('Please enter a title');
         return;
       }
-      
-      const newMaterial = {
-        type,
-        title,
-        url: url || null,
+
+      const success = await addMaterial({
+        title: title.trim(),
+        type: type,
+        url: url?.trim(),
         rating: 5,
         dateAdded: new Date()
-      };
+      }, activeTab);
 
-      try {
-        const success = await addMaterial(newMaterial);
-        if (success) {
-          setShowAddForm(false);
-          form.reset();
-        }
-      } catch (error) {
-        console.error('Failed to add material:', error);
+      if (success) {
+        form.reset(); // 清空表單
+      } else {
         alert('Failed to add material. Please try again.');
       }
     };
@@ -73,45 +142,41 @@ export default function ProfilePage() {
       <div className={styles.materialSection}>
         <div className={styles.materialHeader}></div>
         <div className={styles.materialItems}>
-          {materials
-            .filter(m => m.type === type)
-            .map((material, index) => (
-              <div key={index} className={styles.materialRow}>
-                <span className={styles.materialNumber}>{index + 1}</span>
-                <div className={styles.materialPreview}>
-                  <div className={styles.iconContainer}>
-                    <FaImage size={20} color="#666" />
-                  </div>
+          {materialsForType.map((material, index) => (
+            <div key={index} className={styles.materialRow}>
+              <span className={styles.materialNumber}>{index + 1}</span>
+              <div className={styles.materialPreview}>
+                <div className={styles.iconContainer}>
+                  <FaImage size={20} color="#666" />
                 </div>
-                <span className={styles.materialName}>{material.title}</span>
-                <button className={styles.moreButton}>⋮</button>
               </div>
-            ))}
+              <span className={styles.materialName}>{material.title}</span>
+              <button className={styles.moreButton}>⋮</button>
+            </div>
+          ))}
           
-          <form onSubmit={handleAddMaterial} className={styles.addForm}>
+          <form onSubmit={handleSubmit} className={styles.addForm}>
             <div className={styles.inputGroup}>
               <div className={styles.nameGroup}>
-              <input
-                type="text"
-                name="title"
-                placeholder={`Add New Material...`}
-                required
-                className={styles.addInput}
-              />
-              <input
-                type="url"
-                name="url"
-                placeholder="url..."
-                className={styles.urlInput}
-              />
+                <input
+                  type="text"
+                  name="title"
+                  placeholder={`Add New ${type}...`}
+                  required
+                  className={styles.addInput}
+                />
+                <input
+                  type="url"
+                  name="url"
+                  placeholder="url..."
+                  className={styles.urlInput}
+                />
               </div>
-              
               <div>
-              <button type="submit" className={styles.uploadButton}>
-                +
-              </button>
+                <button type="submit" className={styles.uploadButton}>
+                  +
+                </button>
               </div>
-
             </div>
           </form>
         </div>
@@ -121,7 +186,6 @@ export default function ProfilePage() {
 
   return (
     <div className={styles.profileContainer}>
-      {/* Profile Header Section */}
       <div className={styles.profileHeader}>
         <div className={styles.profileInfo}>
           <div className={styles.avatarSection}>
@@ -132,46 +196,110 @@ export default function ProfilePage() {
               height={80}
               className={styles.avatar}
             />
-            <h2>Leonardo da Vinci</h2>
-            <span className={styles.profileLink}>davinc.in/davinci</span>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className={styles.editInput}
+              />
+            ) : (
+              <h2>{userData?.name}</h2>
+            )}
+            <button onClick={handleEditProfile} className={styles.editButton}>
+              <FaEdit /> Edit Profile
+            </button>
           </div>
-          <p className={styles.bio}>
-            Hi! I'm Eric, a content creator known for engaging and quality content across blogs, 
-            social media, and more. Eager to bring your brand's story to life!
-          </p>
+          {isEditing ? (
+            <div className={styles.editBioSection}>
+              <textarea
+                value={editedBio}
+                onChange={(e) => setEditedBio(e.target.value)}
+                className={styles.editBio}
+              />
+              <div className={styles.editButtons}>
+                <button onClick={handleSaveProfile}>Save</button>
+                <button onClick={() => setIsEditing(false)}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <p className={styles.bio}>
+              {userData?.bio || "Introduce yourself"}
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Topic Section */}
       <div className={styles.topicSection}>
         <div className={styles.topicHeader}>
-          <h2>Topic 1</h2>
+          <h2>
+            {editingTopicId === activeTab ? (
+              <div className={styles.topicEditContainer}>
+                <input
+                  type="text"
+                  value={editedTopicName}
+                  onChange={(e) => setEditedTopicName(e.target.value)}
+                  className={styles.topicEditInput}
+                />
+                <button
+                  onClick={() => handleSaveTopicName(activeTab)}
+                  className={`${styles.iconButton} ${styles.confirmButton}`}
+                  aria-label="Confirm edit"
+                >
+                  <FaCheck />
+                </button>
+                <button
+                  onClick={handleCancelEditTopic}
+                  className={`${styles.iconButton} ${styles.cancelButton}`}
+                  aria-label="Cancel edit"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            ) : (
+              userData?.topics?.find(t => t._id === activeTab)?.name
+            )}
+          </h2>
           <div className={styles.topicTabs}>
-            <button className={`${styles.topicTab} ${activeTab === 'topic1' ? styles.active : ''}`}>
-              topic1
+            {userData?.topics?.map(topic => (
+              <div key={topic._id} className={styles.topicTabWrapper}>
+                <button
+                  className={`${styles.topicTab} ${activeTab === topic._id ? styles.active : ''}`}
+                  onClick={() => setActiveTab(topic._id || '')}
+                >
+                  {topic.name}
+                </button>
+                <button
+                  className={styles.editTopicButton}
+                  onClick={() => handleEditTopic(topic._id || '', topic.name)}
+                >
+                  <FaEdit />
+                </button>
+              </div>
+            ))}
+            <button onClick={handleAddTopic} className={styles.addTopicButton}>
+              <FaPlus />
             </button>
-            <button className={styles.topicTab}>topic 2</button>
-            <button className={styles.topicTab}>Topic 3</button>
           </div>
         </div>
-
+        
         {/* Materials Grid - Two Columns */}
         <div className={styles.materialsGrid}>
-          <div className={styles.materialColumn}>  
+          <div className={styles.materialColumn} data-type="webpage">  
             🌐 Website
-            <MaterialList type="webpage"  materials={materials} />
-            </div>
-            <div className={styles.materialColumn}>
+            <MaterialList type="webpage" />
+          </div>
+          <div className={styles.materialColumn} data-type="video">
             🎥 Video
-            <MaterialList type="video" materials={materials} />
+            <MaterialList type="video" />
           </div>
           <div className={styles.materialColumn}>
             🎧 Podcast
-            <MaterialList type="podcast" materials={materials} />
-            </div>
-            <div className={styles.materialColumn}>
+            <MaterialList type="podcast" />
+          </div>
+          <div className={styles.materialColumn}>
             📚 Book
-            <MaterialList type="book" materials={materials} />
+            <MaterialList type="book" />
           </div>
         </div>
       </div>

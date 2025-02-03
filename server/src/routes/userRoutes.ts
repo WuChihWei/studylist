@@ -5,7 +5,11 @@ import {
   deleteUser,
   getUserMaterials,
   createUser,
-  addMaterial
+  addMaterial,
+  updateUserProfile,
+  addTopic,
+  updateTopicName,
+  updateAllUsersBio
 } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -21,5 +25,9 @@ router.put('/:firebaseUID', updateUser);
 router.delete('/:firebaseUID', deleteUser);
 router.get('/:firebaseUID/materials', getUserMaterials);
 router.post('/:firebaseUID/materials', addMaterial);
+router.put('/:firebaseUID/profile', updateUserProfile);
+router.post('/:firebaseUID/topics', addTopic);
+router.put('/:firebaseUID/topics/:topicId', updateTopicName);
+router.post('/users/update-all-bios', updateAllUsersBio);
 
 export default router;
