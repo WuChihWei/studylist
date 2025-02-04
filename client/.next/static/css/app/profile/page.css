@@ -97,14 +97,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+    /* font-weight: 600; */
 }
 
 .profile_topicTabs__Pg21K {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f5f5f5;
+  /* background: #f5f5f5; */
   padding: 0.25rem;
   border-radius: 6px;
 }
@@ -113,18 +116,19 @@
   padding: 0.5rem 1rem;
   border: none;
   background: none;
-  color: #666;
+  color: #c6c6c6;
   cursor: pointer;
   border-radius: 4px;
   font-size: 0.875rem;
-  font-weight: 500;
+  /* font-weight: 500; */
   transition: all 0.2s;
 }
 
 .profile_topicTab___McQr.profile_active__q9BRI {
   background: white;
   color: #333;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  font-weight: 500;
+  /* box-shadow: 0 1px 3px rgba(0,0,0,0.1); */
 }
 
 .profile_materialsGrid__3cAQh {

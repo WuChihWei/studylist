@@ -34,14 +34,31 @@ const topicSchema = new mongoose.Schema({
   }
 });
 
+const contributionSchema = new mongoose.Schema({
+  date: {
+    type: String,
+    required: true
+  },
+  count: {
+    type: Number,
+    default: 0
+  }
+});
+
 const userSchema = new mongoose.Schema({
   firebaseUID: {
     type: String,
     required: true,
     unique: true
   },
-  name: String,
-  email: String,
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true
+  },
   bio: {
     type: String,
     default: "Introduce yourself"
@@ -50,7 +67,11 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  photoURL: {
+    type: String
+  },
   topics: [topicSchema],
+  contributions: [contributionSchema],
   createdAt: {
     type: Date,
     default: Date.now

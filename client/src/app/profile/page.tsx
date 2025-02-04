@@ -151,11 +151,11 @@ export default function ProfilePage() {
           {materialsForType.map((material, index) => (
             <div key={index} className={styles.materialRow}>
               <span className={styles.materialNumber}>{index + 1}</span>
-              <div className={styles.materialPreview}>
+              {/* <div className={styles.materialPreview}>
                 <div className={styles.iconContainer}>
                   <FaImage size={20} color="#666" />
                 </div>
-              </div>
+              </div> */}
               <span className={styles.materialName}>{material.title}</span>
               <button className={styles.moreButton}>⋮</button>
             </div>
@@ -198,13 +198,19 @@ export default function ProfilePage() {
           <div className={styles.profileUser}>
             <div className={styles.avatarSection}>
               <div className={styles.avatarArea}>
-                <Image
-                  src={userData?.photoURL || '/default-avatar.png'}
-                  alt={userData?.name || 'Profile'}
-                  fill
-                  className={styles.avatar}
-                  priority
-                />
+                {userData?.photoURL ? (
+                  <Image
+                    src={userData.photoURL}
+                    alt={userData?.name || 'Profile'}
+                    fill
+                    className={styles.avatar}
+                    priority
+                  />
+                ) : (
+                  <div className={styles.defaultAvatar}>
+                    <FaImage size={40} color="#666" />
+                  </div>
+                )}
                 <button 
                   onClick={() => router.push('/profile/edit')} 
                   className={styles.editButton}

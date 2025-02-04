@@ -106,7 +106,7 @@ export const useUserData = () => {
     }
   };
 
-  const updateProfile = async (data: { name: string; bio: string }) => {
+  const updateProfile = async (data: { name: string; bio: string; photoURL?: string }) => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');

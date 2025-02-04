@@ -189,20 +189,18 @@ export const addMaterial = async (req: Request, res: Response) => {
 export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
-    const { name, bio } = req.body;
+    const { name, bio, photoURL } = req.body;
         
     const updatedUser = await User.findOneAndUpdate(
       { firebaseUID },
-      { $set: { name, bio } },  // 使用 $set 操作符
+      { $set: { name, bio, photoURL } },
       { new: true }
     );
     
     if (!updatedUser) {
-      console.log('User not found:', firebaseUID);  // 添加日誌
       return res.status(404).json({ error: 'User not found' });
     }
     
-    console.log('Updated user:', updatedUser);  // 添加日誌
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error('Error updating user profile:', error);
