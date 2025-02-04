@@ -6,6 +6,7 @@ import styles from './profile.module.css';
 import Image from 'next/image';
 import { FaImage, FaEdit, FaPlus, FaCheck, FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import ContributionGraph from '../components/ContributionGraph';
 
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial } = useUserData();
@@ -188,45 +189,40 @@ export default function ProfilePage() {
     <div className={styles.profileContainer}>
       <div className={styles.profileHeader}>
         <div className={styles.profileInfo}>
-          <div className={styles.avatarSection}>
-            <Image
-              src="/avatar-placeholder.png"
-              alt="Profile"
-              width={80}
-              height={80}
-              className={styles.avatar}
-            />
-            {isEditing ? (
-              <input
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                className={styles.editInput}
-              />
-            ) : (
-              <h2>{userData?.name}</h2>
-            )}
-            <button onClick={handleEditProfile} className={styles.editButton}>
-              <FaEdit /> Edit Profile
-            </button>
-          </div>
-          {isEditing ? (
-            <div className={styles.editBioSection}>
-              <textarea
-                value={editedBio}
-                onChange={(e) => setEditedBio(e.target.value)}
-                className={styles.editBio}
-              />
-              <div className={styles.editButtons}>
-                <button onClick={handleSaveProfile}>Save</button>
-                <button onClick={() => setIsEditing(false)}>Cancel</button>
+          
+          <div className={styles.profileUser}>
+            <div className={styles.avatarSection}>
+              <div className={styles.avatarArea}>
+                <Image
+                  src={userData?.photoURL || '/default-avatar.png'}
+                  alt={userData?.name || 'Profile'}
+                  fill
+                  className={styles.avatar}
+                  priority
+                />
+                <button 
+                  onClick={() => router.push('/profile/edit')} 
+                  className={styles.editButton}
+                >
+                  Edit
+                </button>
+              </div>
+              
+              <div className={styles.rightSection}>
+                <span className={styles.profileLink}>
+                  {userData?.name || userData?.name?.split(' ')[0] || 'user'}
+                </span>
+                <div className={styles.bio}>
+                  {userData?.bio || 'No bio yet'}
+                </div>
               </div>
             </div>
-          ) : (
-            <p className={styles.bio}>
-              {userData?.bio || "Introduce yourself"}
-            </p>
-          )}
+          </div>
+
+          <div className={styles.contributionSection}>
+            <ContributionGraph />
+          </div>
+
         </div>
       </div>
 

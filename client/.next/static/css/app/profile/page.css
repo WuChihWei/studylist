@@ -4,40 +4,81 @@
 .profile_profileContainer__4OeWo {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .profile_profileHeader__Xf6f4 {
   margin-bottom: 2rem;
+  flex-direction: row;
 }
 
 .profile_profileInfo__PPaP1 {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: row;
   gap: 2rem;
+  width: 100%;
   padding: 1.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.profile_avatarSection__fZnTm {
+.profile_profileUser__FEsT2 {
+  grid-column: 1;
   display: flex;
   flex-direction: column;
+  width: 50%;
+  /* background: rgb(135, 56, 56); 移除背景色 */
+}
+
+.profile_contributionSection__CWidX {
+  grid-column: 1;
+  width: 50%;
+  height: 100%;
+  display: flex;
   align-items: center;
+  justify-content: center;
+}
+
+.profile_contributionSection__CWidX > div {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.profile_avatarSection__fZnTm {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  height: 100%;
+  width: 100%;
+}
+
+.profile_leftSection__3ijaR {
+  /* width: 120px; */
+  width: 30%;
+}
+
+.profile_rightSection__GgNuw {
+  flex: 1 1;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
 }
 
-.profile_avatar__f2UDF {
+.profile_avatarArea__luUJt {
+  position: relative;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  object-fit: cover;
   background-color: blue;
 }
 
-.profile_profileLink__jOPwB {
-  color: #666;
-  font-size: 0.9rem;
+.profile_avatar__f2UDF {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .profile_bio__K9aVx {
@@ -311,17 +352,20 @@
 }
 
 .profile_editButton__oGUfC {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  color: #666;
+  justify-content: center;
   cursor: pointer;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  z-index: 2;
 }
 
 .profile_editInput__FHQhW {
@@ -422,4 +466,101 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.profile_avatarWrapper__YGxGt {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.profile_editButton__oGUfC:hover {
+  background: #0056b3;
+}
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/ContributionGraph.module.css ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************/
+.ContributionGraph_graphContainer__ZoCaJ {
+  --square-size: 10px;
+  --square-gap: 2px;
+  --week-width: calc(var(--square-size) + var(--square-gap));
+  --contribution-empty: #ebedf0;
+  --contribution-l1: #9bd4e9;
+  --contribution-l2: #5e88d1;
+  --contribution-l3: #3050a1;
+  --contribution-l4: #09355c;
+}
+
+.ContributionGraph_graph__dCQSx {
+  display: inline-grid;
+  grid-template-areas: "empty months"
+                      "days squares";
+  grid-template-columns: auto 1fr;
+  grid-gap: 10px;
+  padding: 20px;
+  /* border: 1px solid #e1e4e8; */
+  border-radius: 6px;
+  background: white;
+}
+
+.ContributionGraph_months__pFm3I {
+  grid-area: months;
+  display: grid;
+  grid-template-columns: calc(var(--week-width) * 4) /* Month 1 */
+                        calc(var(--week-width) * 4) /* Month 2 */
+                        calc(var(--week-width) * 4) /* Month 3 */
+                        calc(var(--week-width) * 4) /* Month 4 */
+                        calc(var(--week-width) * 4) /* Month 5 */
+                        calc(var(--week-width) * 4) /* Month 6 */
+                        calc(var(--week-width) * 4) /* Month 7 */
+                        calc(var(--week-width) * 4) /* Month 8 */
+                        calc(var(--week-width) * 4); /* Month 9 */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ContributionGraph_days__yzgVg {
+  grid-area: days;
+  display: grid;
+  grid-template-rows: repeat(7, var(--square-size));
+  grid-gap: var(--square-gap);
+  font-size: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ContributionGraph_squares__2cALP {
+  grid-area: squares;
+  display: grid;
+  grid-gap: var(--square-gap);
+  grid-template-rows: repeat(7, var(--square-size));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--square-size);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ContributionGraph_squares__2cALP li {
+  background-color: var(--contribution-empty);
+  border-radius: 2px;
+  cursor: pointer;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ContributionGraph_squares__2cALP li:hover {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.ContributionGraph_months__pFm3I li,
+.ContributionGraph_days__yzgVg li {
+  font-size: 12px;
+  color: #767676;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }

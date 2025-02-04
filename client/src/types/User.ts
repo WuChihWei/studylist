@@ -30,6 +30,7 @@ export interface User {
     isPremium: boolean;
     topics: Topic[];
     createdAt?: Date;
+    photoURL?: string;
 }
 
 export interface MaterialInput {

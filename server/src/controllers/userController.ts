@@ -190,9 +190,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
     const { name, bio } = req.body;
-    
-    console.log('Updating user profile:', { firebaseUID, name, bio });  // 添加日誌
-    
+        
     const updatedUser = await User.findOneAndUpdate(
       { firebaseUID },
       { $set: { name, bio } },  // 使用 $set 操作符
