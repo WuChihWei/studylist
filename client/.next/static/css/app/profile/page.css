@@ -4,7 +4,7 @@
 .profile_profileContainer__4OeWo {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  /* padding: 1rem; */
 }
 
 .profile_profileHeader__Xf6f4 {
@@ -15,12 +15,11 @@
 .profile_profileInfo__PPaP1 {
   display: flex;
   flex-direction: row;
-  gap: 2rem;
+  /* gap: 2rem; */
   width: 100%;
-  padding: 1.5rem;
+  padding-top: 1.5rem;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* border-radius: 12px; */
 }
 
 .profile_profileUser__FEsT2 {
@@ -92,19 +91,22 @@
   background: white;
   border-radius: 12px;
   /* padding: 1.5rem; */
-  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .profile_topicHeader__8AiRT {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .profile_topicTabs__Pg21K {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f5f5f5;
+  padding: 0.25rem;
+  border-radius: 6px;
 }
 
 .profile_topicTab___McQr {
@@ -113,12 +115,16 @@
   background: none;
   color: #666;
   cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .profile_topicTab___McQr.profile_active__q9BRI {
-  color: #007bff;
-  font-weight: 500;
-  border-bottom: 2px solid #007bff;
+  background: white;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .profile_materialsGrid__3cAQh {
@@ -131,26 +137,28 @@
 .profile_materialColumn__UKzte {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  
+  gap: 8px;
+  background: #ffffff;
+  border-radius: 8px;
+  /* overflow: hidden; */
 }
 
 .profile_materialSection__ut3O_ {
   background: #ffffff;
   border-radius: 8px;
-  /* padding: 0.4rem; */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgb(237, 237, 237);
-  
+  border: 1px solid rgb(237, 237, 237); 
 }
 
 .profile_materialHeader__khZ2W {
-  /* margin-bottom: 0.6rem; */
-  
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight:500;
+  color: #777777;
 }
 
 .profile_materialIcon__pCCNG {
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 .profile_materialItems__MNmAz {
@@ -272,8 +280,6 @@
   align-items: center;
   background: #ffffff;
   border-top: 1px solid #dee2e6;
-  box-shadow: 0 -2px 2px rgba(0, 0, 0, 0.04); /* 上緣陰影 */
-  /* padding: 0.5rem; */
   border-radius: 6px;
 }
 
@@ -289,8 +295,8 @@
   padding: 0.5rem 0.5rem 0;
   outline: none;
   font-size: 1rem;
-  font-weight: 600;
-  co: #e4e4e4;
+  font-weight: 500;
+  color: #e4e4e4;
   background: transparent;
 }
 
@@ -399,12 +405,17 @@
 }
 
 .profile_editTopicButton__mU9Lp {
+  display: none;
+}
+
+.profile_topicTabWrapper__pa_4x:hover .profile_editTopicButton__mU9Lp {
+  display: inline-flex;
   background: none;
   border: none;
   color: #666;
   cursor: pointer;
   padding: 0.25rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .profile_addTopicButton__5HBYO {
@@ -413,17 +424,15 @@
   color: #666;
   cursor: pointer;
   padding: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
 }
 
-.profile_editTopicInput__eaJOG {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+.profile_addTopicButton__5HBYO:hover {
+  background: rgba(0,0,0,0.05);
 }
 
 .profile_topicEditContainer__DfaQl {
@@ -476,6 +485,34 @@
 
 .profile_editButton__oGUfC:hover {
   background: #0056b3;
+}
+
+.profile_mainTopicContainer__Ddx5n {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile_mainTopicWrapper__C_2AK {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile_mainTopicWrapper__C_2AK .profile_editTopicButton__mU9Lp {
+  display: flex;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.profile_mainTopicWrapper__C_2AK h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
 }
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/ContributionGraph.module.css ***!

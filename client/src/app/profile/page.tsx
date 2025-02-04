@@ -4,9 +4,14 @@ import { useUserData } from '../../hooks/useUserData';
 import { Material, Categories } from '../../types/User';
 import styles from './profile.module.css';
 import Image from 'next/image';
-import { FaImage, FaEdit, FaPlus, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaImage, FaPlus, FaCheck, FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import ContributionGraph from '../components/ContributionGraph';
+import { LuGlobe } from "react-icons/lu";
+import { HiOutlineMicrophone } from "react-icons/hi";
+import { FiBook, FiVideo } from "react-icons/fi";
+import { MdEdit } from "react-icons/md";
+
 
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial } = useUserData();
@@ -228,7 +233,7 @@ export default function ProfilePage() {
 
       <div className={styles.topicSection}>
         <div className={styles.topicHeader}>
-          <h2>
+          <div className={styles.mainTopicContainer}>
             {editingTopicId === activeTab ? (
               <div className={styles.topicEditContainer}>
                 <input
@@ -253,24 +258,51 @@ export default function ProfilePage() {
                 </button>
               </div>
             ) : (
-              userData?.topics?.find(t => t._id === activeTab)?.name
+              <div className={styles.mainTopicWrapper}>
+                <button
+                  className={styles.editTopicButton}
+                  onClick={() => handleEditTopic(activeTab || '', userData?.topics?.find(t => t._id === activeTab)?.name || '')}
+                >
+                  <MdEdit size={20} /> 
+                </button>
+                <h1>{userData?.topics?.find(t => t._id === activeTab)?.name}</h1>
+              </div>
             )}
-          </h2>
+          </div>
           <div className={styles.topicTabs}>
             {userData?.topics?.map(topic => (
               <div key={topic._id} className={styles.topicTabWrapper}>
-                <button
-                  className={`${styles.topicTab} ${activeTab === topic._id ? styles.active : ''}`}
-                  onClick={() => setActiveTab(topic._id || '')}
-                >
-                  {topic.name}
-                </button>
-                <button
-                  className={styles.editTopicButton}
-                  onClick={() => handleEditTopic(topic._id || '', topic.name)}
-                >
-                  <FaEdit />
-                </button>
+                {editingTopicId === topic._id ? (
+                  <div className={styles.topicEditContainer}>
+                    <input
+                      type="text"
+                      value={editedTopicName}
+                      onChange={(e) => setEditedTopicName(e.target.value)}
+                      className={styles.topicEditInput}
+                    />
+                    <button
+                      onClick={() => handleSaveTopicName(topic._id || '')}
+                      className={`${styles.iconButton} ${styles.confirmButton}`}
+                      aria-label="Confirm edit"
+                    >
+                      <FaCheck />
+                    </button>
+                    <button
+                      onClick={handleCancelEditTopic}
+                      className={`${styles.iconButton} ${styles.cancelButton}`}
+                      aria-label="Cancel edit"
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className={`${styles.topicTab} ${activeTab === topic._id ? styles.active : ''}`}
+                    onClick={() => setActiveTab(topic._id || '')}
+                  >
+                    {topic.name}
+                  </button>
+                )}
               </div>
             ))}
             <button onClick={handleAddTopic} className={styles.addTopicButton}>
@@ -282,19 +314,31 @@ export default function ProfilePage() {
         {/* Materials Grid - Two Columns */}
         <div className={styles.materialsGrid}>
           <div className={styles.materialColumn} data-type="webpage">  
-            🌐 Website
+            <div className={styles.materialHeader}>
+              <LuGlobe size="1.2em" /> 
+              <span>Website</span>
+            </div>
             <MaterialList type="webpage" />
           </div>
           <div className={styles.materialColumn} data-type="video">
-            🎥 Video
+            <div className={styles.materialHeader}>
+              <FiVideo size="1.2em" />
+              <span>Video</span>
+            </div>
             <MaterialList type="video" />
           </div>
           <div className={styles.materialColumn}>
-            🎧 Podcast
+            <div className={styles.materialHeader}>
+              <HiOutlineMicrophone size="1.2em" />
+              <span>Podcast</span>
+            </div>
             <MaterialList type="podcast" />
           </div>
           <div className={styles.materialColumn}>
-            📚 Book
+            <div className={styles.materialHeader}>
+              <FiBook size="1.2em" />
+              <span>Book</span>
+            </div>
             <MaterialList type="book" />
           </div>
         </div>
