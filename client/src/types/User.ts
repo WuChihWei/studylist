@@ -21,6 +21,11 @@ export interface Topic {
     createdAt?: Date;
 }
 
+interface ContributionData {
+    date: string;
+    count: number;
+}
+
 export interface User {
     _id?: string;
     firebaseUID: string;
@@ -31,6 +36,7 @@ export interface User {
     topics: Topic[];
     createdAt?: Date;
     photoURL?: string;
+    contributions?: ContributionData[];
 }
 
 export interface MaterialInput {

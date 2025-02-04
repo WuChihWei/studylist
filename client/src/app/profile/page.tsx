@@ -14,7 +14,7 @@ import { MdEdit } from "react-icons/md";
 
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -231,7 +231,7 @@ export default function ProfilePage() {
           </div>
 
           <div className={styles.contributionSection}>
-            <ContributionGraph />
+            <ContributionGraph data={getContributionData()} />
           </div>
 
         </div>

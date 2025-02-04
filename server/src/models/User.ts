@@ -71,7 +71,10 @@ const userSchema = new mongoose.Schema({
     type: String
   },
   topics: [topicSchema],
-  contributions: [contributionSchema],
+  contributions: {
+    type: [contributionSchema],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now

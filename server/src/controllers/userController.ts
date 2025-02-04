@@ -130,26 +130,13 @@ export const addMaterial = async (req: Request, res: Response) => {
     const { firebaseUID, topicId } = req.params;
     const { type, title, url, rating } = req.body;
     
-    console.log('Adding material:', {
-      params: req.params,
-      body: req.body
-    });
-
     if (!firebaseUID || !topicId) {
-      console.error('Missing required params:', { firebaseUID, topicId });
       return res.status(400).json({ 
-        error: 'Missing required params',
-        required: ['firebaseUID', 'topicId']
+        error: 'Missing required params'
       });
     }
 
-    if (!type || !title) {
-      return res.status(400).json({ 
-        error: 'Missing required fields',
-        required: ['type', 'title']
-      });
-    }
-
+    // Create new material
     const newMaterial = {
       type,
       title,
@@ -158,10 +145,14 @@ export const addMaterial = async (req: Request, res: Response) => {
       dateAdded: new Date()
     };
 
-    const updatedUser = await User.findOneAndUpdate(
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+
+    // First, add the material to the topic
+    let user = await User.findOneAndUpdate(
       { 
         firebaseUID,
-        'topics._id': topicId 
+        'topics._id': topicId
       },
       { 
         $push: { [`topics.$.categories.${type}`]: newMaterial }
@@ -169,13 +160,59 @@ export const addMaterial = async (req: Request, res: Response) => {
       { new: true }
     );
 
-    if (!updatedUser) {
+    if (!user) {
       return res.status(404).json({ error: 'User or topic not found' });
     }
 
-    // 返回完整的更新後用戶資料
-    res.status(201).json(updatedUser);
-    
+    // Then, handle the contribution count
+    const existingContribution = user.contributions?.find(c => c.date === today);
+
+    if (existingContribution) {
+      // Update existing contribution
+      user = await User.findOneAndUpdate(
+        { 
+          firebaseUID,
+          'contributions.date': today
+        },
+        { 
+          $inc: { 'contributions.$.count': 1 }
+        },
+        { new: true }
+      );
+    } else {
+      // Create new contribution for today
+      user = await User.findOneAndUpdate(
+        { firebaseUID },
+        { 
+          $push: { 
+            contributions: { 
+              date: today, 
+              count: 1 
+            }
+          }
+        },
+        { new: true }
+      );
+    }
+
+    // Clean up old contributions (older than 9 months)
+    const nineMonthsAgo = new Date();
+    nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
+    const cutoffDate = nineMonthsAgo.toISOString().split('T')[0];
+
+    user = await User.findOneAndUpdate(
+      { firebaseUID },
+      {
+        $pull: {
+          contributions: {
+            date: { $lt: cutoffDate }
+          }
+        }
+      },
+      { new: true }
+    );
+
+    res.status(200).json(user);
   } catch (error) {
     console.error('Error adding material:', error);
     res.status(500).json({ 
@@ -349,4 +386,52 @@ export const updateAllUsersBio = async (req: Request, res: Response) => {
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
+};
+
+const handleContribution = async (userId: string) => {
+  const today = new Date().toISOString().split('T')[0];
+  const nineMonthsAgo = new Date();
+  nineMonthsAgo.setMonth(nineMonthsAgo.getMonth() - 9);
+  const cutoffDate = nineMonthsAgo.toISOString().split('T')[0];
+
+  // Update today's contribution count
+  await User.findOneAndUpdate(
+    { 
+      firebaseUID: userId,
+      'contributions.date': today 
+    },
+    { 
+      $inc: { 'contributions.$.count': 1 }
+    },
+    { 
+      new: true 
+    }
+  );
+
+  // If no contribution record exists for today, create one
+  const userWithContribution = await User.findOne({
+    firebaseUID: userId,
+    'contributions.date': today
+  });
+
+  if (!userWithContribution) {
+    await User.findOneAndUpdate(
+      { firebaseUID: userId },
+      {
+        $push: { contributions: { date: today, count: 1 } }
+      }
+    );
+  }
+
+  // Clean up old contributions
+  await User.findOneAndUpdate(
+    { firebaseUID: userId },
+    {
+      $pull: {
+        contributions: {
+          date: { $lt: cutoffDate }
+        }
+      }
+    }
+  );
 };

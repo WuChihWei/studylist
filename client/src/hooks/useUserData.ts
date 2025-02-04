@@ -20,6 +20,11 @@ interface MaterialInput {
   dateAdded?: Date;
 }
 
+interface ContributionData {
+  date: string;
+  count: number;
+}
+
 export const useUserData = () => {
   const { auth } = useFirebase();
   const [userData, setUserData] = useState<User | null>(null);
@@ -235,6 +240,37 @@ export const useUserData = () => {
     }
   };
 
+  const getContributionData = (): ContributionData[] => {
+    if (!userData?.contributions) return [];
+    
+    // Sort contributions by date
+    const sortedContributions = [...userData.contributions].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Fill in missing dates with zero counts
+    const today = new Date();
+    const nineMonthsAgo = new Date();
+    nineMonthsAgo.setMonth(today.getMonth() - 9);
+    
+    const result: ContributionData[] = [];
+    let currentDate = new Date(nineMonthsAgo);
+    
+    while (currentDate <= today) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const contribution = sortedContributions.find(c => c.date === dateStr);
+      
+      result.push({
+        date: dateStr,
+        count: contribution ? contribution.count : 0
+      });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return result;
+  };
+
   return { 
     userData, 
     loading, 
@@ -242,6 +278,7 @@ export const useUserData = () => {
     addMaterial,
     updateProfile,
     addTopic,
-    updateTopicName
+    updateTopicName,
+    getContributionData
   };
 };

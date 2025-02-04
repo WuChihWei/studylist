@@ -60,9 +60,9 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
 
   // 獲取過去9個月的月份標籤
   const getLastNineMonths = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
     const today = new Date();
-    const result = [];
+    const result: string[] = [];
     
     for (let i = 8; i >= 0; i--) {
       const monthIndex = (today.getMonth() - i + 12) % 12;
