@@ -526,11 +526,8 @@
 
 .profile_viewTabs__vTjms {
   display: flex;
-  gap: 2rem;
-  /* margin-bottom: 2rem; */
-  border-bottom: 1px solid #e0e0e0;
+  gap: 20px;
 }
-
 
 .profile_viewTab__JFWWA {
   padding: 0.75rem 0;
@@ -552,6 +549,59 @@
   height: 2px;
   background: #333;
 }
+
+
+
+
+
+
+.profile_viewTabsContainer__4lyq8 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+
+.profile_collectLegend__gSNKy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.profile_collectScale__ATl18 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile_collectDot__SQnwm {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.profile_legendText__wQ9Qe {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Materials view colors */
+.profile_materialsScale__mt9QH .profile_collectDot__SQnwm:nth-child(1) { background-color: #ebedf0; }
+.profile_materialsScale__mt9QH .profile_collectDot__SQnwm:nth-child(2) { background-color: #9bd4e9; }
+.profile_materialsScale__mt9QH .profile_collectDot__SQnwm:nth-child(3) { background-color: #5e88d1; }
+.profile_materialsScale__mt9QH .profile_collectDot__SQnwm:nth-child(4) { background-color: #3050a1; }
+.profile_materialsScale__mt9QH .profile_collectDot__SQnwm:nth-child(5) { background-color: #09355c; }
+
+/* Study list colors */
+.profile_studyScale__Flp7L .profile_collectDot__SQnwm:nth-child(1) { background-color: #9bd4e9; }
+.profile_studyScale__Flp7L .profile_collectDot__SQnwm:nth-child(2) { background-color: #9be9b4; }
+.profile_studyScale__Flp7L .profile_collectDot__SQnwm:nth-child(3) { background-color: #5ed183; }
+.profile_studyScale__Flp7L .profile_collectDot__SQnwm:nth-child(4) { background-color: #30a150; }
+.profile_studyScale__Flp7L .profile_collectDot__SQnwm:nth-child(5) { background-color: #095c35; }
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/ContributionGraph.module.css ***!
   \*******************************************************************************************************************************************************************************************************************************************************************************************/
@@ -559,11 +609,17 @@
   --square-size: 10px;
   --square-gap: 2px;
   --week-width: calc(var(--square-size) + var(--square-gap));
+  /* Collect colors */
   --contribution-empty: #ebedf0;
   --contribution-l1: #9bd4e9;
   --contribution-l2: #5e88d1;
   --contribution-l3: #3050a1;
   --contribution-l4: #09355c;
+  /* Study colors */
+  --study-l1: #9be9b4;
+  --study-l2: #5ed183;
+  --study-l3: #30a150;
+  --study-l4: #095c35;
   position: relative;
   padding-left: 2rem;
 }
@@ -1087,23 +1143,27 @@
 }
 
 .StudyListView_completeButton__UfeIA {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 2px solid #ddd;
   border-radius: 4px;
-  background: white;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #4169E1;
-  transition: all 0.2s;
+  color: transparent;
+  transition: all 0.2s ease;
 }
 
-.StudyListView_completed__uEkPs .StudyListView_completeButton__UfeIA {
-  background: #4169E1;
-  border-color: #4169E1;
-  color: white;
+.StudyListView_completeButton__UfeIA:hover {
+  border-color: #999;
+}
+
+.StudyListView_completeButton__UfeIA.StudyListView_completed__uEkPs {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
 }
 
 .StudyListView_materialsListContent__2BGMI::-webkit-scrollbar {

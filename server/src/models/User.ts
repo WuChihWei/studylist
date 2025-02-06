@@ -9,6 +9,10 @@ const materialSchema = new mongoose.Schema({
   title: String,
   url: String,
   rating: Number,
+  completed: {
+    type: Boolean,
+    default: false
+  },
   dateAdded: {
     type: Date,
     default: Date.now

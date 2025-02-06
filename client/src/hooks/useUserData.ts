@@ -23,6 +23,7 @@ interface MaterialInput {
 interface ContributionData {
   date: string;
   count: number;
+  studyCount?: number;
 }
 
 export const useUserData = () => {
@@ -248,7 +249,14 @@ export const useUserData = () => {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    // Fill in missing dates with zero counts
+    // Get study records
+    const studyRecords = userData.studyRecords || [];
+    const studyCountByDate = studyRecords.reduce((acc, record) => {
+      const date = record.date.split('T')[0];
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
     const today = new Date();
     const nineMonthsAgo = new Date();
     nineMonthsAgo.setMonth(today.getMonth() - 9);
@@ -262,7 +270,8 @@ export const useUserData = () => {
       
       result.push({
         date: dateStr,
-        count: contribution ? contribution.count : 0
+        count: contribution ? contribution.count : 0,
+        studyCount: studyCountByDate[dateStr] || 0
       });
       
       currentDate.setDate(currentDate.getDate() + 1);
@@ -300,6 +309,35 @@ export const useUserData = () => {
     }
   };
 
+  const uncompleteMaterial = async (materialId: string, topicId: string): Promise<void> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const endpoint = `${apiUrl}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/uncomplete`;
+      
+      const token = await user.getIdToken();
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update material completion status');
+      }
+
+      // 重新獲取用戶數據以更新狀態
+      await fetchUserData(user);
+    } catch (error) {
+      console.error('Error uncompleting material:', error);
+      throw error;
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -309,6 +347,7 @@ export const useUserData = () => {
     addTopic,
     updateTopicName,
     getContributionData,
-    completeMaterial
+    completeMaterial,
+    uncompleteMaterial
   };
 };

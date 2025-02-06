@@ -16,7 +16,7 @@ import StudyListView from '../components/StudyListView';
 
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -316,19 +316,49 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        <div className={styles.viewTabs}>
-          <button 
-            className={`${styles.viewTab} ${activeView === 'materials' ? styles.active : ''}`}
-            onClick={() => setActiveView('materials')}
-          >
-            Materials
-          </button>
-          <button 
-            className={`${styles.viewTab} ${activeView === 'studylist' ? styles.active : ''}`}
-            onClick={() => setActiveView('studylist')}
-          >
-            Study List
-          </button>
+        <div className={styles.viewTabsContainer}>
+          <div className={styles.viewTabs}>
+            <button 
+              className={`${styles.viewTab} ${activeView === 'materials' ? styles.active : ''}`}
+              onClick={() => setActiveView('materials')}
+            >
+              Materials
+            </button>
+            <button 
+              className={`${styles.viewTab} ${activeView === 'studylist' ? styles.active : ''}`}
+              onClick={() => setActiveView('studylist')}
+            >
+              Study List
+            </button>
+          </div>
+          
+          <div className={styles.collectLegend}>
+            {activeView === 'materials' ? (
+              <>
+                <span>No Collect</span>
+                <div className={`${styles.collectScale} ${styles.materialsScale}`}>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                </div>
+                <span>Great Collect</span>
+              </>
+            ) : (
+              <>
+                <span>Only Collect</span>
+                <div className={`${styles.collectScale} ${styles.studyScale}`}>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                </div>
+                <span>Finished</span>
+              </>
+            )}
+          </div>
         </div>
 
         {activeView === 'materials' ? (
@@ -349,11 +379,15 @@ export default function ProfilePage() {
               podcast: [],
               book: []
             }}
-            onCompleteMaterial={async (materialId) => {
+            onCompleteMaterial={async (materialId, isCompleted) => {
               try {
-                await completeMaterial(materialId, activeTab);
+                if (isCompleted) {
+                  await uncompleteMaterial(materialId, activeTab);
+                } else {
+                  await completeMaterial(materialId, activeTab);
+                }
               } catch (error) {
-                console.error('Failed to complete material:', error);
+                console.error('Failed to toggle material completion:', error);
               }
             }}
             unitMinutes={20}

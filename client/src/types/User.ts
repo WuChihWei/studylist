@@ -27,6 +27,12 @@ interface ContributionData {
     count: number;
 }
 
+interface StudyRecord {
+    date: string;
+    materialId: string;
+    topicId: string;
+}
+
 export interface User {
     _id?: string;
     firebaseUID: string;
@@ -38,6 +44,7 @@ export interface User {
     createdAt?: Date;
     photoURL?: string;
     contributions?: ContributionData[];
+    studyRecords?: StudyRecord[];
 }
 
 export interface MaterialInput {

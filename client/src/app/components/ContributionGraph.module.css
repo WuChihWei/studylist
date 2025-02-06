@@ -2,11 +2,17 @@
   --square-size: 10px;
   --square-gap: 2px;
   --week-width: calc(var(--square-size) + var(--square-gap));
+  /* Collect colors */
   --contribution-empty: #ebedf0;
   --contribution-l1: #9bd4e9;
   --contribution-l2: #5e88d1;
   --contribution-l3: #3050a1;
   --contribution-l4: #09355c;
+  /* Study colors */
+  --study-l1: #9be9b4;
+  --study-l2: #5ed183;
+  --study-l3: #30a150;
+  --study-l4: #095c35;
   position: relative;
   padding-left: 2rem;
 }

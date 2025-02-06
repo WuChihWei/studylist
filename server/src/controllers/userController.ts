@@ -435,3 +435,149 @@ const handleContribution = async (userId: string) => {
     }
   );
 };
+
+export const completeMaterial = async (req: Request, res: Response) => {
+  try {
+    const { firebaseUID, topicId, materialId } = req.params;
+    console.log('Completing material:', { firebaseUID, topicId, materialId });
+    
+    const user = await User.findOne({ firebaseUID });
+    
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id.toString() === topicId);
+    if (!topic || !topic.categories) {
+      console.log('Topic or categories not found');
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    console.log('Found topic:', {
+      topicId: topic._id,
+      categories: Object.keys(topic.categories)
+    });
+
+    // Find and update the material in the appropriate category
+    let materialUpdated = false;
+    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
+    
+    for (const type of categoryTypes) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
+      const materialIndex = materials.findIndex(m => 
+        m._id && m._id.toString() === materialId
+      );
+
+      if (materialIndex !== -1) {
+        console.log(`Found material in ${type} category at index ${materialIndex}`);
+        
+        const updatePath = `topics.$[topic].categories.${type}.$[material].completed`;
+        const updatedUser = await User.findOneAndUpdate(
+          { firebaseUID },
+          { $set: { [updatePath]: true } },
+          {
+            arrayFilters: [
+              { 'topic._id': topic._id },
+              { 'material._id': materialId }
+            ],
+            new: true
+          }
+        );
+
+        if (updatedUser) {
+          materialUpdated = true;
+          console.log('Successfully updated material');
+          return res.status(200).json(updatedUser);
+        }
+      }
+    }
+
+    if (!materialUpdated) {
+      console.log('Material not found in any category');
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+  } catch (error) {
+    console.error('Error in completeMaterial:', error);
+    res.status(500).json({ 
+      error: 'Server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+export const uncompleteMaterial = async (req: Request, res: Response) => {
+  try {
+    const { firebaseUID, topicId, materialId } = req.params;
+    console.log('Uncompleting material:', { firebaseUID, topicId, materialId });
+    
+    const user = await User.findOne({ firebaseUID });
+    
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id.toString() === topicId);
+    if (!topic || !topic.categories) {
+      console.log('Topic or categories not found');
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    console.log('Found topic:', {
+      topicId: topic._id,
+      categories: Object.keys(topic.categories)
+    });
+
+    // Find and update the material in the appropriate category
+    let materialUpdated = false;
+    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
+    
+    for (const type of categoryTypes) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
+      const materialIndex = materials.findIndex(m => 
+        m._id && m._id.toString() === materialId
+      );
+
+      if (materialIndex !== -1) {
+        console.log(`Found material in ${type} category at index ${materialIndex}`);
+        
+        const updatePath = `topics.$[topic].categories.${type}.$[material].completed`;
+        const updatedUser = await User.findOneAndUpdate(
+          { firebaseUID },
+          { $set: { [updatePath]: false } },
+          {
+            arrayFilters: [
+              { 'topic._id': topic._id },
+              { 'material._id': materialId }
+            ],
+            new: true
+          }
+        );
+
+        if (updatedUser) {
+          materialUpdated = true;
+          console.log('Successfully updated material');
+          return res.status(200).json(updatedUser);
+        }
+      }
+    }
+
+    if (!materialUpdated) {
+      console.log('Material not found in any category');
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+  } catch (error) {
+    console.error('Error in uncompleteMaterial:', error);
+    res.status(500).json({ 
+      error: 'Server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};

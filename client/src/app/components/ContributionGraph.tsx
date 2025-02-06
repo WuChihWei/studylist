@@ -4,6 +4,7 @@ import styles from './ContributionGraph.module.css';
 interface ContributionData {
   date: string;
   count: number;
+  studyCount?: number; // 新增學習記錄
 }
 
 interface ContributionGraphProps {
@@ -19,7 +20,8 @@ const generateSquares = (startDate: Date, totalDays: number, contributionData: C
     const existingData = contributionData.find(d => d.date === dateStr);
     return {
       date: dateStr,
-      count: existingData ? existingData.count : 0
+      count: existingData ? existingData.count : 0,
+      studyCount: existingData ? existingData.studyCount : 0
     };
   });
 };
@@ -51,7 +53,16 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
     }
   }, [data]);
 
-  const getContributionColor = (count: number) => {
+  const getContributionColor = (count: number, studyCount?: number) => {
+    // 如果有學習記錄，優先顯示學習顏色
+    if (studyCount !== undefined && studyCount > 0) {
+      if (studyCount === 1) return 'var(--study-l1)';
+      if (studyCount === 2) return 'var(--study-l2)';
+      if (studyCount === 3) return 'var(--study-l3)';
+      if (studyCount >= 4) return 'var(--study-l4)';
+    }
+    
+    // 否則顯示收藏顏色
     if (count === 0) return 'var(--contribution-empty)';
     if (count <= 1) return 'var(--contribution-l1)';
     if (count <= 3) return 'var(--contribution-l2)';
@@ -146,8 +157,8 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
             {squares.map((square, i) => (
               <li
                 key={i}
-                style={{ backgroundColor: getContributionColor(square.count) }}
-                title={`${square.date}: ${square.count} contributions`}
+                style={{ backgroundColor: getContributionColor(square.count, square.studyCount) }}
+                title={`${square.date}: ${square.count} collections, ${square.studyCount || 0} studies`}
               />
             ))}
           </ul>

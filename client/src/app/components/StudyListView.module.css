@@ -74,23 +74,27 @@
 }
 
 .completeButton {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border: 2px solid #ddd;
   border-radius: 4px;
-  background: white;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #4169E1;
-  transition: all 0.2s;
+  color: transparent;
+  transition: all 0.2s ease;
 }
 
-.completed .completeButton {
-  background: #4169E1;
-  border-color: #4169E1;
-  color: white;
+.completeButton:hover {
+  border-color: #999;
+}
+
+.completeButton.completed {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
 }
 
 .materialsListContent::-webkit-scrollbar {

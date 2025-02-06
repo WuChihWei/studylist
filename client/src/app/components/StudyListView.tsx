@@ -4,16 +4,11 @@ import styles from './StudyListView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
-import { FaCheck } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 interface StudyListViewProps {
-  categories: {
-    webpage: Material[];
-    video: Material[];
-    podcast: Material[];
-    book: Material[];
-  };
-  onCompleteMaterial: (materialId: string) => Promise<void>;
+  categories: Categories;
+  onCompleteMaterial: (materialId: string, isCompleted: boolean) => Promise<void>;
   unitMinutes?: number;
   topicId: string;
 }
@@ -138,15 +133,34 @@ export default function StudyListView({
     });
   };
 
-  const handleComplete = async (materialId: string) => {
-    const newCompleted = new Set(completedMaterials);
-    if (newCompleted.has(materialId)) {
-      newCompleted.delete(materialId);
-    } else {
-      newCompleted.add(materialId);
+  const handleComplete = async (material: Material) => {
+    if (!material._id) return;
+    
+    const isCompleted = material.completed || false;
+    console.log('Attempting to toggle completion:', {
+      materialId: material._id,
+      currentStatus: isCompleted,
+      material: material
+    });
+    
+    try {
+      await onCompleteMaterial(material._id, isCompleted);
+      console.log('Successfully called onCompleteMaterial');
+      
+      const newCompleted = new Set(completedMaterials);
+      if (isCompleted) {
+        newCompleted.delete(material._id);
+      } else {
+        newCompleted.add(material._id);
+      }
+      setCompletedMaterials(newCompleted);
+      console.log('Updated local state:', {
+        newCompletedSize: newCompleted.size,
+        isCompleted
+      });
+    } catch (error) {
+      console.error('Error in handleComplete:', error);
     }
-    setCompletedMaterials(newCompleted);
-    await onCompleteMaterial(materialId);
   };
 
   return (
@@ -179,10 +193,10 @@ export default function StudyListView({
             >
               <div className={styles.materialLeft}>
                 <button
-                  className={styles.completeButton}
-                  onClick={() => handleComplete(material._id || '')}
+                  onClick={() => handleComplete(material)}
+                  className={`${styles.completeButton} ${material.completed ? styles.completed : ''}`}
                 >
-                  {completedMaterials.has(material._id || '') && <FaCheck size={12} />}
+                  {material.completed && <FaCheck />}
                 </button>
                 <span className={styles.materialNumber}>{index + 1}</span>
                 <div className={styles.materialPreview}>

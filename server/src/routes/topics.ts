@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addTopic, addMaterial } from '../controllers/userController';
+import { addTopic, addMaterial, completeMaterial, uncompleteMaterial } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 
 const router = Router({ mergeParams: true });
@@ -8,23 +8,14 @@ const router = Router({ mergeParams: true });
 router.use(authMiddleware);
 
 // POST /api/users/:firebaseUID/topics
-router.post('/:firebaseUID/topics', addTopic);
-
-// 添加 topic
 router.post('/', addTopic);
 
-// 添加 material 到特定 topic
+// Add material to specific topic
 router.post('/:topicId/materials', addMaterial);
 
-router.put('/:topicId/materials/:materialId/complete', async (req, res) => {
-  try {
-    // 實現材料完成狀態的切換邏輯
-    // 返回更新後的用戶數據
-    res.status(200).json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update material status' });
-  }
-});
+// Complete/uncomplete material
+router.put('/:topicId/materials/:materialId/complete', completeMaterial);
+router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 
 console.log('Topics routes initialized');
 
