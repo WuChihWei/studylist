@@ -18,11 +18,11 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
   const categoryIcons = {
-    all: <BsGrid className={styles.categoryIcon} />,
-    webpage: <LuGlobe className={styles.categoryIcon} />,
-    video: <FiVideo className={styles.categoryIcon} />,
-    podcast: <HiOutlineMicrophone className={styles.categoryIcon} />,
-    book: <FiBook className={styles.categoryIcon} />
+    all: <span className={styles.categoryIcon}><BsGrid size={16} /></span>,
+    webpage: <span className={styles.categoryIcon}><LuGlobe size={16} /></span>,
+    video: <span className={styles.categoryIcon}><FiVideo size={16} /></span>,
+    podcast: <span className={styles.categoryIcon}><HiOutlineMicrophone size={16} /></span>,
+    book: <span className={styles.categoryIcon}><FiBook size={16} /></span>
   };
 
   const getCategoryCount = (category: string) => {

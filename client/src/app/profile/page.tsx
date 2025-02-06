@@ -12,10 +12,11 @@ import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { MdEdit } from "react-icons/md";
 import MaterialsView from '../components/MaterialsView';
+import StudyListView from '../components/StudyListView';
 
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -346,7 +347,23 @@ export default function ProfilePage() {
             onAddMaterial={(material) => addMaterial(material, activeTab)}
           />
         ) : (
-          <div>Study List View (Coming Soon)</div>
+          <StudyListView 
+            categories={userData?.topics.find(t => t._id === activeTab)?.categories || {
+              webpage: [],
+              video: [],
+              podcast: [],
+              book: []
+            }}
+            onCompleteMaterial={async (materialId) => {
+              try {
+                await completeMaterial(materialId, activeTab);
+              } catch (error) {
+                console.error('Failed to complete material:', error);
+              }
+            }}
+            unitMinutes={20}
+            topicId={activeTab}
+          />
         )}
       </div>
     </div>

@@ -948,3 +948,158 @@
 }
 
 /* Rest of the material styles can be copied from your existing profile.module.css */
+/*!***************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/StudyListView.module.css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************/
+.StudyListView_materialsContainer__wd6Zj {
+  padding-top: 1rem;
+  background: white;
+}
+
+.StudyListView_materialsList__jM_jP {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.StudyListView_materialsListContent__2BGMI {
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.StudyListView_materialItem__QoRNx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.StudyListView_materialItem__QoRNx.StudyListView_completed__uEkPs {
+  background-color: #f8f9fa;
+}
+
+.StudyListView_materialItem__QoRNx:last-child {
+  border-bottom: none;
+}
+
+.StudyListView_materialLeft__GB11a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.StudyListView_materialNumber___7ZA7 {
+  color: #666;
+  font-size: 14px;
+  min-width: 20px;
+}
+
+.StudyListView_materialPreview__SSxQe {
+  width: 32px;
+  height: 32px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.StudyListView_materialName__TU_s1 {
+  font-size: 14px;
+  color: #333;
+}
+
+.StudyListView_materialRight__LmPbD {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.StudyListView_units__HfB1r {
+  color: #666;
+  font-size: 14px;
+}
+
+.StudyListView_completeButton__UfeIA {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4169E1;
+  transition: all 0.2s;
+}
+
+.StudyListView_completed__uEkPs .StudyListView_completeButton__UfeIA {
+  background: #4169E1;
+  border-color: #4169E1;
+  color: white;
+}
+
+.StudyListView_materialsListContent__2BGMI::-webkit-scrollbar {
+  width: 8px;
+}
+
+.StudyListView_materialsListContent__2BGMI::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.StudyListView_materialsListContent__2BGMI::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.StudyListView_materialsListContent__2BGMI::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.StudyListView_header__qmmXq {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+.StudyListView_headerLeft__rXMix {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+  font-size: 14px;
+}
+
+.StudyListView_unitMinutes__J1Abo {
+  color: #999;
+}
+
+.StudyListView_headerRight__CaOA5 {
+  flex: 1 1;
+  max-width: 200px;
+}
+
+.StudyListView_progressBar__BjaId {
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.StudyListView_progressFill__Or1Ld {
+  height: 100%;
+  background: #4169E1;
+  transition: width 0.3s ease;
+}
+

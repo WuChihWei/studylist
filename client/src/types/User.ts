@@ -5,6 +5,7 @@ export interface Material {
     url?: string;
     rating: number;
     dateAdded: Date;
+    completed?: boolean;
 }
 
 export interface Categories {

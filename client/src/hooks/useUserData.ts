@@ -271,6 +271,35 @@ export const useUserData = () => {
     return result;
   };
 
+  const completeMaterial = async (materialId: string, topicId: string): Promise<void> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+      const endpoint = `${apiUrl}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/complete`;
+      
+      const token = await user.getIdToken();
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update material completion status');
+      }
+
+      // 重新獲取用戶數據以更新狀態
+      await fetchUserData(user);
+    } catch (error) {
+      console.error('Error completing material:', error);
+      throw error;
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -279,6 +308,7 @@ export const useUserData = () => {
     updateProfile,
     addTopic,
     updateTopicName,
-    getContributionData
+    getContributionData,
+    completeMaterial
   };
 };
