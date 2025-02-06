@@ -137,7 +137,7 @@ export default function StudyListView({
     if (!material._id) return;
     
     const isCompleted = material.completed || false;
-    console.log('Attempting to toggle completion:', {
+    console.log('7. Completing material:', {
       materialId: material._id,
       currentStatus: isCompleted,
       material: material

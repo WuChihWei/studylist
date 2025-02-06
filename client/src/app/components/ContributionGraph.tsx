@@ -4,7 +4,7 @@ import styles from './ContributionGraph.module.css';
 interface ContributionData {
   date: string;
   count: number;
-  studyCount?: number; // 新增學習記錄
+  studyCount: number;
 }
 
 interface ContributionGraphProps {
@@ -27,6 +27,8 @@ const generateSquares = (startDate: Date, totalDays: number, contributionData: C
 };
 
 const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
+  console.log('5. ContributionGraph received data:', data);
+  
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [squares, setSquares] = useState<ContributionData[]>(() => {
     const currentYear = new Date().getFullYear();

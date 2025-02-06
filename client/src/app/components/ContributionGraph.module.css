@@ -5,9 +5,9 @@
   /* Collect colors */
   --contribution-empty: #ebedf0;
   --contribution-l1: #9bd4e9;
-  --contribution-l2: #5e88d1;
-  --contribution-l3: #3050a1;
-  --contribution-l4: #09355c;
+  --contribution-l2: #84a3d7;
+  --contribution-l3: #5e79be;
+  --contribution-l4: rgb(35, 88, 135);
   /* Study colors */
   --study-l1: #9be9b4;
   --study-l2: #5ed183;

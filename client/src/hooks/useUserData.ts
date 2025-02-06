@@ -20,10 +20,16 @@ interface MaterialInput {
   dateAdded?: Date;
 }
 
+interface MongoContribution {
+  date: string;
+  count: number;
+  studyCount?: number;  // 從 MongoDB 返回的可能是可選的
+}
+
 interface ContributionData {
   date: string;
   count: number;
-  studyCount?: number;
+  studyCount: number;  // 但我們的應用中需要它是必需的
 }
 
 export const useUserData = () => {
@@ -248,36 +254,12 @@ export const useUserData = () => {
     const sortedContributions = [...userData.contributions].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
-
-    // Get study records
-    const studyRecords = userData.studyRecords || [];
-    const studyCountByDate = studyRecords.reduce((acc, record) => {
-      const date = record.date.split('T')[0];
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {} as { [key: string]: number });
-
-    const today = new Date();
-    const nineMonthsAgo = new Date();
-    nineMonthsAgo.setMonth(today.getMonth() - 9);
     
-    const result: ContributionData[] = [];
-    let currentDate = new Date(nineMonthsAgo);
-    
-    while (currentDate <= today) {
-      const dateStr = currentDate.toISOString().split('T')[0];
-      const contribution = sortedContributions.find(c => c.date === dateStr);
-      
-      result.push({
-        date: dateStr,
-        count: contribution ? contribution.count : 0,
-        studyCount: studyCountByDate[dateStr] || 0
-      });
-      
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    return result;
+    return sortedContributions.map((contribution: MongoContribution): ContributionData => ({
+      date: contribution.date,
+      count: contribution.count,
+      studyCount: contribution.studyCount || 0  // 確保有 studyCount
+    }));
   };
 
   const completeMaterial = async (materialId: string, topicId: string): Promise<void> => {
@@ -298,11 +280,12 @@ export const useUserData = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update material completion status');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update material completion status');
       }
 
-      // 重新獲取用戶數據以更新狀態
-      await fetchUserData(user);
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
     } catch (error) {
       console.error('Error completing material:', error);
       throw error;
@@ -327,11 +310,12 @@ export const useUserData = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update material completion status');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update material completion status');
       }
 
-      // 重新獲取用戶數據以更新狀態
-      await fetchUserData(user);
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
     } catch (error) {
       console.error('Error uncompleting material:', error);
       throw error;
