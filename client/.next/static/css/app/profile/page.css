@@ -518,6 +518,40 @@
   font-size: 2rem;
   font-weight: 700;
 }
+
+.profile_viewTab__JFWWA.profile_active__q9BRI {
+  color: #333;
+  font-weight: 500;
+}
+
+.profile_viewTabs__vTjms {
+  display: flex;
+  gap: 2rem;
+  /* margin-bottom: 2rem; */
+  border-bottom: 1px solid #e0e0e0;
+}
+
+
+.profile_viewTab__JFWWA {
+  padding: 0.75rem 0;
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 1rem;
+  position: relative;
+}
+
+
+.profile_viewTab__JFWWA.profile_active__q9BRI::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #333;
+}
 /*!*******************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/ContributionGraph.module.css ***!
   \*******************************************************************************************************************************************************************************************************************************************************************************************/
@@ -605,3 +639,312 @@
   padding: 0;
   margin: 0;
 }
+/*!***************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/MaterialsView.module.css ***!
+  \***************************************************************************************************************************************************************************************************************************************************************************************/
+.MaterialsView_materialsContainer__jycDZ {
+  padding-top: 1rem;
+  background: white;
+}
+
+
+.MaterialsView_categoryTabs__IBKhN {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.MaterialsView_categoryTab__xfGtb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border: none;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.MaterialsView_categoryTab__xfGtb:hover {
+  color: #666;
+}
+
+.MaterialsView_categoryTab__xfGtb.MaterialsView_active__r4xxx {
+  color: #333;
+  font-weight: 500;
+}
+
+.MaterialsView_categoryIcon__ZeNjo {
+  font-size: 1.1rem;
+}
+
+.MaterialsView_materialsList__Jgq2B {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.MaterialsView_materialItem__2tqlj {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.MaterialsView_materialItem__2tqlj:last-child {
+  border-bottom: none;
+}
+
+.MaterialsView_materialLeft__CdzXz {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.MaterialsView_materialNumber__z0Ril {
+  color: #666;
+  font-size: 14px;
+  min-width: 20px;
+}
+
+.MaterialsView_materialPreview__42U3L {
+  width: 32px;
+  height: 32px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.MaterialsView_previewPlaceholder__Obd71 {
+  width: 20px;
+  height: 20px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.MaterialsView_materialName__ILNbY {
+  font-size: 14px;
+  color: #333;
+}
+
+.MaterialsView_moreButton__dGABd {
+  color: #666;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.MaterialsView_addForm__4qSbb {
+  border-bottom: 1px solid #eee;
+}
+
+.MaterialsView_addMaterialRow__z4IOX {
+  display: flex;
+  align-items: center;
+  padding: 18px 10px;
+  gap: 12px;
+}
+
+.MaterialsView_addButtonContainer__HP4AJ {
+  display: flex;
+  align-items: center;
+}
+
+.MaterialsView_addButton__fRyYY {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: #4169E1;
+  border: none;
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.MaterialsView_inputGroup__1zv3g {
+  flex: 1 1;
+  display: flex;
+  gap: 12px;
+}
+
+.MaterialsView_addInput__y2B36, .MaterialsView_urlInput__vLsrE {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+}
+
+.MaterialsView_addInput__y2B36 {
+  flex: 1 1;
+  color: #999;
+}
+
+.MaterialsView_urlInput__vLsrE {
+  flex: 1 1;
+  color: #999;
+}
+
+.MaterialsView_typeIconContainer__InmET {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.MaterialsView_typeDropdown__RCHGC {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 200px;
+}
+
+.MaterialsView_dropdownHeader__TDZzm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.MaterialsView_typeOptions__5hkBU {
+  display: flex;
+  gap: 8px;
+}
+
+.MaterialsView_typeOption__mcp29 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.MaterialsView_closeButton__yJsWG {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.MaterialsView_dropdownButton__ETFzU {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.MaterialsView_categoryIcon__ZeNjo {
+  font-size: 16px;
+}
+
+.MaterialsView_typeSelector__vN8Q6 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 16px;
+  border-left: 1px solid #eee;
+}
+
+.MaterialsView_typeButton__pOLAV {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.MaterialsView_typeButton__pOLAV:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.MaterialsView_typeButton__pOLAV.MaterialsView_active__r4xxx {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.MaterialsView_submitButton__r5jub {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.MaterialsView_submitButton__r5jub:hover {
+  background: #0056b3;
+}
+
+.MaterialsView_materialsListContent__g7GFy {
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.MaterialsView_materialsListContent__g7GFy::-webkit-scrollbar {
+  width: 8px;
+}
+
+.MaterialsView_materialsListContent__g7GFy::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.MaterialsView_materialsListContent__g7GFy::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.MaterialsView_materialsListContent__g7GFy::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.MaterialsView_overlayGradient__zyB24 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, white);
+  pointer-events: none;
+  display: none;
+}
+
+.MaterialsView_hasMoreItems__EpdPo .MaterialsView_overlayGradient__zyB24 {
+  display: block;
+}
+
+/* Rest of the material styles can be copied from your existing profile.module.css */

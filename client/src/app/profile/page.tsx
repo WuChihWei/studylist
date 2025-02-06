@@ -11,6 +11,7 @@ import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { MdEdit } from "react-icons/md";
+import MaterialsView from '../components/MaterialsView';
 
 
 export default function ProfilePage() {
@@ -28,6 +29,8 @@ export default function ProfilePage() {
     rating: 5
   });
   const router = useRouter();
+  const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
 
   // 在組件加載後設置第一個 topic 的 ID 作為 activeTab
   useEffect(() => {
@@ -317,37 +320,34 @@ export default function ProfilePage() {
           </div>
         </div>
         
-        {/* Materials Grid - Two Columns */}
-        <div className={styles.materialsGrid}>
-          <div className={styles.materialColumn} data-type="webpage">  
-            <div className={styles.materialHeader}>
-              <LuGlobe size="1.2em" /> 
-              <span>Website</span>
-            </div>
-            <MaterialList type="webpage" />
-          </div>
-          <div className={styles.materialColumn} data-type="video">
-            <div className={styles.materialHeader}>
-              <FiVideo size="1.2em" />
-              <span>Video</span>
-            </div>
-            <MaterialList type="video" />
-          </div>
-          <div className={styles.materialColumn}>
-            <div className={styles.materialHeader}>
-              <HiOutlineMicrophone size="1.2em" />
-              <span>Podcast</span>
-            </div>
-            <MaterialList type="podcast" />
-          </div>
-          <div className={styles.materialColumn}>
-            <div className={styles.materialHeader}>
-              <FiBook size="1.2em" />
-              <span>Book</span>
-            </div>
-            <MaterialList type="book" />
-          </div>
+        <div className={styles.viewTabs}>
+          <button 
+            className={`${styles.viewTab} ${activeView === 'materials' ? styles.active : ''}`}
+            onClick={() => setActiveView('materials')}
+          >
+            Materials
+          </button>
+          <button 
+            className={`${styles.viewTab} ${activeView === 'studylist' ? styles.active : ''}`}
+            onClick={() => setActiveView('studylist')}
+          >
+            Study List
+          </button>
         </div>
+
+        {activeView === 'materials' ? (
+          <MaterialsView 
+            categories={userData?.topics.find(t => t._id === activeTab)?.categories || {
+              webpage: [],
+              video: [],
+              podcast: [],
+              book: []
+            }}
+            onAddMaterial={(material) => addMaterial(material, activeTab)}
+          />
+        ) : (
+          <div>Study List View (Coming Soon)</div>
+        )}
       </div>
     </div>
   );
