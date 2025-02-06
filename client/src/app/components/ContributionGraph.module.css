@@ -7,6 +7,69 @@
   --contribution-l2: #5e88d1;
   --contribution-l3: #3050a1;
   --contribution-l4: #09355c;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-bottom: 8px; */
+  /* background-color: blueviolet; */
+}
+
+.yearLabel {
+  font-size: 14px;
+  color: #767676;
+  font-weight: 600;
+}
+
+.navigationButtons {
+  display: flex;
+  /* gap: 2px; */
+  color: #c2c2c2;
+}
+
+.navButton {
+  background: none;
+  border: none;
+  padding: 4px 4px;
+  cursor: pointer;
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.navButton:hover {
+  color: #333;
+}
+
+.navButton:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.graphScrollContainer {
+  overflow: hidden;
+}
+
+.graphScrollContainer::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.graphScrollContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.graphScrollContainer::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.graphScrollContainer::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .graph {
@@ -15,24 +78,19 @@
                       "days squares";
   grid-template-columns: auto 1fr;
   grid-gap: 10px;
-  padding: 20px;
+  /* padding: 20px; */
   /* border: 1px solid #e1e4e8; */
   border-radius: 6px;
-  background: white;
+  /* background: white; */
+  min-width: 100%;
 }
 
 .months {
   grid-area: months;
   display: grid;
-  grid-template-columns: calc(var(--week-width) * 4) /* Month 1 */
-                        calc(var(--week-width) * 4) /* Month 2 */
-                        calc(var(--week-width) * 4) /* Month 3 */
-                        calc(var(--week-width) * 4) /* Month 4 */
-                        calc(var(--week-width) * 4) /* Month 5 */
-                        calc(var(--week-width) * 4) /* Month 6 */
-                        calc(var(--week-width) * 4) /* Month 7 */
-                        calc(var(--week-width) * 4) /* Month 8 */
-                        calc(var(--week-width) * 4); /* Month 9 */
+  grid-auto-flow: column;
+  grid-auto-columns: var(--square-size);
+  grid-gap: var(--square-gap);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -59,6 +117,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  min-width: calc(var(--week-width) * 54); /* 增加寬度以確保顯示完整的12個月 */
 }
 
 .squares li {
@@ -74,11 +133,12 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.months li,
-.days li {
+.months li {
   font-size: 12px;
   color: #767676;
   list-style: none;
   padding: 0;
   margin: 0;
+  position: relative;
+  white-space: nowrap;
 }

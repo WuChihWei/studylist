@@ -564,6 +564,69 @@
   --contribution-l2: #5e88d1;
   --contribution-l3: #3050a1;
   --contribution-l4: #09355c;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.ContributionGraph_header__H9Nq1 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-bottom: 8px; */
+  /* background-color: blueviolet; */
+}
+
+.ContributionGraph_yearLabel__djsZR {
+  font-size: 14px;
+  color: #767676;
+  font-weight: 600;
+}
+
+.ContributionGraph_navigationButtons__sD0Uv {
+  display: flex;
+  /* gap: 2px; */
+  color: #c2c2c2;
+}
+
+.ContributionGraph_navButton__zbLFh {
+  background: none;
+  border: none;
+  padding: 4px 4px;
+  cursor: pointer;
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.ContributionGraph_navButton__zbLFh:hover {
+  color: #333;
+}
+
+.ContributionGraph_navButton__zbLFh:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.ContributionGraph_graphScrollContainer__3ysFl {
+  overflow: hidden;
+}
+
+.ContributionGraph_graphScrollContainer__3ysFl::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.ContributionGraph_graphScrollContainer__3ysFl::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.ContributionGraph_graphScrollContainer__3ysFl::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.ContributionGraph_graphScrollContainer__3ysFl::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .ContributionGraph_graph__dCQSx {
@@ -572,24 +635,19 @@
                       "days squares";
   grid-template-columns: auto 1fr;
   grid-gap: 10px;
-  padding: 20px;
+  /* padding: 20px; */
   /* border: 1px solid #e1e4e8; */
   border-radius: 6px;
-  background: white;
+  /* background: white; */
+  min-width: 100%;
 }
 
 .ContributionGraph_months__pFm3I {
   grid-area: months;
   display: grid;
-  grid-template-columns: calc(var(--week-width) * 4) /* Month 1 */
-                        calc(var(--week-width) * 4) /* Month 2 */
-                        calc(var(--week-width) * 4) /* Month 3 */
-                        calc(var(--week-width) * 4) /* Month 4 */
-                        calc(var(--week-width) * 4) /* Month 5 */
-                        calc(var(--week-width) * 4) /* Month 6 */
-                        calc(var(--week-width) * 4) /* Month 7 */
-                        calc(var(--week-width) * 4) /* Month 8 */
-                        calc(var(--week-width) * 4); /* Month 9 */
+  grid-auto-flow: column;
+  grid-auto-columns: var(--square-size);
+  grid-gap: var(--square-gap);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -616,6 +674,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  min-width: calc(var(--week-width) * 54); /* 增加寬度以確保顯示完整的12個月 */
 }
 
 .ContributionGraph_squares__2cALP li {
@@ -631,13 +690,14 @@
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.ContributionGraph_months__pFm3I li,
-.ContributionGraph_days__yzgVg li {
+.ContributionGraph_months__pFm3I li {
   font-size: 12px;
   color: #767676;
   list-style: none;
   padding: 0;
   margin: 0;
+  position: relative;
+  white-space: nowrap;
 }
 /*!***************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/MaterialsView.module.css ***!

@@ -155,11 +155,6 @@ export default function ProfilePage() {
           {materialsForType.map((material, index) => (
             <div key={index} className={styles.materialRow}>
               <span className={styles.materialNumber}>{index + 1}</span>
-              {/* <div className={styles.materialPreview}>
-                <div className={styles.iconContainer}>
-                  <FaImage size={20} color="#666" />
-                </div>
-              </div> */}
               <span className={styles.materialName}>{material.title}</span>
               <button className={styles.moreButton}>⋮</button>
             </div>

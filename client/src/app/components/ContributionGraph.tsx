@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './ContributionGraph.module.css';
 
 interface ContributionData {
@@ -10,43 +10,44 @@ interface ContributionGraphProps {
   data?: ContributionData[];
 }
 
+// 將函數移到組件外部
+const generateSquares = (startDate: Date, totalDays: number, contributionData: ContributionData[]) => {
+  return [...Array(totalDays)].map((_, i) => {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    const existingData = contributionData.find(d => d.date === dateStr);
+    return {
+      date: dateStr,
+      count: existingData ? existingData.count : 0
+    };
+  });
+};
+
 const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [squares, setSquares] = useState<ContributionData[]>(() => {
-    const today = new Date();
-    const nineMonthsAgo = new Date();
-    nineMonthsAgo.setMonth(today.getMonth() - 9);
+    const currentYear = new Date().getFullYear();
+    const startDate = new Date(currentYear, 0, 1); // 1月1日
+    const endDate = new Date(currentYear, 11, 31); // 12月31日
     
-    // 計算天數差
-    const daysDiff = Math.floor((today.getTime() - nineMonthsAgo.getTime()) / (1000 * 60 * 60 * 24));
+    const weeks = Math.ceil((endDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+    const totalDays = weeks * 7;
     
-    if (data.length === 0) {
-      return [...Array(daysDiff)].map((_, i) => {
-        const date = new Date(nineMonthsAgo);
-        date.setDate(date.getDate() + i);
-        return {
-          date: date.toISOString().split('T')[0],
-          count: Math.floor(Math.random() * 5)
-        };
-      });
-    }
-    return data.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= nineMonthsAgo && itemDate <= today;
-    });
+    return generateSquares(startDate, totalDays, data);
   });
 
   useEffect(() => {
     if (data.length > 0) {
-      const today = new Date();
-      const nineMonthsAgo = new Date();
-      nineMonthsAgo.setMonth(today.getMonth() - 9);
+      const currentYear = new Date().getFullYear();
+      const startDate = new Date(currentYear, 0, 1);
+      const endDate = new Date(currentYear, 11, 31);
       
-      const filteredData = data.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= nineMonthsAgo && itemDate <= today;
-      });
+      const weeks = Math.ceil((endDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+      const totalDays = weeks * 7;
       
-      setSquares(filteredData);
+      const newSquares = generateSquares(startDate, totalDays, data);
+      setSquares(newSquares);
     }
   }, [data]);
 
@@ -58,45 +59,99 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
     return 'var(--contribution-l4)';
   };
 
-  // 獲取過去9個月的月份標籤
-  const getLastNineMonths = () => {
+  const getMonths = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-    const today = new Date();
-    const result: string[] = [];
-    
-    for (let i = 8; i >= 0; i--) {
-      const monthIndex = (today.getMonth() - i + 12) % 12;
-      result.push(months[monthIndex]);
-    }
-    
-    return result;
+    return months;
   };
 
-  const months = getLastNineMonths();
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const currentYear = new Date().getFullYear();
+  const months = getMonths();
+  const days = ['M', '', 'W', '', 'F', '', ''] as const;
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    const scrollAmount = container.clientWidth * 0.5; // 滾動半個視窗寬度
+    const newScrollLeft = direction === 'left' 
+      ? container.scrollLeft - scrollAmount
+      : container.scrollLeft + scrollAmount;
+    
+    container.scrollTo({
+      left: newScrollLeft,
+      behavior: 'smooth'
+    });
+  };
+
+  // 新增計算每月第一天位置的函數
+  const getMonthPositions = () => {
+    const positions: { [key: string]: number } = {};
+    let currentColumn = 0;
+    
+    squares.forEach((square, index) => {
+      const date = new Date(square.date);
+      if (date.getDate() === 1) {  // 如果是每月第一天
+        const monthKey = months[date.getMonth()];
+        positions[monthKey] = Math.floor(index / 7);  // 計算列位置
+      }
+    });
+    
+    return positions;
+  };
+
+  const monthPositions = getMonthPositions();
 
   return (
     <div className={styles.graphContainer}>
-      <div className={styles.graph}>
-        <ul className={styles.months}>
-          {months.map(month => (
-            <li key={month}>{month}</li>
-          ))}
-        </ul>
-        <ul className={styles.days}>
-          {days.map(day => (
-            <li key={day}>{day}</li>
-          ))}
-        </ul>
-        <ul className={styles.squares}>
-          {squares.map((square, i) => (
-            <li
-              key={i}
-              style={{ backgroundColor: getContributionColor(square.count) }}
-              title={`${square.date}: ${square.count} contributions`}
-            />
-          ))}
-        </ul>
+      <div className={styles.header}>
+        <div className={styles.yearLabel}>{currentYear}</div>
+        <div className={styles.navigationButtons}>
+          <button 
+            className={styles.navButton}
+            onClick={() => handleScroll('left')}
+            title="Scroll left"
+          >
+            ◀
+          </button>
+          <button 
+            className={styles.navButton}
+            onClick={() => handleScroll('right')}
+            title="Scroll right"
+          >
+            ▶
+          </button>
+        </div>
+      </div>
+      <div className={styles.graphScrollContainer} ref={scrollContainerRef}>
+        <div className={styles.graph}>
+          <ul className={styles.months}>
+            {months.map(month => (
+              <li 
+                key={month} 
+                style={{ 
+                  gridColumn: monthPositions[month] + 1,
+                  gridColumnEnd: 'span 1'
+                }}
+              >
+                {month}
+              </li>
+            ))}
+          </ul>
+          <ul className={styles.days}>
+            {days.map((day, index) => (
+              <li key={index}>{day}</li>
+            ))}
+          </ul>
+          <ul className={styles.squares}>
+            {squares.map((square, i) => (
+              <li
+                key={i}
+                style={{ backgroundColor: getContributionColor(square.count) }}
+                title={`${square.date}: ${square.count} contributions`}
+              />
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
