@@ -2,12 +2,21 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
 import { Request, Response, NextFunction } from 'express';
 
+// 在任何其他代碼之前加載環境變數
 dotenv.config();
+
+// 添加調試信息
+console.log('Environment variables loaded:', {
+  FIREBASE_BASE64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ? 'exists' : 'not found',
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT
+});
 
 console.log('MongoDB URI:', process.env.MONGODB_URI);
 

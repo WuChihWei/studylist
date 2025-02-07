@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  console.error('Missing environment variable: FIREBASE_SERVICE_ACCOUNT_BASE64');
+  console.error('Current environment variables:', Object.keys(process.env));
   throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set');
 }
 
@@ -24,6 +26,10 @@ declare global {
     }
   }
 }
+
+console.log('Environment variables:', {
+  FIREBASE_SERVICE_ACCOUNT_BASE64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ? 'exists' : 'not found'
+});
 
 export const authMiddleware = async (
   req: Request, 
