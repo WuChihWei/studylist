@@ -363,12 +363,14 @@ export const getUser = async (req: Request, res: Response) => {
     
     console.log('User found:', user);
     res.status(200).json(user);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in getUser:', error);
     res.status(500).json({ 
       error: 'Server error',
       details: error instanceof Error ? error.message : 'Unknown error',
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === 'development' ? 
+        error instanceof Error ? error.stack : undefined 
+        : undefined
     });
   }
 };
