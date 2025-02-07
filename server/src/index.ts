@@ -48,18 +48,27 @@ if (!mongoUri) {
 }
 
 // MongoDB connection
-mongoose.connect(mongoUri)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    console.log('MongoDB connection state:', mongoose.connection.readyState);
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    console.error('Connection details:', {
-      uri: mongoUri.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://***:***@'),
-      readyState: mongoose.connection.readyState
-    });
-  });
+// mongoose.connect(mongoUri)
+//   .then(() => {
+//     console.log('Connected to MongoDB');
+//     console.log('MongoDB connection state:', mongoose.connection.readyState);
+//   })
+//   .catch((err) => {
+//     console.error('MongoDB connection error:', err);
+//     console.error('Connection details:', {
+//       uri: mongoUri.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://***:***@'),
+//       readyState: mongoose.connection.readyState
+//     });
+//   });
+mongoose.connect(process.env.MONGODB_URI!, {
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  connectTimeoutMS: 30000,
+}).then(() => {
+  console.log('Connected to MongoDB');
+}).catch((error) => {
+  console.error('MongoDB connection error:', error);
+});
 
 // Routes
 app.use('/api/users', userRoutes);

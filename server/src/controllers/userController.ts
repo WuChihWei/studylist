@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import mongoose from 'mongoose';
 
 export const getUserByFirebaseUID = async (req: Request, res: Response) => {
   try {
@@ -346,23 +347,28 @@ export const updateTopicName = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
+    console.log('Getting user with firebaseUID:', firebaseUID);
     
-    console.log('Getting user with firebaseUID:', firebaseUID); // 調試用
-    
-    const user = await User.findOne({ firebaseUID });
+    if (!mongoose.connection.readyState) {
+      console.error('MongoDB not connected');
+      return res.status(500).json({ error: 'Database connection error' });
+    }
+
+    const user = await User.findOne({ firebaseUID }).maxTimeMS(20000);
     
     if (!user) {
-      console.log('User not found'); // 調試用
+      console.log('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
     
-    console.log('User found:', user); // 調試用
+    console.log('User found:', user);
     res.status(200).json(user);
   } catch (error) {
     console.error('Error in getUser:', error);
     res.status(500).json({ 
       error: 'Server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
