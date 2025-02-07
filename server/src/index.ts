@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
@@ -18,10 +19,18 @@ console.log('Environment variables loaded:', {
   PORT: process.env.PORT
 });
 
-console.log('MongoDB URI:', process.env.MONGODB_URI);
+console.log('Starting server with MongoDB URI:', 
+  process.env.MONGODB_URI ? 'URI exists' : 'URI missing'
+);
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+// Render 會自動設置 PORT 環境變量
+const PORT = process.env.PORT || 10000;  // 改為更大的默認端口
+
+console.log('=== Server Configuration ===');
+console.log('PORT:', PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
 // Middleware
 app.use(cors({
@@ -33,70 +42,79 @@ app.use(cors({
 app.use(express.json());
 
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, {
-    body: req.body,
-    params: req.params,
-    headers: req.headers
-  });
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-const mongoUri = process.env.MONGODB_URI;
+// 數據庫狀態映射
+const dbStateMap = {
+  0: 'disconnected',
+  1: 'connected',
+  2: 'connecting',
+  3: 'disconnecting'
+};
 
-if (!mongoUri) {
-  throw new Error('MONGODB_URI is not defined in the environment variables');
-}
-
-// MongoDB connection
-// mongoose.connect(mongoUri)
-//   .then(() => {
-//     console.log('Connected to MongoDB');
-//     console.log('MongoDB connection state:', mongoose.connection.readyState);
-//   })
-//   .catch((err) => {
-//     console.error('MongoDB connection error:', err);
-//     console.error('Connection details:', {
-//       uri: mongoUri.replace(/mongodb\+srv:\/\/([^:]+):([^@]+)@/, 'mongodb+srv://***:***@'),
-//       readyState: mongoose.connection.readyState
-//     });
-//   });
-mongoose.connect(process.env.MONGODB_URI!, {
-  serverSelectionTimeoutMS: 30000,
-  socketTimeoutMS: 45000,
-  connectTimeoutMS: 30000,
-}).then(() => {
-  console.log('Connected to MongoDB');
-}).catch((error) => {
-  console.error('MongoDB connection error:', error);
+// 根路由 - 不需要認證
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/stripe', stripeRoutes);
-app.use('/api/users/:firebaseUID/topics', topicsRouter);
-
-// Add before other routes
-app.get('/test', (req, res) => {
-  res.json({ message: 'Server is running' });
-});
-
+// 健康檢查端點
 app.get('/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  
   res.json({
     server: 'running',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongodb: dbStateMap[dbState as keyof typeof dbStateMap] || 'unknown',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
   });
 });
 
-// 添加全局錯誤處理中間件
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Global error handler:', err);
-  res.status(500).json({
-    error: 'Server error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+// API 路由
+app.use('/api/users', userRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/topics', topicsRouter);
+
+// 404 處理
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Route not found',
+    path: req.path,
+    method: req.method
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// 錯誤處理中間件
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
 });
+
+// 啟動服務器
+const startServer = async () => {
+  try {
+    console.log('Starting server...');
+    console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
+    
+    if (process.env.MONGODB_URI) {
+      await mongoose.connect(process.env.MONGODB_URI);
+      console.log('MongoDB Connected');
+    } else {
+      console.warn('No MongoDB URI provided, running without database');
+    }
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (error) {
+    console.error('Server startup error:', error);
+  }
+};
+
+startServer();

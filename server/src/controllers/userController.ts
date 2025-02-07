@@ -347,31 +347,25 @@ export const updateTopicName = async (req: Request, res: Response) => {
 export const getUser = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
-    console.log('Getting user with firebaseUID:', firebaseUID);
     
     if (!mongoose.connection.readyState) {
-      console.error('MongoDB not connected');
-      return res.status(500).json({ error: 'Database connection error' });
+      return res.status(503).json({ error: 'Database connection not ready' });
     }
 
-    const user = await User.findOne({ firebaseUID }).maxTimeMS(20000);
-    
+    const user = await User.findOne({ firebaseUID })
+      .select('firebaseUID name email bio materials')  // 只選擇需要的字段
+      .maxTimeMS(3000)                                // 降低查詢超時時間
+      .lean()                                         // 使用 lean() 提高性能
+      .exec();
+
     if (!user) {
-      console.log('User not found');
       return res.status(404).json({ error: 'User not found' });
     }
-    
-    console.log('User found:', user);
-    res.status(200).json(user);
-  } catch (error: unknown) {
-    console.error('Error in getUser:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      details: error instanceof Error ? error.message : 'Unknown error',
-      stack: process.env.NODE_ENV === 'development' ? 
-        error instanceof Error ? error.stack : undefined 
-        : undefined
-    });
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('Get user error:', error);
+    return res.status(500).json({ error: 'Server error' });
   }
 };
 

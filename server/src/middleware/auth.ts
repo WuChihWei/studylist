@@ -31,11 +31,16 @@ console.log('Environment variables:', {
   FIREBASE_SERVICE_ACCOUNT_BASE64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 ? 'exists' : 'not found'
 });
 
+console.log('Firebase admin initialization status:', admin.apps.length ? 'Initialized' : 'Not initialized');
+
 export const authMiddleware = async (
   req: Request, 
   res: Response, 
   next: NextFunction
 ) => {
+  console.log('Auth middleware triggered');
+  console.log('Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
+  
   try {
     const token = req.headers.authorization?.split('Bearer ')[1];
     if (!token) {
