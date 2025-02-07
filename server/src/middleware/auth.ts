@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
-import path from 'path';
 
-// 使用相對路徑從 server 根目錄讀取
-const serviceAccount = require('../../firebase-service-account.json');
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set');
+}
+
+// 從環境變數讀取 Firebase 憑證
+const serviceAccount = JSON.parse(
+  Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString()
+);
 
 if (!admin.apps.length) {
   admin.initializeApp({
