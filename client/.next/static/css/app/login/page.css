@@ -8,7 +8,8 @@
 
 .login_leftSection__GOiIM {
   flex: 1 1;
-  background: linear-gradient(180deg, #FFE5E5 0%, #E5E5FF 50%, #000080 100%);
+  width: 50%;
+  background: linear-gradient(180deg, #88bbfe 0%, #8686ff 50%, #050561 100%);
   padding: 4rem;
   display: flex;
   flex-direction: column;
@@ -39,11 +40,17 @@
 
 .login_loginSection__h_RAj {
   flex: 1 1;
-  padding: 4rem;
+  width: 50%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 500px;
+  align-items: center;
+  padding: 4rem;
+}
+
+.login_loginSection__h_RAj > * {
+  width: 100%;
+  max-width: 400px;
 }
 
 .login_loginSection__h_RAj h2 {

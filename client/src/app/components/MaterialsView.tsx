@@ -4,7 +4,9 @@ import styles from './MaterialsView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
+import { MdWeb } from "react-icons/md";
 import { BsGrid } from "react-icons/bs";
+import { IoChevronDownSharp } from "react-icons/io5";
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -18,11 +20,11 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
 
   const categoryIcons = {
-    all: <span className={styles.categoryIcon}><BsGrid size={16} /></span>,
-    webpage: <span className={styles.categoryIcon}><LuGlobe size={16} /></span>,
-    video: <span className={styles.categoryIcon}><FiVideo size={16} /></span>,
+    all: <span className={styles.categoryIcon}><BsGrid size={18} /></span>,
+    webpage: <span className={styles.categoryIcon}><MdWeb size={18} /></span>,
+    video: <span className={styles.categoryIcon}><FiVideo size={18} /></span>,
     podcast: <span className={styles.categoryIcon}><HiOutlineMicrophone size={16} /></span>,
-    book: <span className={styles.categoryIcon}><FiBook size={16} /></span>
+    book: <span className={styles.categoryIcon}><FiBook size={18} /></span>
   };
 
   const getCategoryCount = (category: string) => {
@@ -110,7 +112,7 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
                 className={styles.dropdownButton}
                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
               >
-                ▼
+                <IoChevronDownSharp size={14} />
               </button>
               {isTypeDropdownOpen && (
                 <div className={styles.typeDropdown}>
@@ -147,7 +149,7 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
               <input
                 type="text"
                 name="title"
-                placeholder="Add New Material..."
+                placeholder="Add Material..."
                 className={styles.addInput}
                 required
               />

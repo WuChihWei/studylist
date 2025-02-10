@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { User } from '../types/User';
 import { useFirebase } from '../app/firebase/FirebaseProvider';
 
+const API_URL = 'https://studylist-server.onrender.com';
+
 type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
 
 interface MaterialPayload {
@@ -36,39 +38,71 @@ export const useUserData = () => {
   const { auth } = useFirebase();
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchUserData = async (currentUser: any) => {
+    if (isLoading) return;
+    
+    const startTime = performance.now();
+    console.log('=== API Request Started ===');
+    console.log('Start time:', new Date().toISOString());
+    
     try {
       setLoading(true);
+      const cacheKey = `userData_${currentUser.uid}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        const { data, timestamp } = JSON.parse(cachedData);
+        const cacheAge = Date.now() - timestamp;
+        if (cacheAge < 5 * 60 * 1000) { // 5分鐘緩存
+          console.log('Using cached data, age:', Math.round(cacheAge / 1000), 'seconds');
+          setUserData(data);
+          return;
+        }
+      }
+
+      console.log('Cache miss or expired, fetching from API...');
+      const tokenStartTime = performance.now();
       const token = await currentUser.getIdToken();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      
-      console.log('Fetching from:', `${apiUrl}/api/users/${currentUser.uid}`);
-      
-      const response = await fetch(`${apiUrl}/api/users/${currentUser.uid}`, {
+      console.log('Token fetch time:', Math.round(performance.now() - tokenStartTime), 'ms');
+
+      const fetchStartTime = performance.now();
+      const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
       const data = await response.json();
+      const fetchEndTime = performance.now();
+      console.log('API fetch time:', Math.round(fetchEndTime - fetchStartTime), 'ms');
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      
       setUserData(data);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error:', error);
       setUserData(null);
     } finally {
+      const endTime = performance.now();
+      console.log('=== API Request Completed ===');
+      console.log('End time:', new Date().toISOString());
+      console.log('Total execution time:', Math.round(endTime - startTime), 'ms');
+      console.log('========================');
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
+      if (user && isMounted) {
         fetchUserData(user);
       } else {
         setUserData(null);
@@ -76,7 +110,10 @@ export const useUserData = () => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [auth]);
 
   const addMaterial = async (materialData: MaterialInput, topicId: string) => {
@@ -84,8 +121,7 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const endpoint = `${apiUrl}/api/users/${user.uid}/topics/${topicId}/materials`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials`;
       
       console.log('Adding material:', {
         payload: materialData,
@@ -124,13 +160,12 @@ export const useUserData = () => {
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
       
       console.log('Updating profile with data:', data);
-      console.log('Sending request to:', `${apiUrl}/api/users/${user.uid}/profile`);
+      console.log('Sending request to:', `${API_URL}/api/users/${user.uid}/profile`);
       
       const response = await fetch(
-        `${apiUrl}/api/users/${user.uid}/profile`,
+        `${API_URL}/api/users/${user.uid}/profile`,
         {
           method: 'PUT',
           headers: {
@@ -163,16 +198,15 @@ export const useUserData = () => {
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
       
       console.log('Updating topic:', {
         topicId,
         name,
-        url: `${apiUrl}/api/users/${user.uid}/topics/${topicId}`
+        url: `${API_URL}/api/users/${user.uid}/topics/${topicId}`
       });
       
       const response = await fetch(
-        `${apiUrl}/api/users/${user.uid}/topics/${topicId}`,
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}`,
         {
           method: 'PUT',
           headers: {
@@ -210,12 +244,11 @@ export const useUserData = () => {
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
       
-      console.log('Sending request to:', `${apiUrl}/api/users/${user.uid}/topics`);
+      console.log('Sending request to:', `${API_URL}/api/users/${user.uid}/topics`);
       
       const response = await fetch(
-        `${apiUrl}/api/users/${user.uid}/topics`,
+        `${API_URL}/api/users/${user.uid}/topics`,
         {
           method: 'POST',
           headers: {
@@ -266,9 +299,10 @@ export const useUserData = () => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const endpoint = `${apiUrl}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/complete`;
+  
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/complete`;
+      
+      console.log('Sending complete request to:', endpoint);
       
       const token = await user.getIdToken();
       const response = await fetch(endpoint, {
@@ -278,12 +312,13 @@ export const useUserData = () => {
           'Content-Type': 'application/json'
         }
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update material completion status');
+        console.error('Complete material error response:', errorData);
+        throw new Error(errorData.message || errorData.error || 'Failed to update material completion status');
       }
-
+  
       const updatedUser = await response.json();
       setUserData(updatedUser);
     } catch (error) {
@@ -297,8 +332,7 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
-      const endpoint = `${apiUrl}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/uncomplete`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/uncomplete`;
       
       const token = await user.getIdToken();
       const response = await fetch(endpoint, {

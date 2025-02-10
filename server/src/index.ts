@@ -42,7 +42,14 @@ app.use(cors({
 app.use(express.json());
 
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('\n=== Incoming Request ===');
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  console.log(`Method: ${req.method}`);
+  console.log(`URL: ${req.url}`);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+  console.log('======================\n');
   next();
 });
 
@@ -75,10 +82,10 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API 路由
-app.use('/api/users', userRoutes);
+// API routes - order matters!
+app.use('/api/users/:firebaseUID/topics', topicsRouter);  // More specific route first
+app.use('/api/users', userRoutes);                        // More general route second
 app.use('/api/stripe', stripeRoutes);
-app.use('/api/topics', topicsRouter);
 
 // 404 處理
 app.use((req, res) => {
@@ -96,24 +103,63 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // 啟動服務器
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined');
+    }
+    
+    console.log('Attempting to connect to MongoDB...');
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 30000, // 增加超時時間
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      retryWrites: true,
+      w: 'majority'
+    });
+    
+    console.log('MongoDB Connected Successfully');
+    return true;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    return false;
+  }
+};
+
 const startServer = async () => {
   try {
-    console.log('Starting server...');
-    console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
+    console.log('\n=== Server Startup ===');
+    console.log('Environment Variables:');
+    console.log('- PORT:', PORT);
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- CLIENT_URL:', process.env.CLIENT_URL);
+    console.log('- MONGODB_URI exists:', !!process.env.MONGODB_URI);
     
-    if (process.env.MONGODB_URI) {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('MongoDB Connected');
+    if (await connectDB()) {
+      app.listen(PORT, () => {
+        console.log('\n=== Server Started ===');
+        console.log(`🚀 Server URL: http://localhost:${PORT}`);
+        console.log(`📝 API Docs: http://localhost:${PORT}/api-docs`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`👥 CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+        console.log('====================\n');
+      });
+      app.listen(PORT, () => {
+        console.log('\n=== Server Started ===');
+        console.log(`🚀 Server URL: http://localhost:${PORT}`);
+        console.log(`📝 API Docs: http://localhost:${PORT}/api-docs`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`👥 CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
+        console.log('====================\n');
+      });
     } else {
-      console.warn('No MongoDB URI provided, running without database');
+      console.warn('⚠️  Warning: Running without database connection');
     }
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
   } catch (error) {
-    console.error('Server startup error:', error);
+    console.error('❌ Server startup error:', error);
   }
 };
 

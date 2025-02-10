@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { auth } from '../firebase/firebaseConfig';
-import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, signOut } from 'firebase/auth';
 import styles from './signup.module.css';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -14,6 +14,25 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [error, setError] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn');
+    if (loggedIn === 'true') {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsLoggedIn(false);
+      localStorage.removeItem('isLoggedIn');
+      console.log("User logged out");
+    } catch (error: any) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,16 +101,16 @@ const SignupPage = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.leftSection}>
+     <div className={styles.leftSection}>
         <h1>Learn With Your Role Models</h1>
         <p>To create the most motivating learning methods</p>
-        <button className={styles.howItWorks}>How it works</button>
+        {/* <button className={styles.howItWorks}>How it works</button> */}
       </div>
 
       <div className={styles.rightSection}>
         <div className={styles.signupBox}>
           <h2>Hello!</h2>
-          <p>Sign Up Get Started</p>
+          {/* <p>Sign Up Get Started</p>
 
           <div className={styles.socialButtons}>
             <button onClick={handleGoogleSignup} className={styles.googleButton}>
@@ -100,38 +119,42 @@ const SignupPage = () => {
             <button onClick={handleFacebookSignup} className={styles.facebookButton}>
               Sign Up With Facebook
             </button>
-          </div>
+          </div> */}
 
-          <div className={styles.divider}>or</div>
+          {/* <div className={styles.divider}>or</div> */}
 
-          <form onSubmit={handleSignup} className={styles.form}>
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={styles.input}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={styles.input}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
-              required
-            />
-            <button type="submit" className={styles.registerButton}>
-              Register
-            </button>
-          </form>
+          {!isLoggedIn ? (
+            <form onSubmit={handleSignup} className={styles.form}>
+              <input
+                type="text"
+                placeholder="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={styles.input}
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={styles.input}
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={styles.input}
+                required
+              />
+              <button type="submit" className={styles.registerButton}>
+                Register
+              </button>
+            </form>
+          ) : (
+            <button onClick={handleLogout} className={styles.registerButton}>Logout</button>
+          )}
 
           {error && <div className={styles.error}>{error}</div>}
           

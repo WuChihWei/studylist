@@ -26,28 +26,99 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     try {
+      console.log('Starting login process...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Firebase auth successful');
+      
       const token = await userCredential.user.getIdToken();
+      console.log('Token obtained successfully');
       
-      // 获取用户数据
-      // const response = await fetch(`http://localhost:5001/api/users/${userCredential.user.uid}`, {
-      const response = await fetch(`https://studylist-server.onrender.com/api/users/${userCredential.user.uid}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const apiUrl = 'https://studylist-server.onrender.com';
+      const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
+      console.log('Making request to:', requestUrl);
+      
+      try {
+        console.log('Starting fetch request...');
+        const response = await fetch(requestUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        console.log('Response received:', {
+          status: response.status,
+          statusText: response.statusText
+        });
+
+        if (response.status === 400) {
+          console.log('User not found, creating new user...');
+          const createResponse = await fetch(`${apiUrl}/api/users`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              firebaseUID: userCredential.user.uid,
+              name: 'New User',
+              email: email,
+              materials: []
+            })
+          });
+          
+          console.log('Create user response:', {
+            status: createResponse.status,
+            statusText: createResponse.statusText
+          });
+
+          if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            console.error('Create user error:', errorText);
+            throw new Error(`Failed to create user: ${createResponse.status}`);
+          }
+          
+          const userData = await createResponse.json();
+          console.log('User created successfully:', userData);
+          
+          localStorage.setItem('userData', JSON.stringify(userData));
+          setIsLoggedIn(true);
+          localStorage.setItem('isLoggedIn', 'true');
+          
+          console.log('Redirecting to profile...');
+          await router.push('/profile');
+          return;
         }
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch user data');
-      
-      const userData = await response.json();
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      setIsLoggedIn(true);
-      localStorage.setItem('isLoggedIn', 'true');
-      router.push('/profile');
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error:', errorText);
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const userData = await response.json();
+        console.log('Login successful, user data:', userData);
+        
+        localStorage.setItem('userData', JSON.stringify(userData));
+        setIsLoggedIn(true);
+        localStorage.setItem('isLoggedIn', 'true');
+        
+        console.log('Redirecting to profile...');
+        await router.push('/profile');
+        
+      } catch (fetchError) {
+        console.error('Fetch error:', {
+          name: fetchError.name,
+          message: fetchError.message,
+          stack: fetchError.stack
+        });
+        setError('Failed to fetch user data. Please try again.');
+      }
     } catch (error: any) {
-      console.error("Error:", error);
-      setError(error.message);
+      console.error("Login error:", error);
+      setError(error.message || 'An error occurred during login');
     }
   };
 
@@ -63,13 +134,95 @@ const LoginPage = () => {
   };
 
   const handleGoogleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      const provider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      console.log('Google auth successful');
+      
+      const token = await userCredential.user.getIdToken();
+      console.log('Token obtained successfully');
+      
+      const apiUrl = 'https://studylist-server.onrender.com';
+      const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
+      console.log('Making request to:', requestUrl);
+      
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Failed to fetch user data: ${response.status}`);
+      }
+      
+      const userData = await response.json();
+      console.log('Login successful, received user data:', userData);
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setIsLoggedIn(true);
+      localStorage.setItem('isLoggedIn', 'true');
+      setShowPopup(true);
+      router.push('/profile');
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      setError(error.message || 'An error occurred during Google login');
+    }
   };
 
   const handleFacebookLogin = async () => {
-    const provider = new FacebookAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      const provider = new FacebookAuthProvider();
+      const userCredential = await signInWithPopup(auth, provider);
+      console.log('Facebook auth successful');
+      
+      const token = await userCredential.user.getIdToken();
+      console.log('Token obtained successfully');
+      
+      const apiUrl = 'https://studylist-server.onrender.com';
+      const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
+      console.log('Making request to:', requestUrl);
+      
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
+        });
+        throw new Error(`Failed to fetch user data: ${response.status}`);
+      }
+      
+      const userData = await response.json();
+      console.log('Login successful, received user data:', userData);
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setIsLoggedIn(true);
+      localStorage.setItem('isLoggedIn', 'true');
+      setShowPopup(true);
+      router.push('/profile');
+    } catch (error: any) {
+      console.error("Facebook login error:", error);
+      setError(error.message || 'An error occurred during Facebook login');
+    }
   };
 
   return (
@@ -77,12 +230,12 @@ const LoginPage = () => {
       <div className={styles.leftSection}>
         <h1>Learn With Your Role Models</h1>
         <p>To create the most motivating learning methods</p>
-        <button className={styles.howItWorks}>How it works</button>
+        {/* <button className={styles.howItWorks}>How it works</button> */}
       </div>
       
       <div className={styles.loginSection}>
         <h2>Hello Again!</h2>
-        <p className={styles.welcomeText}>Welcome Back</p>
+        {/* <p className={styles.welcomeText}>Welcome Back</p>
         
         {error && <p className={styles.errorMessage}>{error}</p>}
         
@@ -94,11 +247,11 @@ const LoginPage = () => {
         <button onClick={handleGoogleLogin} className={styles.googleButton}>
           <span className={styles.icon}>G</span>
           Log In With Google
-        </button>
+        </button> */}
 
-        <div className={styles.divider}>
+        {/* <div className={styles.divider}>
           <span>or</span>
-        </div>
+        </div> */}
 
         {!isLoggedIn ? (
           <form onSubmit={handleLogin} className={styles.form}>

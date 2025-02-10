@@ -15,7 +15,6 @@
 .profile_profileInfo__PPaP1 {
   display: flex;
   flex-direction: row;
-  /* gap: 2rem; */
   width: 100%;
   padding-top: 1.5rem;
   background: white;
@@ -66,8 +65,8 @@
 
 .profile_avatarArea__luUJt {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   background-color: blue;
 }
@@ -85,6 +84,13 @@
   color: #333;
   line-height: 1.5;
   max-width: 600px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.profile_profileLink__jOPwB {
+  font-weight: 700;
+  font-size: 18px;
 }
 
 .profile_topicSection__3EBgX {
@@ -97,18 +103,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 2rem;
-  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  padding-top: 1rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid #e0e0e0;
-    /* font-weight: 600; */
+  border-top: 1px solid #e0e0e0;
 }
 
 .profile_topicTabs__Pg21K {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  /* background: #f5f5f5; */
-  padding: 0.25rem;
   border-radius: 6px;
 }
 
@@ -120,7 +124,6 @@
   cursor: pointer;
   border-radius: 4px;
   font-size: 0.875rem;
-  /* font-weight: 500; */
   transition: all 0.2s;
 }
 
@@ -133,53 +136,48 @@
 
 .profile_materialsGrid__3cAQh {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-gap: 1.5rem;
-  gap: 1.5rem;
+  /* grid-template-columns: repeat(2, 1fr); */
+  /* gap: 1.5rem; */
 }
 
-.profile_materialColumn__UKzte {
+/* .materialColumn {
   display: flex;
   flex-direction: column;
   gap: 8px;
   background: #ffffff;
   border-radius: 8px;
-  /* overflow: hidden; */
-}
+} */
 
-.profile_materialSection__ut3O_ {
+/* .materialSection {
   background: #ffffff;
   border-radius: 8px;
   border: 1px solid rgb(237, 237, 237); 
 }
 
-.profile_materialHeader__khZ2W {
+.materialHeader {
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight:500;
   color: #777777;
-}
+} */
 
-.profile_materialIcon__pCCNG {
+/* .materialIcon {
   font-size: 1rem;
-}
+} */
 
-.profile_materialItems__MNmAz {
+/* .materialItems {
   display: flex;
   flex-direction: column;
-  /* gap: 0.6rem; */
-  /* padding: 0.6rem; */
-}
+} */
 
-.profile_materialRow__u_Tqv {
+/* .materialRow {
   display: flex;
   align-items: center;
   padding: 0.6rem 0.6rem 0rem 0.6rem;
-  /* background: #f8f9fa; */
   border-radius: 6px;
   gap: 0.8rem;
-}
+} */
 
 .profile_materialNumber__7D5qb {
   color: #666;
@@ -363,14 +361,14 @@
 
 .profile_editButton__oGUfC {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background: #007bff;
-  color: white;
+  bottom: -28px;  /* Position it below the avatar */
+  right: 50%;     /* Center horizontally */
+  transform: translateX(50%); 
+  color: rgb(40, 40, 40);
   border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  background-color: transparent;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -405,7 +403,7 @@
 .profile_topicTabWrapper__pa_4x {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  /* gap: 0.5rem; */
 }
 
 .profile_editTopicButton__mU9Lp {
@@ -418,7 +416,7 @@
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 0.25rem;
+  /* padding: 0.25rem; */
   font-size: 1rem;
 }
 
@@ -427,12 +425,11 @@
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 0.5rem;
-  font-size: 0.875rem;
+  /* padding: 0.5rem; */
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
 }
 
 .profile_addTopicButton__5HBYO:hover {
@@ -455,7 +452,7 @@
 .profile_iconButton__pbXQD {
   background: none;
   border: none;
-  padding: 4px;
+  /* padding: 4px; */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -478,17 +475,13 @@
 .profile_topicNameContainer__pbBIz {
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* gap: 8px; */
 }
 
 .profile_avatarWrapper__YGxGt {
   position: relative;
-  width: 100px;
-  height: 100px;
-}
-
-.profile_editButton__oGUfC:hover {
-  background: #0056b3;
+  width: 120px;
+  height: 120px;
 }
 
 .profile_mainTopicContainer__Ddx5n {
@@ -515,13 +508,14 @@
 
 .profile_mainTopicWrapper__C_2AK h1 {
   margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
+  /* font-size: 2.2rem; */
+  font-weight: 800;
 }
 
 .profile_viewTab__JFWWA.profile_active__q9BRI {
   color: #333;
-  font-weight: 500;
+  font-weight: 600;
+  font-size:20px;
 }
 
 .profile_viewTabs__vTjms {
@@ -530,7 +524,7 @@
 }
 
 .profile_viewTab__JFWWA {
-  padding: 0.75rem 0;
+  padding: 0.5rem 0;
   border: none;
   background: none;
   color: #999;
@@ -567,7 +561,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
   color: #666;
 }
 
@@ -759,15 +753,19 @@
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/components/MaterialsView.module.css ***!
   \***************************************************************************************************************************************************************************************************************************************************************************************/
 .MaterialsView_materialsContainer__jycDZ {
-  padding-top: 1rem;
-  background: white;
+  /* padding-bottom: 2rem; */
+  /* margin-bottom: 2rem; */
+  /* background: rgb(201, 84, 84); */
+
 }
 
 
 .MaterialsView_categoryTabs__IBKhN {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #dcdcdc;
 }
 
 .MaterialsView_categoryTab__xfGtb {
@@ -775,11 +773,12 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0;
+  
   border: none;
   background: none;
   color: #999;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   transition: color 0.2s;
 }
 
@@ -819,13 +818,13 @@
 .MaterialsView_materialLeft__CdzXz {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
 }
 
 .MaterialsView_materialNumber__z0Ril {
   color: #666;
   font-size: 14px;
-  min-width: 20px;
+  /* min-width: 20px; */
 }
 
 .MaterialsView_materialPreview__42U3L {
@@ -848,6 +847,7 @@
 .MaterialsView_materialName__ILNbY {
   font-size: 14px;
   color: #333;
+  font-weight: 600;
 }
 
 .MaterialsView_moreButton__dGABd {
@@ -856,7 +856,7 @@
   border: none;
   font-size: 18px;
   cursor: pointer;
-  padding: 4px 8px;
+  /* padding: 4px 8px; */
 }
 
 .MaterialsView_addForm__4qSbb {
@@ -866,7 +866,7 @@
 .MaterialsView_addMaterialRow__z4IOX {
   display: flex;
   align-items: center;
-  padding: 18px 10px;
+  padding: 14px 10px;
   gap: 12px;
 }
 
@@ -876,13 +876,13 @@
 }
 
 .MaterialsView_addButton__fRyYY {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  background: #4169E1;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #3263f5;
   border: none;
   color: white;
-  font-size: 20px;
+  font-size: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -892,31 +892,44 @@
 .MaterialsView_inputGroup__1zv3g {
   flex: 1 1;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
+  color: #909090;
 }
 
 .MaterialsView_addInput__y2B36, .MaterialsView_urlInput__vLsrE {
   border: none;
   outline: none;
-  font-size: 14px;
+  /* font-size: 12px; */
   background: transparent;
+  color: #464646;
+  width: 100%;
 }
 
 .MaterialsView_addInput__y2B36 {
-  flex: 1 1;
-  color: #999;
+  color: #a7a7a7;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.MaterialsView_addInput__y2B36::placeholder {
+  color: #b7b7b7;
 }
 
 .MaterialsView_urlInput__vLsrE {
-  flex: 1 1;
-  color: #999;
+  color: #2d2d2d;
+  font-size: 12px;
+}
+
+.MaterialsView_urlInput__vLsrE::placeholder {
+  color: #c2c2c2;
 }
 
 .MaterialsView_typeIconContainer__InmET {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 4px;
+  color: #b3b3b3;
 }
 
 .MaterialsView_typeDropdown__RCHGC {
@@ -926,10 +939,11 @@
   transform: translateY(-50%);
   background: white;
   border: 1px solid #eee;
-  border-radius: 4px;
+  border-radius: 40px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   z-index: 1000;
   min-width: 200px;
+  /* color: #909090; */
 }
 
 .MaterialsView_dropdownHeader__TDZzm {
@@ -951,8 +965,7 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  border: 1px solid #ffffff;
   background: none;
   cursor: pointer;
 }
@@ -973,6 +986,7 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  color: #909090;
 }
 
 .MaterialsView_categoryIcon__ZeNjo {
@@ -1026,7 +1040,7 @@
 
 .MaterialsView_materialsListContent__g7GFy {
   position: relative;
-  max-height: 600px;
+  max-height:500px;
   overflow-y: auto;
 }
 
@@ -1061,6 +1075,20 @@
 
 .MaterialsView_hasMoreItems__EpdPo .MaterialsView_overlayGradient__zyB24 {
   display: block;
+}
+
+.MaterialsView_dropdownButton__ETFzU svg {
+  transition: transform 0.2s ease;
+}
+
+.MaterialsView_dropdownButton__ETFzU svg {
+  /* transform: rotate(-90deg); */
+}
+
+.MaterialsView_typeIconContainer__InmET:has(.MaterialsView_typeDropdown__RCHGC) .MaterialsView_dropdownButton__ETFzU svg {
+  /* transform: rotate(0deg); */
+  transform: rotate(-90deg);
+
 }
 
 /* Rest of the material styles can be copied from your existing profile.module.css */
