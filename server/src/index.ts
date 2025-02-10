@@ -139,27 +139,27 @@ const startServer = async () => {
     console.log('- MONGODB_URI exists:', !!process.env.MONGODB_URI);
     
     if (await connectDB()) {
-      app.listen(PORT, () => {
+      const server = app.listen(PORT, () => {
         console.log('\n=== Server Started ===');
         console.log(`🚀 Server URL: http://localhost:${PORT}`);
         console.log(`📝 API Docs: http://localhost:${PORT}/api-docs`);
         console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`👥 CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
         console.log('====================\n');
-      });
-      app.listen(PORT, () => {
-        console.log('\n=== Server Started ===');
-        console.log(`🚀 Server URL: http://localhost:${PORT}`);
-        console.log(`📝 API Docs: http://localhost:${PORT}/api-docs`);
-        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`👥 CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
-        console.log('====================\n');
+      }).on('error', (error: any) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`❌ Port ${PORT} is already in use`);
+          process.exit(1);
+        } else {
+          console.error('❌ Server startup error:', error);
+        }
       });
     } else {
       console.warn('⚠️  Warning: Running without database connection');
     }
   } catch (error) {
     console.error('❌ Server startup error:', error);
+    process.exit(1);
   }
 };
 
