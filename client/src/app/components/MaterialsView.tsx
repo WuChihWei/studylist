@@ -11,6 +11,7 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineEdit } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 import { auth } from '../firebase/firebaseConfig';
+import { useUserData } from '../../hooks/useUserData';
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -76,45 +77,12 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
   }) => {
     const handleDelete = async () => {
       try {
-        const user = auth.currentUser;
-        if (!user) {
-          throw new Error('No user logged in');
+        const success = await onDeleteMaterial(materialId);
+        if (success) {
+          onClose();
         }
-
-        console.log('=== Delete Material Debug Info ===');
-        console.log('1. Request Details:', {
-          userId: user.uid,
-          topicId: activeTab,
-          materialId
-        });
-
-        const token = await user.getIdToken();
-        const url = `/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}`;
-
-        const response = await fetch(url, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        console.log('2. Response:', {
-          status: response.status,
-          ok: response.ok
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('3. Error:', errorText);
-          throw new Error(`Failed to delete material: ${errorText}`);
-        }
-
-        console.log('4. Delete successful');
-        await onDeleteMaterial(materialId);
-        onClose();
       } catch (error) {
-        console.error('5. Error in handleDelete:', error);
-        throw error;
+        console.error('Error in handleDelete:', error);
       }
     };
 

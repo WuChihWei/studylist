@@ -10,10 +10,11 @@ import ContributionGraph from '../components/ContributionGraph';
 import { MdEdit } from "react-icons/md";
 import MaterialsView from '../components/MaterialsView';
 import StudyListView from '../components/StudyListView';
+import { auth } from '../firebase/firebaseConfig';
 
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -361,7 +362,7 @@ export default function ProfilePage() {
 
         {activeView === 'materials' ? (
           <MaterialsView 
-            categories={userData?.topics.find(t => t._id === activeTab)?.categories || {
+            categories={userData?.topics.find(t => t._id?.toString() === activeTab)?.categories || {
               webpage: [],
               video: [],
               podcast: [],
@@ -370,10 +371,10 @@ export default function ProfilePage() {
             onAddMaterial={(material) => addMaterial(material, activeTab)}
             onDeleteMaterial={async (materialId) => {
               try {
-                const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
-                  method: 'DELETE',
-                });
-                if (!response.ok) throw new Error('Failed to delete material');
+                const success = await deleteMaterial(materialId, activeTab);
+                if (!success) {
+                  throw new Error('Failed to delete material');
+                }
                 return true;
               } catch (error) {
                 console.error('Error deleting material:', error);

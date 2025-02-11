@@ -356,6 +356,43 @@ export const useUserData = () => {
     }
   };
 
+  const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      const token = await user.getIdToken();
+      
+      console.log('Delete material request:', {
+        endpoint,
+        materialId,
+        topicId,
+        userUid: user.uid
+      });
+      
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Delete material failed:', errorData);
+        return false;
+      }
+
+      await fetchUserData(user);
+      return true;
+    } catch (error) {
+      console.error('Delete material error:', error);
+      return false;
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -366,6 +403,7 @@ export const useUserData = () => {
     updateTopicName,
     getContributionData,
     completeMaterial,
-    uncompleteMaterial
+    uncompleteMaterial,
+    deleteMaterial
   };
 };

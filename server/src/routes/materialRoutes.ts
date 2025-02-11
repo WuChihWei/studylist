@@ -49,18 +49,20 @@ const deleteMaterial: RequestHandler = async (req, res) => {
 
     const topic = user.topics.id(topicId);
     if (!topic || !topic.categories) {
-      return res.status(404).json({ error: 'Topic not found' });
+      return res.status(404).json({ error: 'Topic not found or invalid structure' });
     }
 
     let materialDeleted = false;
     const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
     
     for (const type of categoryTypes) {
-      const materials = topic.categories[type];
-      if (!Array.isArray(materials)) continue;
+      if (!topic.categories[type] || !Array.isArray(topic.categories[type])) {
+        continue;
+      }
 
+      const materials = topic.categories[type];
       const materialIndex = materials.findIndex(
-        (m: { _id?: Types.ObjectId }) => m._id?.toString() === materialId
+        m => m._id.toString() === materialId
       );
       
       if (materialIndex !== -1) {
