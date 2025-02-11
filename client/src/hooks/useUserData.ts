@@ -34,40 +34,40 @@ interface ContributionData {
   studyCount: number;  // 但我們的應用中需要它是必需的
 }
 
+const isOnline = () => {
+  return typeof navigator !== 'undefined' && navigator.onLine;
+};
+
 export const useUserData = () => {
   const { auth } = useFirebase();
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchUserData = async (currentUser: any) => {
+  const fetchUserData = async (currentUser: any, forceRefresh = false) => {
     if (isLoading) return;
-    
-    const startTime = performance.now();
-    console.log('=== API Request Started ===');
-    console.log('Start time:', new Date().toISOString());
     
     try {
       setLoading(true);
-      const cacheKey = `userData_${currentUser.uid}`;
-      const cachedData = sessionStorage.getItem(cacheKey);
+      const startTime = performance.now();
       
-      if (cachedData) {
-        const { data, timestamp } = JSON.parse(cachedData);
-        const cacheAge = Date.now() - timestamp;
-        if (cacheAge < 5 * 60 * 1000) { // 5分鐘緩存
-          console.log('Using cached data, age:', Math.round(cacheAge / 1000), 'seconds');
+      // 如果不是強制刷新，才檢查快取
+      if (!forceRefresh && !isOnline()) {
+        console.log('Offline - using cached data if available');
+        const cacheKey = `userData_${currentUser.uid}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          const { data, timestamp } = JSON.parse(cachedData);
+          const age = Math.round((Date.now() - timestamp) / 1000);
+          console.log(`Using cached data, age: ${age} seconds`);
           setUserData(data);
           return;
         }
+        throw new Error('No cached data available and device is offline');
       }
 
-      console.log('Cache miss or expired, fetching from API...');
-      const tokenStartTime = performance.now();
       const token = await currentUser.getIdToken();
-      console.log('Token fetch time:', Math.round(performance.now() - tokenStartTime), 'ms');
-
-      const fetchStartTime = performance.now();
       const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -75,9 +75,12 @@ export const useUserData = () => {
         }
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      const fetchEndTime = performance.now();
-      console.log('API fetch time:', Math.round(fetchEndTime - fetchStartTime), 'ms');
+      const cacheKey = `userData_${currentUser.uid}`;
       
       sessionStorage.setItem(cacheKey, JSON.stringify({
         data,
@@ -86,14 +89,9 @@ export const useUserData = () => {
       
       setUserData(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching user data:', error);
       setUserData(null);
     } finally {
-      const endTime = performance.now();
-      console.log('=== API Request Completed ===');
-      console.log('End time:', new Date().toISOString());
-      console.log('Total execution time:', Math.round(endTime - startTime), 'ms');
-      console.log('========================');
       setLoading(false);
     }
   };
@@ -385,7 +383,32 @@ export const useUserData = () => {
         return false;
       }
 
-      await fetchUserData(user);
+      // 更新本地狀態而不是重新獲取所有數據
+      setUserData(prevData => {
+        if (!prevData) return null;
+        
+        const updatedTopics = prevData.topics.map(topic => {
+          if (topic._id !== topicId) return topic;
+          
+          const updatedCategories = { ...topic.categories };
+          for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+            updatedCategories[type] = updatedCategories[type].filter(
+              m => m._id !== materialId
+            );
+          }
+          
+          return {
+            ...topic,
+            categories: updatedCategories
+          };
+        });
+
+        return {
+          ...prevData,
+          topics: updatedTopics
+        };
+      });
+
       return true;
     } catch (error) {
       console.error('Delete material error:', error);
