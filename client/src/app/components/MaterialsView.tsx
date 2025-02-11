@@ -65,12 +65,14 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     materialId, 
     title,
     type,
-    onClose 
+    onClose,
+    index
   }: { 
     materialId: string, 
     title: string,
     type: keyof Categories,
-    onClose: () => void 
+    onClose: () => void,
+    index: number
   }) => {
     const handleDelete = async () => {
       try {
@@ -80,17 +82,19 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
         }
 
         const token = await user.getIdToken();
-        const response = await fetch(`/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        const response = await fetch(
+          `/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}&index=${index}`, 
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
           }
-        });
+        );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete material');
+          throw new Error('Failed to delete material');
         }
 
         await onDeleteMaterial(materialId);
@@ -370,6 +374,7 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                     title={material.title}
                     type={material.type as keyof Categories}
                     onClose={() => setOpenMoreMenu(null)}
+                    index={index}
                   />
                 )}
               </div>
