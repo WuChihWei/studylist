@@ -65,12 +65,30 @@ const deleteMaterial: RequestHandler = async (req, res) => {
     const materials = topic.categories[materialType];
     console.log('Materials array:', {
       type: materialType,
+      categories: topic.categories,
+      materials,
       length: materials?.length,
       requestedIndex: materialIndex
     });
 
+    if (!topic.categories[materialType]) {
+      return res.status(404).json({ error: `Category ${materialType} not found` });
+    }
+
     if (!Array.isArray(materials) || materialIndex >= materials.length) {
-      return res.status(404).json({ error: 'Invalid material index' });
+      return res.status(404).json({ 
+        error: 'Invalid material index',
+        availableLength: materials?.length || 0,
+        requestedIndex: materialIndex
+      });
+    }
+
+    if (materials[materialIndex]._id.toString() !== materialId) {
+      return res.status(400).json({ 
+        error: 'Material ID mismatch',
+        expected: materialId,
+        found: materials[materialIndex]._id
+      });
     }
 
     materials.splice(materialIndex, 1);
