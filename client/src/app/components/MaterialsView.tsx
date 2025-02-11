@@ -9,6 +9,7 @@ import { BsGrid } from "react-icons/bs";
 import { IoChevronDownSharp } from "react-icons/io5";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineEdit } from "react-icons/md";
+import { IoClose } from "react-icons/io5";
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -93,7 +94,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           <div className={styles.menuIconContainer}>
             <MdOutlineEdit size={18} />
           </div>
-          <span>Edit</span>
         </button>
         <button 
           className={styles.moreMenuItem}
@@ -102,7 +102,14 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           <div className={styles.menuIconContainer}>
             <RiDeleteBin6Line size={18} />
           </div>
-          <span>Delete</span>
+        </button>
+        <button 
+          className={styles.moreMenuItem}
+          onClick={onClose}
+        >
+          <div className={styles.menuIconContainer}>
+            <IoClose size={18} />
+          </div>
         </button>
       </div>
     );
@@ -177,21 +184,46 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 <div className={styles.typeDropdown}>
                   <div className={styles.dropdownHeader}>
                     <div className={styles.typeOptions}>
-                      {Object.entries(categoryIcons).map(([type, icon]) => (
-                        type !== 'all' && (
-                          <button
-                            key={type}
-                            type="button"
-                            className={styles.typeOption}
-                            onClick={() => {
-                              setSelectedType(type as 'webpage' | 'video' | 'podcast' | 'book');
-                              setIsTypeDropdownOpen(false);
-                            }}
-                          >
-                            {icon}
-                          </button>
-                        )
-                      ))}
+                      <button
+                        type="button"
+                        className={styles.typeOption}
+                        onClick={() => {
+                          setSelectedType('webpage');
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        <MdWeb size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.typeOption}
+                        onClick={() => {
+                          setSelectedType('video');
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        <FiVideo size={18} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.typeOption}
+                        onClick={() => {
+                          setSelectedType('podcast');
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        <HiOutlineMicrophone size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.typeOption}
+                        onClick={() => {
+                          setSelectedType('book');
+                          setIsTypeDropdownOpen(false);
+                        }}
+                      >
+                        <FiBook size={18} />
+                      </button>
                     </div>
                     <button 
                       type="button"
