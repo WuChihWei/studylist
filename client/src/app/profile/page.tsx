@@ -29,6 +29,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
   const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
+  const [unitMinutes, setUnitMinutes] = useState(20);
 
   // 在組件加載後設置第一個 topic 的 ID 作為 activeTab
   useEffect(() => {
@@ -367,6 +368,34 @@ export default function ProfilePage() {
               book: []
             }}
             onAddMaterial={(material) => addMaterial(material, activeTab)}
+            onDeleteMaterial={async (materialId) => {
+              try {
+                const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
+                  method: 'DELETE',
+                });
+                if (!response.ok) throw new Error('Failed to delete material');
+                return true;
+              } catch (error) {
+                console.error('Error deleting material:', error);
+                return false;
+              }
+            }}
+            onUpdateMaterial={async (materialId, title) => {
+              try {
+                const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ title }),
+                });
+                if (!response.ok) throw new Error('Failed to update material');
+                return true;
+              } catch (error) {
+                console.error('Error updating material:', error);
+                return false;
+              }
+            }}
           />
         ) : (
           <StudyListView 
@@ -387,7 +416,8 @@ export default function ProfilePage() {
                 console.error('Failed to toggle material completion:', error);
               }
             }}
-            unitMinutes={20}
+            unitMinutes={unitMinutes}
+            onUnitMinutesChange={setUnitMinutes}
             topicId={activeTab}
           />
         )}

@@ -9,14 +9,16 @@ import { FaCheck, FaTimes } from "react-icons/fa";
 interface StudyListViewProps {
   categories: Categories;
   onCompleteMaterial: (materialId: string, isCompleted: boolean) => Promise<void>;
-  unitMinutes?: number;
+  unitMinutes: number;
+  onUnitMinutesChange: (minutes: number) => void;
   topicId: string;
 }
 
 export default function StudyListView({ 
   categories, 
   onCompleteMaterial,
-  unitMinutes = 20,
+  unitMinutes,
+  onUnitMinutesChange,
   topicId
 }: StudyListViewProps) {
   const [completedMaterials, setCompletedMaterials] = useState<Set<string>>(() => {
@@ -97,24 +99,10 @@ export default function StudyListView({
   };
 
   const estimateTimeUnits = (material: Material & { type: keyof Categories }) => {
-    let estimatedMinutes = 20;
-
-    switch (material.type) {
-      case 'webpage':
-        estimatedMinutes = 15;
-        break;
-      case 'video':
-        estimatedMinutes = 30;
-        break;
-      case 'podcast':
-        estimatedMinutes = 45;
-        break;
-      case 'book':
-        estimatedMinutes = 240;
-        break;
+    if (!material.readingTime) {
+      return '?';
     }
-
-    return Math.ceil(estimatedMinutes / unitMinutes);
+    return Math.ceil(material.readingTime / unitMinutes);
   };
 
   const getAllMaterials = () => {
@@ -168,7 +156,22 @@ export default function StudyListView({
       <div className={styles.header}>
         <div className={styles.headerLeft}>
           <span>All ({getAllMaterials().length})</span>
-          <span className={styles.unitMinutes}>{unitMinutes} mins/unit</span>
+          <div className={styles.unitMinutesInput}>
+            <input
+              type="number"
+              min="1"
+              max="120"
+              value={unitMinutes}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (value > 0 && value <= 120) {
+                  onUnitMinutesChange(value);
+                }
+              }}
+              className={styles.minutesInput}
+            />
+            <span>mins/unit</span>
+          </div>
         </div>
         <div className={styles.headerRight}>
           <div className={styles.progressBar}>
@@ -205,7 +208,7 @@ export default function StudyListView({
                 <span className={styles.materialName}>{material.title}</span>
               </div>
               <div className={styles.materialRight}>
-                <span className={styles.units}>
+                <span className={`${styles.units} ${estimateTimeUnits(material) === '?' ? styles.unknown : ''}`}>
                   {estimateTimeUnits(material)} units
                 </span>
               </div>

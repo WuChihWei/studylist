@@ -6,6 +6,7 @@ export interface Material {
     rating: number;
     dateAdded: Date;
     completed?: boolean;
+    readingTime?: number;
 }
 
 export interface Categories {

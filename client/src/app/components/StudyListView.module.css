@@ -71,6 +71,16 @@
 .units {
   color: #666;
   font-size: 14px;
+  /* min-width: 60px; */
+  text-align: right;
+  display: flex;
+  align-items: center;
+  /* gap: 4px; */
+}
+
+.units.unknown {
+  color: #999;
+  font-style: italic;
 }
 
 .completeButton {
@@ -152,4 +162,25 @@
   height: 100%;
   background: #4169E1;
   transition: width 0.3s ease;
+}
+
+.unitMinutesInput {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.minutesInput {
+  width: 50px;
+  padding: 0.25rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.minutesInput:focus {
+  outline: none;
+  border-color: #007bff;
 }

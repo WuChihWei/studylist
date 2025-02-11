@@ -337,4 +337,68 @@
 
 }
 
+.moreButtonContainer {
+  position: relative;
+}
+
+.moreMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  min-width: 120px;
+  padding: 4px;
+}
+
+.moreMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.moreMenuItem:hover {
+  background: #f5f5f5;
+}
+
+.menuIconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: #666;
+}
+
+.moreMenuItem:hover .menuIconContainer {
+  color: #333;
+}
+
+.editInput {
+  border: 1px solid #eee;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+
+.editInput:focus {
+  border-color: #3263f5;
+}
+
 /* Rest of the material styles can be copied from your existing profile.module.css */

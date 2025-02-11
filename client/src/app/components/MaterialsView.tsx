@@ -7,17 +7,24 @@ import { FiBook, FiVideo } from "react-icons/fi";
 import { MdWeb } from "react-icons/md";
 import { BsGrid } from "react-icons/bs";
 import { IoChevronDownSharp } from "react-icons/io5";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import { MdOutlineEdit } from "react-icons/md";
 
 interface MaterialsViewProps {
   categories: Categories;
   onAddMaterial: (material: any) => void;
+  onDeleteMaterial: (materialId: string) => Promise<boolean>;
+  onUpdateMaterial: (materialId: string, title: string) => Promise<boolean>;
 }
 
-export default function MaterialsView({ categories, onAddMaterial }: MaterialsViewProps) {
+export default function MaterialsView({ categories, onAddMaterial, onDeleteMaterial, onUpdateMaterial }: MaterialsViewProps) {
   const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
   const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
   const [selectedType, setSelectedType] = useState<'webpage' | 'video' | 'podcast' | 'book'>('webpage');
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const [openMoreMenu, setOpenMoreMenu] = useState<string | null>(null);
+  const [editingMaterial, setEditingMaterial] = useState<string | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
 
   const categoryIcons = {
     all: <span className={styles.categoryIcon}><BsGrid size={18} /></span>,
@@ -47,6 +54,58 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
       ];
     }
     return categories[activeCategory].map(m => ({ ...m, type: activeCategory }));
+  };
+
+  const MoreMenu = ({ 
+    materialId, 
+    title,
+    onClose 
+  }: { 
+    materialId: string, 
+    title: string,
+    onClose: () => void 
+  }) => {
+    const handleDelete = async () => {
+      try {
+        const success = await onDeleteMaterial(materialId);
+        if (success) {
+          onClose();
+        } else {
+          console.error('Failed to delete material');
+        }
+      } catch (error) {
+        console.error('Error deleting material:', error);
+      }
+    };
+
+    const handleEdit = () => {
+      setEditingMaterial(materialId);
+      setEditedTitle(title);
+      onClose();
+    };
+
+    return (
+      <div className={styles.moreMenu}>
+        <button 
+          className={styles.moreMenuItem}
+          onClick={handleEdit}
+        >
+          <div className={styles.menuIconContainer}>
+            <MdOutlineEdit size={18} />
+          </div>
+          <span>Edit</span>
+        </button>
+        <button 
+          className={styles.moreMenuItem}
+          onClick={handleDelete}
+        >
+          <div className={styles.menuIconContainer}>
+            <RiDeleteBin6Line size={18} />
+          </div>
+          <span>Delete</span>
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -171,9 +230,43 @@ export default function MaterialsView({ categories, onAddMaterial }: MaterialsVi
                 <div className={styles.materialPreview}>
                   <div className={styles.previewPlaceholder} />
                 </div>
-                <span className={styles.materialName}>{material.title}</span>
+                {editingMaterial === material._id ? (
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    const success = await onUpdateMaterial(material._id!, editedTitle);
+                    if (success) {
+                      setEditingMaterial(null);
+                    } else {
+                      console.error('Failed to update material');
+                    }
+                  }}>
+                    <input
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className={styles.editInput}
+                      autoFocus
+                    />
+                  </form>
+                ) : (
+                  <span className={styles.materialName}>{material.title}</span>
+                )}
               </div>
-              <button className={styles.moreButton}>⋯</button>
+              <div className={styles.moreButtonContainer}>
+                <button 
+                  className={styles.moreButton}
+                  onClick={() => setOpenMoreMenu(material._id ? material._id : null)}
+                >
+                  ⋯
+                </button>
+                {openMoreMenu === material._id && (
+                  <MoreMenu
+                    materialId={material._id!}
+                    title={material.title}
+                    onClose={() => setOpenMoreMenu(null)}
+                  />
+                )}
+              </div>
             </div>
           ))}
         </div>

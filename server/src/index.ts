@@ -7,6 +7,7 @@ import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
+import materialRoutes from './routes/materialRoutes';
 import { Request, Response, NextFunction } from 'express';
 
 // 在任何其他代碼之前加載環境變數
@@ -86,6 +87,7 @@ app.get('/health', (req, res) => {
 app.use('/api/users/:firebaseUID/topics', topicsRouter);  // More specific route first
 app.use('/api/users', userRoutes);                        // More general route second
 app.use('/api/stripe', stripeRoutes);
+app.use('/api/materials', materialRoutes);
 
 // 404 處理
 app.use((req, res) => {
