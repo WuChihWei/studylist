@@ -87,7 +87,7 @@ app.get('/health', (req, res) => {
 app.use('/api/users/:firebaseUID/topics', topicsRouter);  // More specific route first
 app.use('/api/users', userRoutes);                        // More general route second
 app.use('/api/stripe', stripeRoutes);
-app.use('/api/materials', materialRoutes);
+app.use('/api', materialRoutes);
 
 // 404 處理
 app.use((req, res) => {

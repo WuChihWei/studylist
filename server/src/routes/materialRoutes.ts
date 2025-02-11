@@ -102,6 +102,9 @@ const deleteMaterial: RequestHandler = async (req, res) => {
   }
 };
 
-router.delete('/:firebaseUID/topics/:topicId/materials/:materialId', deleteMaterial);
+router.delete(
+  '/users/:firebaseUID/topics/:topicId/materials/:materialId',
+  deleteMaterial
+);
 
 export default router;
