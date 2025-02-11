@@ -53,12 +53,14 @@ const deleteMaterial: RequestHandler = async (req, res) => {
     }
 
     let materialDeleted = false;
-    const categories: CategoryType[] = ['webpage', 'video', 'podcast', 'book'];
+    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
     
-    for (const category of categories) {
-      const materials = topic.categories[category] as Material[];
+    for (const type of categoryTypes) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
       const materialIndex = materials.findIndex(
-        (m: Material) => m._id.toString() === materialId
+        (m: { _id?: Types.ObjectId }) => m._id?.toString() === materialId
       );
       
       if (materialIndex !== -1) {
