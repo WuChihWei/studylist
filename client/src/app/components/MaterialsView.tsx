@@ -10,15 +10,17 @@ import { IoChevronDownSharp } from "react-icons/io5";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineEdit } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
+import { auth } from '../firebase/firebaseConfig';
 
 interface MaterialsViewProps {
   categories: Categories;
   onAddMaterial: (material: any) => void;
   onDeleteMaterial: (materialId: string) => Promise<boolean>;
   onUpdateMaterial: (materialId: string, title: string) => Promise<boolean>;
+  activeTab: string;
 }
 
-export default function MaterialsView({ categories, onAddMaterial, onDeleteMaterial, onUpdateMaterial }: MaterialsViewProps) {
+export default function MaterialsView({ categories, onAddMaterial, onDeleteMaterial, onUpdateMaterial, activeTab }: MaterialsViewProps) {
   const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
   const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
   const [selectedType, setSelectedType] = useState<'webpage' | 'video' | 'podcast' | 'book'>('webpage');
@@ -26,6 +28,8 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
   const [openMoreMenu, setOpenMoreMenu] = useState<string | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<string | null>(null);
   const [editedTitle, setEditedTitle] = useState('');
+  const [isLoading, setLoading] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
 
   const categoryIcons = {
     all: <span className={styles.categoryIcon}><BsGrid size={18} /></span>,
@@ -60,20 +64,37 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
   const MoreMenu = ({ 
     materialId, 
     title,
+    type,
     onClose 
   }: { 
     materialId: string, 
     title: string,
+    type: keyof Categories,
     onClose: () => void 
   }) => {
     const handleDelete = async () => {
       try {
-        const success = await onDeleteMaterial(materialId);
-        if (success) {
-          onClose();
-        } else {
-          console.error('Failed to delete material');
+        const user = auth.currentUser;
+        if (!user) {
+          throw new Error('No user logged in');
         }
+
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to delete material');
+        }
+
+        await onDeleteMaterial(materialId);
+        onClose();
       } catch (error) {
         console.error('Error deleting material:', error);
       }
@@ -113,6 +134,58 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
         </button>
       </div>
     );
+  };
+
+  const isOnline = () => {
+    return typeof window !== 'undefined' && window.navigator.onLine;
+  };
+
+  const fetchUserData = async (currentUser: any) => {
+    if (isLoading) return;
+    
+    try {
+      setLoading(true);
+      
+      if (!isOnline()) {
+        console.log('Offline - using cached data if available');
+        const cacheKey = `userData_${currentUser.uid}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          const { data } = JSON.parse(cachedData);
+          setUserData(data);
+          return;
+        }
+        throw new Error('No cached data available and device is offline');
+      }
+
+      const token = await currentUser.getIdToken();
+      const response = await fetch(`/api/users/${currentUser.uid}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const cacheKey = `userData_${currentUser.uid}`;
+      
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      
+      setUserData(data);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUserData(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -295,6 +368,7 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                   <MoreMenu
                     materialId={material._id!}
                     title={material.title}
+                    type={material.type as keyof Categories}
                     onClose={() => setOpenMoreMenu(null)}
                   />
                 )}

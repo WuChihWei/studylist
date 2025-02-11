@@ -4,6 +4,15 @@ import { authMiddleware } from '../middleware/auth';
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { RequestHandler } from 'express';
 
+type CategoryType = 'webpage' | 'video' | 'podcast' | 'book';
+
+interface Categories {
+  webpage: any[];
+  video: any[];
+  podcast: any[];
+  book: any[];
+}
+
 interface AuthRequest extends Request {
   user?: DecodedIdToken & { firebaseUID: string };
 }
@@ -12,13 +21,18 @@ const router = Router({ mergeParams: true });
 
 router.use(authMiddleware);
 
-const deleteMaterial: RequestHandler<any, any, any, any, { user?: DecodedIdToken & { firebaseUID: string } }> = async (req, res) => {
+const deleteMaterial: RequestHandler = async (req, res) => {
   try {
-    const { topicId, materialId } = req.params;
-    const firebaseUID = (req as AuthRequest).user?.firebaseUID;
-
+    const { firebaseUID, topicId, materialId } = req.params;
+    const { type } = req.query;
+    
     if (!firebaseUID) {
       return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const materialType = type as CategoryType;
+    if (!materialType || !['webpage', 'video', 'podcast', 'book'].includes(materialType)) {
+      return res.status(400).json({ error: 'Invalid material type' });
     }
 
     const user = await User.findOne({ firebaseUID });
@@ -31,28 +45,26 @@ const deleteMaterial: RequestHandler<any, any, any, any, { user?: DecodedIdToken
       return res.status(404).json({ error: 'Topic not found' });
     }
 
-    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
-    let materialFound = false;
+    if (!topic.categories) {
+      return res.status(404).json({ error: 'Categories not found' });
+    }
 
-    categoryTypes.forEach(category => {
-      if (!topic.categories || !topic.categories[category]) return;
-      
-      const materials = topic.categories[category];
-      const index = materials.findIndex((m: { _id: { toString: () => string } }) => 
-        m._id.toString() === materialId
-      );
-      
-      if (index !== -1) {
-        materials.splice(index, 1);
-        materialFound = true;
-      }
-    });
+    const materials = topic.categories[materialType];
+    if (!Array.isArray(materials)) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
 
-    if (!materialFound) {
+    const materialIndex = materials.findIndex(m => 
+      m._id.toString() === materialId
+    );
+
+    if (materialIndex === -1) {
       return res.status(404).json({ error: 'Material not found' });
     }
 
+    materials.splice(materialIndex, 1);
     await user.save();
+
     return res.status(200).json({ message: 'Material deleted successfully' });
   } catch (error) {
     console.error('Error deleting material:', error);
@@ -60,6 +72,6 @@ const deleteMaterial: RequestHandler<any, any, any, any, { user?: DecodedIdToken
   }
 };
 
-router.delete('/:topicId/:materialId', deleteMaterial);
+router.delete('/:firebaseUID/topics/:topicId/materials/:materialId', deleteMaterial);
 
 export default router;

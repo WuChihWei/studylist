@@ -396,6 +396,7 @@ export default function ProfilePage() {
                 return false;
               }
             }}
+            activeTab={activeTab}
           />
         ) : (
           <StudyListView 
