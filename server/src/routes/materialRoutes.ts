@@ -26,38 +26,56 @@ const deleteMaterial: RequestHandler = async (req, res) => {
     const { firebaseUID, topicId, materialId } = req.params;
     const { type, index } = req.query;
     
+    console.log('Delete material request:', {
+      params: { firebaseUID, topicId, materialId },
+      query: { type, index }
+    });
+
     if (!firebaseUID || !type || index === undefined) {
+      console.log('Missing parameters:', { firebaseUID, type, index });
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
     const materialType = type as CategoryType;
     if (!['webpage', 'video', 'podcast', 'book'].includes(materialType)) {
+      console.log('Invalid material type:', materialType);
       return res.status(400).json({ error: 'Invalid material type' });
     }
 
     const materialIndex = parseInt(index as string);
     if (isNaN(materialIndex)) {
+      console.log('Invalid index:', index);
       return res.status(400).json({ error: 'Invalid index' });
     }
 
     const user = await User.findOne({ firebaseUID });
+    console.log('Found user:', !!user);
+    
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const topic = user.topics.id(topicId);
+    console.log('Found topic:', !!topic);
+    
     if (!topic || !topic.categories) {
       return res.status(404).json({ error: 'Topic not found' });
     }
 
     const materials = topic.categories[materialType];
+    console.log('Materials array:', {
+      type: materialType,
+      length: materials?.length,
+      requestedIndex: materialIndex
+    });
+
     if (!Array.isArray(materials) || materialIndex >= materials.length) {
       return res.status(404).json({ error: 'Invalid material index' });
     }
 
-    // 使用索引直接刪除
     materials.splice(materialIndex, 1);
     await user.save();
+    console.log('Material deleted successfully');
 
     return res.status(200).json({ message: 'Material deleted successfully' });
   } catch (error) {
