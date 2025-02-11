@@ -81,26 +81,40 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           throw new Error('No user logged in');
         }
 
+        console.log('Attempting to delete material:', {
+          userId: user.uid,
+          topicId: activeTab,
+          materialId,
+          type,
+          index
+        });
+
         const token = await user.getIdToken();
-        const response = await fetch(
-          `/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}&index=${index}`, 
-          {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
+        const url = `/api/materials/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}&index=${index}`;
+        
+        console.log('Delete request URL:', url);
+
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-        );
+        });
+
+        console.log('Delete response status:', response.status);
 
         if (!response.ok) {
-          throw new Error('Failed to delete material');
+          const errorText = await response.text();
+          console.error('Delete error response:', errorText);
+          throw new Error(`Failed to delete material: ${errorText}`);
         }
 
         await onDeleteMaterial(materialId);
         onClose();
       } catch (error) {
         console.error('Error deleting material:', error);
+        throw error;
       }
     };
 
