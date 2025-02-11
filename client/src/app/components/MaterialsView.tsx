@@ -82,57 +82,38 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
         }
 
         console.log('=== Delete Material Debug Info ===');
-        console.log('1. Material Details:', {
-          materialId,
-          type,
-          index,
-          title
+        console.log('1. Request Details:', {
+          userId: user.uid,
+          topicId: activeTab,
+          materialId
         });
-
-        console.log('2. Current User:', {
-          uid: user.uid,
-          email: user.email
-        });
-
-        console.log('3. Active Tab (Topic ID):', activeTab);
 
         const token = await user.getIdToken();
-        const url = `/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}?type=${type}&index=${index}`;
-        
-        console.log('4. API Request Details:', {
-          method: 'DELETE',
-          url,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const url = `/api/users/${user.uid}/topics/${activeTab}/materials/${materialId}`;
 
         const response = await fetch(url, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        console.log('5. Response Details:', {
+        console.log('2. Response:', {
           status: response.status,
-          ok: response.ok,
-          statusText: response.statusText
+          ok: response.ok
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.log('6. Error Response:', errorText);
+          console.error('3. Error:', errorText);
           throw new Error(`Failed to delete material: ${errorText}`);
         }
 
-        console.log('7. Delete Successful');
+        console.log('4. Delete successful');
         await onDeleteMaterial(materialId);
         onClose();
       } catch (error) {
-        console.error('8. Error in handleDelete:', error);
+        console.error('5. Error in handleDelete:', error);
         throw error;
       }
     };
