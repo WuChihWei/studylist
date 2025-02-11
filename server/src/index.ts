@@ -84,10 +84,10 @@ app.get('/health', (req, res) => {
 });
 
 // API routes - order matters!
-app.use('/api/users/:firebaseUID/topics', topicsRouter);  // More specific route first
-app.use('/api/users', userRoutes);                        // More general route second
+app.use('/api/users/:firebaseUID/topics/:topicId/materials', materialRoutes);  // 更具體的路由先
+app.use('/api/users/:firebaseUID/topics', topicsRouter);
+app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
-app.use('/api', materialRoutes);
 
 // 404 處理
 app.use((req, res) => {
