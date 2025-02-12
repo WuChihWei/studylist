@@ -48,3 +48,8 @@ firebase-debug.log*
 /out/
 .cache/
 .swc/
+
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
