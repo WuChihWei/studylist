@@ -56,7 +56,7 @@ export default function Home() {
         </div>
       </main>
 
-      <section className={styles.secondSection}>
+      {/* <section className={styles.secondSection}>
         <div className={styles.imageColumn}>
           <Image
             src="/master_chat.png"
@@ -90,7 +90,7 @@ export default function Home() {
             className={styles.image}
           />
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

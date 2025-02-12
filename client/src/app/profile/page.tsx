@@ -11,10 +11,11 @@ import { MdEdit } from "react-icons/md";
 import MaterialsView from '../components/MaterialsView';
 import StudyListView from '../components/StudyListView';
 import { auth } from '../firebase/firebaseConfig';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -31,6 +32,13 @@ export default function ProfilePage() {
   const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
   const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
   const [unitMinutes, setUnitMinutes] = useState(20);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    topicId: string | null;
+  }>({
+    isOpen: false,
+    topicId: null
+  });
 
   // 在組件加載後設置第一個 topic 的 ID 作為 activeTab
   useEffect(() => {
@@ -105,6 +113,42 @@ export default function ProfilePage() {
   const handleCancelEditTopic = () => {
     setEditingTopicId(null);
     setEditedTopicName('');
+  };
+
+  const handleDeleteTopic = (topicId: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      topicId
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmation.topicId || !userData) return;
+
+    try {
+      const success = await deleteTopic(deleteConfirmation.topicId);
+      
+      if (success) {
+        // If we're deleting the active topic, switch to the first available topic
+        if (activeTab === deleteConfirmation.topicId && userData.topics?.length > 1) {
+          const nextTopic = userData.topics.find(t => t._id !== deleteConfirmation.topicId);
+          if (nextTopic?._id) {
+            setActiveTab(nextTopic._id);
+          }
+        }
+      } else {
+        alert('Failed to delete topic. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting topic:', error);
+      alert('Failed to delete topic. Please try again.');
+    } finally {
+      setDeleteConfirmation({ isOpen: false, topicId: null });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmation({ isOpen: false, topicId: null });
   };
 
   if (loading) return <div>Loading...</div>;
@@ -260,6 +304,13 @@ export default function ProfilePage() {
                 >
                   <FaTimes />
                 </button>
+                <button
+                  onClick={() => handleDeleteTopic(activeTab)}
+                  className={`${styles.iconButton} ${styles.deleteButton}`}
+                  aria-label="Delete topic"
+                >
+                  <RiDeleteBin6Line />
+                </button>
               </div>
             ) : (
               <div className={styles.mainTopicWrapper}>
@@ -297,6 +348,13 @@ export default function ProfilePage() {
                       aria-label="Cancel edit"
                     >
                       <FaTimes />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTopic(topic._id || '')}
+                      className={`${styles.iconButton} ${styles.deleteButton}`}
+                      aria-label="Delete topic"
+                    >
+                      <RiDeleteBin6Line />
                     </button>
                   </div>
                 ) : (
@@ -424,6 +482,29 @@ export default function ProfilePage() {
           />
         )}
       </div>
+
+      {deleteConfirmation.isOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2>Delete Topic</h2>
+            <p>Are you sure you want to delete this topic? This action cannot be undone.</p>
+            <div className={styles.modalButtons}>
+              <button
+                onClick={handleConfirmDelete}
+                className={styles.deleteButton}
+              >
+                Delete
+              </button>
+              <button
+                onClick={handleCancelDelete}
+                className={styles.cancelButton}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

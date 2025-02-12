@@ -416,6 +416,45 @@ export const useUserData = () => {
     }
   };
 
+  const deleteTopic = async (topicId: string): Promise<boolean> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+
+      const token = await user.getIdToken();
+      const response = await fetch(
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Delete topic failed:', errorData);
+        return false;
+      }
+
+      // Update local state
+      setUserData(prevData => {
+        if (!prevData) return null;
+        return {
+          ...prevData,
+          topics: prevData.topics.filter(topic => topic._id !== topicId)
+        };
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Delete topic error:', error);
+      return false;
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -427,6 +466,7 @@ export const useUserData = () => {
     getContributionData,
     completeMaterial,
     uncompleteMaterial,
-    deleteMaterial
+    deleteMaterial,
+    deleteTopic
   };
 };

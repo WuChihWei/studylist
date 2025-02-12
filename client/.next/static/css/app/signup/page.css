@@ -1,0 +1,179 @@
+/*!****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[5].use[3]!./src/app/signup/signup.module.css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************/
+.signup_container__p7EEk {
+  display: flex;
+  min-height: 100vh;
+}
+
+.signup_leftSection__YkVrI {
+  flex: 1 1;
+  width: 50%;
+  background: linear-gradient(180deg, #88bbfe 0%, #8686ff 50%, #050561 100%);
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+}
+
+.signup_leftSection__YkVrI h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.signup_leftSection__YkVrI p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.signup_rightSection__2CLjq {
+  flex: 1 1;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+}
+
+.signup_signupBox__zk7Lk {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  /* gap: 1.5rem; */
+  /* background-color: blueviolet; */
+}
+
+.signup_signupBox__zk7Lk h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.signup_welcomeText__Zxe4l {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.signup_facebookButton__9uOgJ, .signup_googleButton__D8NTo {
+  width: 100%;
+  /* padding: 1rem; */
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.signup_facebookButton__9uOgJ {
+  background-color: #1877F2;
+  color: white;
+}
+
+.signup_googleButton__D8NTo {
+  background-color: #EA4335;
+  color: white;
+}
+
+.signup_divider__zMVbp {
+  text-align: center;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.signup_divider__zMVbp::before,
+.signup_divider__zMVbp::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background-color: #ddd;
+}
+
+.signup_divider__zMVbp::before {
+  left: 0;
+}
+
+.signup_divider__zMVbp::after {
+  right: 0;
+}
+
+.signup_form__kGT7f {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.signup_input__Njpei {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.signup_registerButton__aayJO {
+  background: #007BFF;
+  color: white;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.signup_error__4DFlZ {
+  color: red;
+  margin-top: 1rem;
+  font-weight: bold;
+}
+
+.signup_loginLink__pyQFO {
+  text-align: center;
+  margin-top: 1rem;
+  color: #666;
+}
+
+.signup_loginLink__pyQFO a {
+  color: #007BFF;
+  text-decoration: none;
+}
+
+.signup_popup__EuhjZ {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.signup_popup__EuhjZ button {
+  background: #007BFF;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.signup_icon__gkDUx {
+  font-weight: bold;
+}
+
+.signup_links__lvyph{
+    text-align: center;
+}
+
+.signup_errorMessage__eK28R {
+    color: red; /* Change to your desired color */
+    margin-top: 1rem;
+    font-weight: bold;
+  }
