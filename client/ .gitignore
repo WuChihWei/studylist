@@ -42,3 +42,9 @@ next-env.d.ts
 # Firebase
 firebase-debug.log*
 .firebase/
+
+# next.js
+/.next/
+/out/
+.cache/
+.swc/
