@@ -45,7 +45,8 @@ const LoginPage = () => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          credentials: 'include'
+          credentials: 'include',
+          mode: 'cors'
         });
         
         console.log('Response received:', {
@@ -152,7 +153,8 @@ const LoginPage = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        credentials: 'include'
+        credentials: 'include',
+        mode: 'cors'
       });
       
       if (!response.ok) {
@@ -198,7 +200,8 @@ const LoginPage = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        credentials: 'include'
+        credentials: 'include',
+        mode: 'cors'
       });
       
       if (!response.ok) {
