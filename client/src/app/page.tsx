@@ -28,7 +28,7 @@ export default function Home() {
                 Collect learning materials in one site, share and discuss with your students without burnout
               </p>
               <button className={styles.downloadButton}>
-                Download Chrome Plugin
+                Download Chrome Plugin (Coming Soon)
               </button>
             </div>
             <div className={styles.demoWrapper}>
