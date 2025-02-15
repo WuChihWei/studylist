@@ -15,24 +15,15 @@
   width: 100%;
   padding-top: 1.5rem;
   background: white;
-  /* border-radius: 12px; */
+  gap: 2rem;
 }
 
 .profileUser {
-  grid-column: 1;
-  display: flex;
-  flex-direction: column;
   width: 50%;
-  /* background: rgb(135, 56, 56); 移除背景色 */
 }
 
 .contributionSection {
-  grid-column: 1;
   width: 50%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .contributionSection > div {
@@ -636,4 +627,50 @@
 
 .deleteButton:hover {
   background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* 平板和手機版面配置 */
+@media (max-width: 768px) {
+  .profileInfo {
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .profileUser,
+  .contributionSection {
+    width: 100%;
+  }
+
+  .contributionSection > div {
+    padding: 0 1rem;
+  }
+}
+
+/* 更小螢幕的優化 */
+@media (max-width: 480px) {
+  .profileInfo {
+    padding: 1rem;
+    gap: 2rem;
+  }
+
+  .avatarSection {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .leftSection {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .rightSection {
+    width: 100%;
+    align-items: center;
+  }
+
+  .bio {
+    text-align: center;
+  }
 }

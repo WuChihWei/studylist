@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Material, Categories } from '../../types/User';
 import styles from './MaterialsView.module.css';
@@ -12,6 +13,9 @@ import { MdOutlineEdit } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 import { auth } from '../firebase/firebaseConfig';
 import { useUserData } from '../../hooks/useUserData';
+import { IconType } from 'react-icons';
+
+
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -20,6 +24,18 @@ interface MaterialsViewProps {
   onUpdateMaterial: (materialId: string, title: string) => Promise<boolean>;
   activeTab: string;
 }
+
+const TYPE_ICONS: Record<string, IconType> = {
+  video: FiVideo,
+  book: FiBook,
+  podcast: HiOutlineMicrophone,
+  webpage: LuGlobe
+};
+
+const truncateTitle = (title: string, maxLength: number = 40) => {
+  if (!title) return '';
+  return title.length <= maxLength ? title : `${title.slice(0, maxLength)}...`;
+};
 
 export default function MaterialsView({ categories, onAddMaterial, onDeleteMaterial, onUpdateMaterial, activeTab }: MaterialsViewProps) {
   const [activeView, setActiveView] = useState<'materials' | 'studylist'>('materials');
@@ -319,7 +335,14 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
               <div className={styles.materialLeft}>
                 <span className={styles.materialNumber}>{index + 1}</span>
                 <div className={styles.materialPreview}>
-                  <div className={styles.previewPlaceholder} />
+                  {TYPE_ICONS[material.type] ? (
+                    React.createElement(TYPE_ICONS[material.type], { 
+                      size: 16,
+                      className: styles[`icon${material.type}`]
+                    })
+                  ) : (
+                    <div className={styles.previewPlaceholder} />
+                  )}
                 </div>
                 {editingMaterial === material._id ? (
                   <form onSubmit={async (e) => {
@@ -340,7 +363,19 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                     />
                   </form>
                 ) : (
-                  <span className={styles.materialName}>{material.title}</span>
+                  <span className={`${styles.materialName} ${material.url ? styles.hasUrl : ''}`}>
+                    {material.url ? (
+                      <a 
+                        href={material.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        {truncateTitle(material.title)}
+                      </a>
+                    ) : (
+                      truncateTitle(material.title)
+                    )}
+                  </span>
                 )}
               </div>
               <div className={styles.moreButtonContainer}>

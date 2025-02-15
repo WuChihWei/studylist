@@ -81,6 +81,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #666;
+}
+
+.materialPreview svg {
+  width: 16px;
+  height: 16px;
 }
 
 .previewPlaceholder {
@@ -94,6 +100,22 @@
   font-size: 14px;
   color: #333;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.materialName.hasUrl a {
+  color: #333;
+  text-decoration: underline;
+  text-decoration-color: #666;
+  text-underline-offset: 2px;
+  transition: color 0.2s ease;
+}
+
+.materialName.hasUrl a:hover {
+  color: #1E90FF;
 }
 
 .moreButton {
@@ -427,3 +449,16 @@
 }
 
 /* Rest of the material styles can be copied from your existing profile.module.css */
+
+/* 在小螢幕上調整最大寬度 */
+@media (max-width: 768px) {
+  .materialName {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .materialName {
+    max-width: 150px;
+  }
+}
