@@ -25,98 +25,63 @@ const LoginPage = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
     try {
-      console.log('Starting login process...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Firebase auth successful');
-      
       const token = await userCredential.user.getIdToken();
-      console.log('Token obtained successfully');
       
       const apiUrl = 'https://studylist-server.onrender.com';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
-      console.log('Making request to:', requestUrl);
       
-      try {
-        console.log('Starting fetch request...');
-        const response = await fetch(requestUrl, {
-          method: 'GET',
+      const response = await fetch(requestUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        mode: 'cors'
+      });
+
+      if (response.status === 400) {
+        // 如果用戶不存在，創建新用戶
+        const createResponse = await fetch(`${apiUrl}/api/users`, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          credentials: 'include',
-          mode: 'cors'
-        });
-        
-        console.log('Response received:', {
-          status: response.status,
-          statusText: response.statusText
+          body: JSON.stringify({
+            firebaseUID: userCredential.user.uid,
+            name: 'New User',
+            email: email,
+            materials: []
+          })
         });
 
-        if (response.status === 400) {
-          console.log('User not found, creating new user...');
-          const createResponse = await fetch(`${apiUrl}/api/users`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              firebaseUID: userCredential.user.uid,
-              name: 'New User',
-              email: email,
-              materials: []
-            })
-          });
-          
-          console.log('Create user response:', {
-            status: createResponse.status,
-            statusText: createResponse.statusText
-          });
-
-          if (!createResponse.ok) {
-            const errorText = await createResponse.text();
-            console.error('Create user error:', errorText);
-            throw new Error(`Failed to create user: ${createResponse.status}`);
-          }
-          
-          const userData = await createResponse.json();
-          console.log('User created successfully:', userData);
-          
-          localStorage.setItem('userData', JSON.stringify(userData));
-          setIsLoggedIn(true);
-          localStorage.setItem('isLoggedIn', 'true');
-          
-          console.log('Redirecting to profile...');
-          await router.push('/profile');
-          return;
+        if (!createResponse.ok) {
+          throw new Error('Failed to create user account');
         }
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Server error:', errorText);
-          throw new Error(`Server error: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        console.log('Login successful, user data:', userData);
-        
+        const userData = await createResponse.json();
         localStorage.setItem('userData', JSON.stringify(userData));
-        setIsLoggedIn(true);
-        localStorage.setItem('isLoggedIn', 'true');
-        
-        console.log('Redirecting to profile...');
-        await router.push('/profile');
-        
-      } catch (fetchError) {
-        console.error('Fetch error:', {
-          name: fetchError.name,
-          message: fetchError.message,
-          stack: fetchError.stack
-        });
-        setError('Failed to fetch user data. Please try again.');
+      } else if (!response.ok) {
+        throw new Error('Failed to fetch user data');
+      } else {
+        const userData = await response.json();
+        localStorage.setItem('userData', JSON.stringify(userData));
       }
+
+      // 設置登入狀態
+      setIsLoggedIn(true);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      // 顯示成功訊息並跳轉
+      setShowPopup(true);
+      setTimeout(() => {
+        router.push('/profile');
+      }, 1000); // 給使用者一個視覺反饋的時間
+
     } catch (error: any) {
       console.error("Login error:", error);
       setError(error.message || 'An error occurred during login');

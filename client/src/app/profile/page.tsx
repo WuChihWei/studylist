@@ -40,22 +40,6 @@ export default function ProfilePage() {
     topicId: null
   });
 
-  useEffect(() => {
-    // Check authentication status
-    const user = auth.currentUser;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-  }, [router]);
-
-  // If still loading or no user data, show appropriate message
-  if (loading) return <div>Loading...</div>;
-  if (!userData) {
-    router.push('/login');
-    return <div>Please log in to view this page</div>;
-  }
-
   // 在組件加載後設置第一個 topic 的 ID 作為 activeTab
   useEffect(() => {
     if (userData && userData.topics && userData.topics.length > 0) {
@@ -166,6 +150,10 @@ export default function ProfilePage() {
   const handleCancelDelete = () => {
     setDeleteConfirmation({ isOpen: false, topicId: null });
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (!userData) return <div>Please log in</div>;
+  
 
   const MaterialList = ({ type }: { type: keyof Categories }) => {
     const currentTopic = userData?.topics?.find(t => t._id === activeTab);
