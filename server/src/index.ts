@@ -35,7 +35,11 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000',
+    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+    /\.vercel\.app$/  // This will allow all vercel.app subdomains
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']

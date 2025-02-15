@@ -7,7 +7,19 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  console.error(err.stack);
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    origin: req.headers.origin
+  });
+
+  if (err.name === 'CORSError') {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed',
+      allowedOrigins: process.env.CLIENT_URL
+    });
+  }
 
   if (err instanceof Stripe.errors.StripeError) {
     return res.status(err.statusCode || 500).json({
