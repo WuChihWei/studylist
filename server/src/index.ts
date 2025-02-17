@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -8,7 +8,6 @@ import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
 import materialRoutes from './routes/materialRoutes';
-import { Request, Response, NextFunction } from 'express';
 import { authMiddleware } from './middleware/auth';
 
 // 在任何其他代碼之前加載環境變數
@@ -55,7 +54,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Debug logging middleware
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('\n=== INCOMING REQUEST ===');
   console.log('Timestamp:', new Date().toISOString());
   console.log('Method:', req.method);
@@ -65,11 +64,11 @@ app.use((req, res, next) => {
 });
 
 // Public routes
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/test/cors', (req, res) => {
+app.get('/test/cors', (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'CORS test successful',
@@ -80,14 +79,16 @@ app.get('/test/cors', (req, res) => {
 // Protected routes
 app.use('/api/users', authMiddleware);
 
-// Error handling
-app.use((err, req, res, next) => {
+// Error handling middleware
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error('Error:', err);
   res.status(500).json({ error: 'Internal server error' });
-});
+};
+
+app.use(errorHandler);
 
 // 404 handler (must be last)
-app.use((req, res) => {
+app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: 'Route not found',
     path: req.path,
