@@ -146,12 +146,16 @@ const connectDB = async () => {
   }
 };
 
-app.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
-  const dbConnected = await connectDB();
-  if (dbConnected) {
-    console.log('Database connection established');
-  } else {
-    console.error('Failed to connect to database');
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-});
+};
+
+startServer();
