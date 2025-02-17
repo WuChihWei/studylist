@@ -42,6 +42,7 @@ const corsOptions = {
   origin: [
     process.env.CLIENT_URL || 'http://localhost:3000',
     'https://studylist-client.vercel.app',
+    'https://studylistserver-production.up.railway.app',
     /\.vercel\.app$/,
     /\.railway\.app$/
   ],
