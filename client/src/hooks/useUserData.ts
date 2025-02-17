@@ -50,14 +50,14 @@ export const useUserData = () => {
     try {
       setIsLoading(true);
       const token = await currentUser.getIdToken(forceRefresh);
-      console.log('Token obtained successfully');
-
+      
       const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Access-Control-Allow-Private-Network': 'true'
         },
         mode: 'cors',
         credentials: 'include'
@@ -69,7 +69,6 @@ export const useUserData = () => {
 
       const data = await response.json();
       setUserData(data);
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching user data:', error);
       setUserData(null);

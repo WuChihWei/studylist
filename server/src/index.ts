@@ -57,31 +57,14 @@ const corsOptions = {
     const allowedOrigins = [
       process.env.CLIENT_URL,
       'http://localhost:3000',
-      'https://studylist-coral.vercel.app/',
+      'https://studylist-coral.vercel.app',
       'https://studylist-wuchihweis-projects.vercel.app'
     ].filter(Boolean);
     
-    console.log('CORS Check:', {
-      requestOrigin: origin,
-      allowedOrigins,
-      corsOriginEnv: process.env.CORS_ORIGIN
-    });
-
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-
-    const isAllowed = allowedOrigins.some(allowedOrigin => 
-      allowedOrigin === origin || 
-      origin.endsWith('.vercel.app')
-    );
-
-    if (isAllowed) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      console.log(`Origin ${origin} not allowed by CORS`);
-      callback(new Error(`Origin ${origin} not allowed`));
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
