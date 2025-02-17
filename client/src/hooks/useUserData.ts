@@ -47,15 +47,13 @@ export const useUserData = () => {
   const fetchUserData = async (currentUser: any, forceRefresh = false) => {
     if (isLoading) return;
     
-    console.log('=== Fetching User Data ===');
-    console.log('Current user:', currentUser?.uid);
-    
     try {
-      setLoading(true);
-      const token = await currentUser.getIdToken(true); // 強制刷新 token
+      setIsLoading(true);
+      const token = await currentUser.getIdToken(forceRefresh);
       console.log('Token obtained successfully');
 
       const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -65,23 +63,18 @@ export const useUserData = () => {
         credentials: 'include'
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('User data received:', data);
-      
       setUserData(data);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching user data:', error);
       setUserData(null);
     } finally {
+      setIsLoading(false);
       setLoading(false);
     }
   };
