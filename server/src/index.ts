@@ -31,6 +31,8 @@ console.log('Environment Check:', {
   ALLOWED_ORIGINS: [
     process.env.CLIENT_URL,
     'http://localhost:3000',
+    'https://studylist-coral.vercel.app',
+    'https://studylist-2cxo487un-wuchihweis-projects.vercel.app',
     'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app'
   ]
 });
@@ -54,10 +56,12 @@ const corsOptions = {
     const allowedOrigins = [
       process.env.CLIENT_URL,
       'http://localhost:3000',
+      'https://studylist-coral.vercel.app',
+      'https://studylist-2cxo487un-wuchihweis-projects.vercel.app',
       'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
       /\.vercel\.app$/,
-      /\.railway\.app$/
-    ].filter(Boolean); // 移除 undefined 值
+      /\.railway\.app$/,
+    ].filter(Boolean);
     
     console.log('CORS Check:', {
       requestOrigin: origin,
