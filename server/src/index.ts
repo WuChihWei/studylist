@@ -40,22 +40,24 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 const corsOptions = {
   origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
+    'http://localhost:3000',
     'https://studylist-client.vercel.app',
-    'https://studylistserver-production.up.railway.app',
     /\.vercel\.app$/,
     /\.railway\.app$/
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Authorization'],
   credentials: true,
-  maxAge: 86400 // 24 hours
+  maxAge: 86400,
+  preflightContinue: false
 };
+
+app.use(cors(corsOptions));
 
 // Debug logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log('\n=== INCOMING REQUEST ===');
-  console.log('Timestamp:', new Date().toISOString());
+  console.log('=== Incoming Request ===');
   console.log('Method:', req.method);
   console.log('Path:', req.path);
   console.log('Headers:', req.headers);
@@ -108,15 +110,15 @@ app.use('/api/users', authMiddleware);
 // 在所有路由之前添加
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   next();
 });
 
 // API routes
-app.use('/api/users', userRoutes);
-app.use('/api/stripe', stripeRoutes);
-app.use('/api/users/:userId/topics', topicsRouter);
-app.use('/api/users/:userId/materials', materialRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/stripe', authMiddleware, stripeRoutes);
+app.use('/api/users/:userId/topics', authMiddleware, topicsRouter);
+app.use('/api/users/:userId/materials', authMiddleware, materialRoutes);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
