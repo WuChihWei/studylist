@@ -34,15 +34,9 @@ console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
-// Debug logging middleware
-app.use((req, res, next) => {
-  console.log('\n=== INCOMING REQUEST ===');
-  console.log('Timestamp:', new Date().toISOString());
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  next();
-});
+// Basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
@@ -53,48 +47,47 @@ const corsOptions = {
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: true
+  credentials: true,
+  preflightContinue: false
 };
 
-// Apply middlewares
+// Apply CORS before routes
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Test routes (before auth middleware)
-app.get('/test/cors', (req, res) => {
-  console.log('CORS test endpoint hit');
-  res.json({
-    message: 'CORS test successful',
-    headers: req.headers,
-    origin: req.headers.origin
-  });
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log('\n=== INCOMING REQUEST ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Headers:', req.headers);
+  next();
 });
 
-app.get('/test/headers', (req, res) => {
-  console.log('Headers test endpoint hit');
-  res.json({
-    message: 'Headers test',
-    headers: req.headers,
-    authorization: req.headers.authorization || 'No auth header'
-  });
-});
-
-// Health check
+// Public routes
 app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/test/cors', (req, res) => {
   res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+    success: true,
+    message: 'CORS test successful',
+    headers: req.headers
   });
 });
 
 // Protected routes
 app.use('/api/users', authMiddleware);
 
-// 404 handler
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404 handler (must be last)
 app.use((req, res) => {
-  console.log('404 Not Found:', req.path);
   res.status(404).json({
     error: 'Route not found',
     path: req.path,
