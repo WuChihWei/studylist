@@ -26,7 +26,7 @@ console.log('Starting server with MongoDB URI:',
 
 const app = express();
 // Render 會自動設置 PORT 環境變量
-const PORT = process.env.PORT || 10000;  // 改為更大的默認端口
+const PORT = process.env.PORT || 3001;
 
 console.log('=== Server Configuration ===');
 console.log('PORT:', PORT);
@@ -146,38 +146,12 @@ const connectDB = async () => {
   }
 };
 
-const startServer = async () => {
-  try {
-    console.log('\n=== Server Startup ===');
-    console.log('Environment Variables:');
-    console.log('- PORT:', PORT);
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('- CLIENT_URL:', process.env.CLIENT_URL);
-    console.log('- MONGODB_URI exists:', !!process.env.MONGODB_URI);
-    
-    if (await connectDB()) {
-      const server = app.listen(PORT, () => {
-        console.log('\n=== Server Started ===');
-        console.log(`🚀 Server URL: http://localhost:${PORT}`);
-        console.log(`📝 API Docs: http://localhost:${PORT}/api-docs`);
-        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-        console.log(`👥 CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:3000'}`);
-        console.log('====================\n');
-      }).on('error', (error: any) => {
-        if (error.code === 'EADDRINUSE') {
-          console.error(`❌ Port ${PORT} is already in use`);
-          process.exit(1);
-        } else {
-          console.error('❌ Server startup error:', error);
-        }
-      });
-    } else {
-      console.warn('⚠️  Warning: Running without database connection');
-    }
-  } catch (error) {
-    console.error('❌ Server startup error:', error);
-    process.exit(1);
+app.listen(PORT, async () => {
+  console.log(`Server is running on port ${PORT}`);
+  const dbConnected = await connectDB();
+  if (dbConnected) {
+    console.log('Database connection established');
+  } else {
+    console.error('Failed to connect to database');
   }
-};
-
-startServer();
+});
