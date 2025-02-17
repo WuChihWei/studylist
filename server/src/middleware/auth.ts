@@ -34,13 +34,17 @@ console.log('Environment variables:', {
 console.log('Firebase admin initialization status:', admin.apps.length ? 'Initialized' : 'Not initialized');
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  console.log('Auth middleware triggered');
-  console.log('All headers:', req.headers);
+  console.log('\n=== Auth Middleware ===');
+  console.log('Method:', req.method);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   
-  const authHeader = req.headers.authorization;
-  console.log('Authorization header:', authHeader || 'Missing');
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
+    console.log('No valid authorization header found');
     return res.status(401).json({ error: 'No token provided' });
   }
 
@@ -52,6 +56,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     next();
   } catch (error) {
     console.error('Token verification failed:', error);
-    return res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Invalid token' });
   }
 };

@@ -34,7 +34,7 @@ console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
-// CORS configuration
+// 1. 首先配置 CORS
 const corsOptions = {
   origin: [
     'http://localhost:3000',
@@ -43,32 +43,33 @@ const corsOptions = {
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Length', 'Content-Type'],
-  credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-  maxAge: 86400
+  credentials: true
 };
 
-// Apply CORS before any other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// 在路由之前添加基本中間件
+// 2. 基本中間件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 添加請求日誌中間件
+// 3. 請求日誌
 app.use((req, res, next) => {
-  console.log('\n=== Incoming Request ===');
+  console.log('\n=== Request Details ===');
   console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Headers:', req.headers);
+  console.log('URL:', req.url);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Body:', req.body);
+  console.log('=====================\n');
   next();
 });
 
-// 保護需要認證的路由
+// 4. 健康檢查端點（不需要認證）
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 5. API 路由（需要認證）
 app.use('/api/users', authMiddleware);
-// 其他路由配置...
+
+// 6. OPTIONS 請求處理
+app.options('*', cors(corsOptions));
