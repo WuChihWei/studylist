@@ -41,13 +41,27 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': 'http://localhost:3000'
+          'Accept': 'application/json'
         },
         mode: 'cors'
       });
 
-      console.log('Server response status:', response.status);
+      // Add more detailed logging
+      console.log('Request details:', {
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer [TOKEN]',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+
+      console.log('Full response:', {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        ok: response.ok
+      });
 
       if (!response.ok) {
         const errorData = await response.text();
@@ -103,10 +117,26 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': 'http://localhost:3000'
+          'Accept': 'application/json'
         },
         mode: 'cors'
+      });
+      
+      // Add more detailed logging
+      console.log('Request details:', {
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer [TOKEN]',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Full response:', {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        ok: response.ok
       });
       
       if (!response.ok) {
@@ -151,10 +181,26 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Origin': 'http://localhost:3000'
+          'Accept': 'application/json'
         },
         mode: 'cors'
+      });
+      
+      // Add more detailed logging
+      console.log('Request details:', {
+        url: requestUrl,
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer [TOKEN]',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Full response:', {
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries()),
+        ok: response.ok
       });
       
       if (!response.ok) {
