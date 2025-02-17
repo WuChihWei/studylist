@@ -117,7 +117,8 @@ const LoginPage = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        mode: 'cors'
+        mode: 'cors',
+        credentials: 'include'
       });
       
       // Add more detailed logging
@@ -181,7 +182,8 @@ const LoginPage = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        mode: 'cors'
+        mode: 'cors',
+        credentials: 'include'
       });
       
       // Add more detailed logging

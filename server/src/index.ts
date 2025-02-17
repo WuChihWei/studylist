@@ -40,25 +40,26 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 const corsOptions = {
   origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
+    'http://localhost:3000',
     'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
     /\.vercel\.app$/,
     /\.railway\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Authorization'],
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // CORS logging middleware
 app.use((req, res, next) => {
-  console.log('\n=== CORS Pre-flight Check ===');
-  console.log('Request Details:', {
-    method: req.method,
-    path: req.path,
-    origin: req.headers.origin
-  });
-  console.log('Request Headers:', req.headers);
+  console.log('\n=== CORS Request ===');
+  console.log('Method:', req.method);
+  console.log('Origin:', req.headers.origin);
+  console.log('Access-Control-Request-Headers:', req.headers['access-control-request-headers']);
   next();
 });
 
