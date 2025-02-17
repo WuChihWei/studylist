@@ -48,6 +48,14 @@ app.use(cors({
 
 app.use(express.json());
 
+// 在 CORS 配置之後添加
+app.use((req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  console.log('Received token:', token ? 'exists' : 'missing');
+  console.log('Full Authorization header:', req.headers.authorization);
+  next();
+});
+
 // 添加請求日誌中間件
 app.use((req, res, next) => {
   console.log('\n=== Incoming Request ===');

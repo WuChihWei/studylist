@@ -33,24 +33,30 @@ console.log('Environment variables:', {
 
 console.log('Firebase admin initialization status:', admin.apps.length ? 'Initialized' : 'Not initialized');
 
-export const authMiddleware = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
-  console.log('Auth middleware triggered');
-  console.log('Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
-  
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const token = req.headers.authorization?.split('Bearer ')[1];
-    if (!token) {
+    const authHeader = req.headers.authorization;
+    console.log('Auth Header:', authHeader);
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No token found in request');
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    req.user = decodedToken;
-    next();
+    const token = authHeader.split(' ')[1];
+    console.log('Token extracted:', token.substring(0, 10) + '...');
+
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      console.log('Token verified successfully:', decodedToken.uid);
+      req.user = decodedToken;
+      next();
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError);
+      return res.status(403).json({ error: 'Invalid token' });
+    }
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
