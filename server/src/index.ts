@@ -66,19 +66,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
-  const dbState = mongoose.connection.readyState;
-  const dbStateMap: { [key: number]: string } = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
-  };
-  
   res.json({
     status: 'ok',
-    server: 'running',
-    mongodb: dbStateMap[dbState] || 'unknown',
-    environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });
 });
