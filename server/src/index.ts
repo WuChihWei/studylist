@@ -36,20 +36,25 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
 // CORS configuration
 const corsOptions = {
-  origin: '*',  // 暫時允許所有來源
+  origin: ['http://localhost:3000', 'https://studylist-client.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   exposedHeaders: ['Content-Length', 'Content-Type'],
   credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  maxAge: 86400
 };
 
-// Apply CORS before other middleware
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
 
 // Basic middleware
 app.use(express.json());
@@ -61,7 +66,8 @@ app.use((req, res, next) => {
   console.log('Time:', new Date().toISOString());
   console.log('Method:', req.method);
   console.log('Path:', req.path);
-  console.log('Headers:', req.headers);
+  console.log('Origin:', req.headers.origin);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   next();
 });
 
