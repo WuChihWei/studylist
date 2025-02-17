@@ -57,7 +57,8 @@ const corsOptions = {
     const allowedOrigins = [
       process.env.CLIENT_URL,
       'http://localhost:3000',
-      'https://studylist-coral.vercel.app'
+      'https://studylist-coral.vercel.app/',
+      'https://studylist-wuchihweis-projects.vercel.app'
     ].filter(Boolean);
     
     console.log('CORS Check:', {
