@@ -47,30 +47,39 @@ export const useUserData = () => {
   const fetchUserData = async (currentUser: any, forceRefresh = false) => {
     if (isLoading) return;
     
+    console.log('=== fetchUserData started ===');
+    console.log('Current user:', currentUser?.uid);
+    
     try {
       setIsLoading(true);
       const token = await currentUser.getIdToken(forceRefresh);
+      console.log('Token obtained:', token ? 'Yes' : 'No');
       
       const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Access-Control-Allow-Private-Network': 'true'
+          'Accept': 'application/json'
         },
         mode: 'cors',
         credentials: 'include'
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Received user data:', data);
       setUserData(data);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error in fetchUserData:', error);
       setUserData(null);
     } finally {
       setIsLoading(false);
@@ -81,16 +90,22 @@ export const useUserData = () => {
   useEffect(() => {
     let isMounted = true;
     
+    console.log('=== Auth state effect started ===');
+    
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      console.log('Auth state changed:', user ? `User logged in: ${user.uid}` : 'No user');
       if (user && isMounted) {
+        console.log('Calling fetchUserData for user:', user.uid);
         fetchUserData(user);
       } else {
+        console.log('Clearing user data');
         setUserData(null);
         setLoading(false);
       }
     });
 
     return () => {
+      console.log('Cleanup: unmounting component');
       isMounted = false;
       unsubscribe();
     };
