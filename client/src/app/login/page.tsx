@@ -41,9 +41,9 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Origin': 'http://localhost:3000'
         },
-        credentials: 'include',
         mode: 'cors'
       });
 
@@ -103,9 +103,9 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Origin': 'http://localhost:3000'
         },
-        credentials: 'include',
         mode: 'cors'
       });
       
@@ -151,9 +151,9 @@ const LoginPage = () => {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Origin': 'http://localhost:3000'
         },
-        credentials: 'include',
         mode: 'cors'
       });
       

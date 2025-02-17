@@ -36,34 +36,25 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 // Middleware
 app.options('*', cors());
 
+// CORS 配置
 app.use(cors({
-  origin: true, // 允許所有來源
-  credentials: true,
+  origin: '*',  // 開發時允許所有來源
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 app.use(express.json());
 
+// 添加請求日誌中間件
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
+  console.log('\n=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Authorization:', req.headers.authorization || 'No Auth Header');
   next();
-});
-
-// 在所有路由之前添加
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-
-  // 處理 OPTIONS 請求
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
 });
 
 // 數據庫狀態映射
