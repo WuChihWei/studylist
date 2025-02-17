@@ -36,14 +36,16 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 // Middleware
 app.use(cors({
   origin: [
-    process.env.CLIENT_URL || 'http://localhost:3000',
+    'http://localhost:3000',
     'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
     /\.vercel\.app$/,
     /\.railway\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600 // 緩存預檢請求結果 10 分鐘
 }));
 app.use(express.json());
 
@@ -106,7 +108,11 @@ app.use((req, res) => {
 // 錯誤處理中間件
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
 });
 
 // 啟動服務器
