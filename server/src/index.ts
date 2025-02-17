@@ -9,6 +9,7 @@ import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
 import materialRoutes from './routes/materialRoutes';
 import { Request, Response, NextFunction } from 'express';
+import { authMiddleware } from './middleware/auth';
 
 // 在任何其他代碼之前加載環境變數
 dotenv.config();
@@ -54,3 +55,20 @@ app.use(cors(corsOptions));
 
 // Handle preflight requests
 app.options('*', cors(corsOptions));
+
+// 在路由之前添加基本中間件
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// 添加請求日誌中間件
+app.use((req, res, next) => {
+  console.log('\n=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Headers:', req.headers);
+  next();
+});
+
+// 保護需要認證的路由
+app.use('/api/users', authMiddleware);
+// 其他路由配置...
