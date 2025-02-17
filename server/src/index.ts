@@ -39,28 +39,22 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://studylist-client.vercel.app',
-    /\.vercel\.app$/,
-    /\.railway\.app$/
-  ],
+  origin: true,  // 允許所有來源，或者使用具體的域名列表
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   exposedHeaders: ['Authorization'],
   credentials: true,
   maxAge: 86400,
-  preflightContinue: false
+  optionsSuccessStatus: 204
 };
 
+// 確保 CORS 中間件在所有路由之前
 app.use(cors(corsOptions));
 
-// Debug logging middleware
+// 請求日誌中間件
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log('=== Incoming Request ===');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Headers:', req.headers);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
   next();
 });
 
@@ -95,13 +89,6 @@ app.get('/test/cors', (req: Request, res: Response) => {
 
 // Protected routes
 app.use('/api/users', authMiddleware);
-
-// 在所有路由之前添加
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  next();
-});
 
 // API routes
 app.use('/api/users', authMiddleware, userRoutes);
