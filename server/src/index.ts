@@ -33,7 +33,8 @@ console.log('Environment Check:', {
     'http://localhost:3000',
     'https://studylist-coral.vercel.app',
     'https://studylist-2cxo487un-wuchihweis-projects.vercel.app',
-    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app'
+    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+    'https://studylistserver-production.up.railway.app'
   ]
 });
 
@@ -59,8 +60,9 @@ const corsOptions = {
       'https://studylist-coral.vercel.app',
       'https://studylist-2cxo487un-wuchihweis-projects.vercel.app',
       'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+      'https://studylistserver-production.up.railway.app',
       /\.vercel\.app$/,
-      /\.railway\.app$/,
+      /\.railway\.app$/
     ].filter(Boolean);
     
     console.log('CORS Check:', {
