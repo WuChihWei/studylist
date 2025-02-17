@@ -34,31 +34,35 @@ console.log('Environment variables:', {
 console.log('Firebase admin initialization status:', admin.apps.length ? 'Initialized' : 'Not initialized');
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-  console.log('\n=== Auth Middleware ===');
-  console.log('Request path:', req.path);
-  console.log('Request method:', req.method);
-  console.log('Request headers:', {
-    authorization: req.headers.authorization ? 'Present' : 'Missing',
-    origin: req.headers.origin,
-    host: req.headers.host
-  });
-
-  console.log('Auth middleware details:', {
+  console.log('\n=== Detailed Auth Middleware Logging ===');
+  console.log('Request Details:', {
     path: req.path,
     method: req.method,
-    hasAuthHeader: !!req.headers.authorization,
+    url: req.url,
+    baseUrl: req.baseUrl,
+    originalUrl: req.originalUrl
+  });
+  
+  console.log('Headers Details:', {
+    all: req.headers,
+    authorization: req.headers.authorization ? 'Present' : 'Missing',
     origin: req.headers.origin,
-    tokenPrefix: req.headers.authorization?.substring(0, 20) + '...'
+    host: req.headers.host,
+    'content-type': req.headers['content-type'],
+    'accept': req.headers.accept
   });
 
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request detected, skipping auth check');
     return next();
   }
 
   try {
     const authHeader = req.headers.authorization;
+    console.log('Authorization header:', authHeader ? `${authHeader.substring(0, 20)}...` : 'Missing');
+    
     if (!authHeader?.startsWith('Bearer ')) {
-      console.log('Authentication failed: No valid authorization header');
+      console.log('Authentication failed: Invalid or missing Bearer token');
       return res.status(401).json({
         error: 'Authentication required',
         details: 'No valid authorization token provided'
@@ -66,15 +70,29 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     }
 
     const token = authHeader.split('Bearer ')[1];
-    console.log('Token received, verifying...');
+    console.log('Token extraction successful, length:', token.length);
 
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    console.log('Token verified successfully for user:', decodedToken.uid);
-    
-    req.user = decodedToken;
-    next();
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(token);
+      console.log('Token verification successful:', {
+        uid: decodedToken.uid,
+        email: decodedToken.email,
+        timestamp: new Date().toISOString()
+      });
+      
+      req.user = decodedToken;
+      next();
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError);
+      throw verifyError;
+    }
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('Authentication error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      timestamp: new Date().toISOString()
+    });
+    
     return res.status(401).json({
       error: 'Authentication failed',
       details: error instanceof Error ? error.message : 'Unknown error',

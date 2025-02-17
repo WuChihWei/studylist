@@ -26,39 +26,37 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     
+    console.log('\n=== Login Request Started ===');
     try {
-      console.log('Starting login process...');
+      console.log('1. Starting Firebase authentication...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const token = await userCredential.user.getIdToken();
       
-      console.log('Firebase authentication successful');
+      console.log('2. Getting Firebase token...');
+      const token = await userCredential.user.getIdToken();
+      console.log('Token obtained, length:', token.length);
+      
       const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
-      console.log('Attempting to fetch user data from:', requestUrl);
+      console.log('3. Preparing API request to:', requestUrl);
       
+      const requestHeaders = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      console.log('4. Request headers:', requestHeaders);
+      
+      console.log('5. Sending fetch request...');
       const response = await fetch(requestUrl, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors'
+        headers: requestHeaders,
+        mode: 'cors',
+        credentials: 'include'
       });
-
-      // Add more detailed logging
-      console.log('Request details:', {
-        url: requestUrl,
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer [TOKEN]',
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-
-      console.log('Full response:', {
+      
+      console.log('6. Response received:', {
         status: response.status,
+        statusText: response.statusText,
         headers: Object.fromEntries(response.headers.entries()),
         ok: response.ok
       });

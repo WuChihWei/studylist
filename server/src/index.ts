@@ -50,8 +50,27 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 };
 
-// 確保 CORS 中間件在所有路由之前
+// CORS logging middleware
+app.use((req, res, next) => {
+  console.log('\n=== CORS Pre-flight Check ===');
+  console.log('Request Details:', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin
+  });
+  console.log('Request Headers:', req.headers);
+  next();
+});
+
+// CORS configuration
 app.use(cors(corsOptions));
+
+// CORS verification middleware
+app.use((req, res, next) => {
+  console.log('\n=== CORS Post-flight Check ===');
+  console.log('Response Headers:', res.getHeaders());
+  next();
+});
 
 // 請求日誌中間件
 app.use((req: Request, res: Response, next: NextFunction) => {
