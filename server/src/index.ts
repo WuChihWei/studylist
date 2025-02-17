@@ -39,13 +39,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: true,  // 允許所有來源，或者使用具體的域名列表
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Authorization'],
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000',
+    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+    /\.vercel\.app$/,
+    /\.railway\.app$/
+  ],
   credentials: true,
-  maxAge: 86400,
-  optionsSuccessStatus: 204
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 };
 
 // 確保 CORS 中間件在所有路由之前
@@ -103,23 +105,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 };
 
 app.use(errorHandler);
-
-// 添加在所有路由之後
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Global error handler:', err);
-  
-  if (err.name === 'FirebaseAuthError') {
-    return res.status(401).json({
-      error: 'Authentication failed',
-      message: err.message
-    });
-  }
-  
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
-  });
-});
 
 // 404 handler (must be last)
 app.use((req: Request, res: Response) => {

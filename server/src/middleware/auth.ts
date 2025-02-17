@@ -43,6 +43,14 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     host: req.headers.host
   });
 
+  console.log('Auth middleware details:', {
+    path: req.path,
+    method: req.method,
+    hasAuthHeader: !!req.headers.authorization,
+    origin: req.headers.origin,
+    tokenPrefix: req.headers.authorization?.substring(0, 20) + '...'
+  });
+
   if (req.method === 'OPTIONS') {
     return next();
   }
