@@ -30,7 +30,7 @@ const LoginPage = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
       
-      const apiUrl = 'https://studylist-server.onrender.com';
+      const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
       
       const response = await fetch(requestUrl, {
@@ -108,7 +108,7 @@ const LoginPage = () => {
       const token = await userCredential.user.getIdToken();
       console.log('Token obtained successfully');
       
-      const apiUrl = 'https://studylist-server.onrender.com';
+      const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
       console.log('Making request to:', requestUrl);
       
@@ -155,7 +155,7 @@ const LoginPage = () => {
       const token = await userCredential.user.getIdToken();
       console.log('Token obtained successfully');
       
-      const apiUrl = 'https://studylist-server.onrender.com';
+      const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
       console.log('Making request to:', requestUrl);
       

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User } from '../types/User';
 import { useFirebase } from '../app/firebase/FirebaseProvider';
 
-const API_URL = 'https://studylist-server.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app';
 
 type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
 
