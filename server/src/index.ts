@@ -55,10 +55,9 @@ app.use(express.urlencoded({ extended: true }));
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
     const allowedOrigins = [
-      ...process.env.CORS_ORIGIN?.split(',') || [],
+      process.env.CLIENT_URL,
       'http://localhost:3000',
-      'https://studylist-coral.vercel.app',
-      'https://studylist-2cxo487un-wuchihweis-projects.vercel.app'
+      'https://studylist-coral.vercel.app'
     ].filter(Boolean);
     
     console.log('CORS Check:', {
@@ -74,8 +73,7 @@ const corsOptions = {
 
     const isAllowed = allowedOrigins.some(allowedOrigin => 
       allowedOrigin === origin || 
-      origin.endsWith('.vercel.app') || 
-      origin.endsWith('.railway.app')
+      origin.endsWith('.vercel.app')
     );
 
     if (isAllowed) {

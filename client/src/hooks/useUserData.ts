@@ -61,6 +61,7 @@ export const useUserData = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
+        mode: 'cors',
         credentials: 'include'
       });
 
