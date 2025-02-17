@@ -42,15 +42,15 @@ app.use((req, res, next) => {
   console.log('URL:', req.url);
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
   
-  // Log response
+  // Log response with proper typing
   const oldSend = res.send;
-  res.send = function (data) {
+  res.send = function(body: any) {
     console.log('\n=== OUTGOING RESPONSE ===');
     console.log('Status:', res.statusCode);
     console.log('Headers:', JSON.stringify(res.getHeaders(), null, 2));
-    console.log('Body:', data);
+    console.log('Body:', body);
     console.log('========================\n');
-    return oldSend.apply(res, arguments);
+    return oldSend.call(res, body);
   };
   
   next();
@@ -58,7 +58,11 @@ app.use((req, res, next) => {
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://studylist-client.vercel.app'],
+  origin: [
+    'http://localhost:3000',
+    'https://studylist-client.vercel.app',
+    /\.vercel\.app$/
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
