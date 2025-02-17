@@ -27,51 +27,37 @@ const LoginPage = () => {
     setError('');
     
     try {
+      console.log('Starting login process...');
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
       
+      console.log('Firebase authentication successful');
       const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
+      console.log('Attempting to fetch user data from:', requestUrl);
       
       const response = await fetch(requestUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         credentials: 'include',
         mode: 'cors'
       });
 
-      if (response.status === 400) {
-        // 如果用戶不存在，創建新用戶
-        const createResponse = await fetch(`${apiUrl}/api/users`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            firebaseUID: userCredential.user.uid,
-            name: 'New User',
-            email: email,
-            materials: []
-          })
-        });
+      console.log('Server response status:', response.status);
 
-        if (!createResponse.ok) {
-          throw new Error('Failed to create user account');
-        }
-        
-        const userData = await createResponse.json();
-        localStorage.setItem('userData', JSON.stringify(userData));
-      } else if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      } else {
-        const userData = await response.json();
-        localStorage.setItem('userData', JSON.stringify(userData));
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Server error response:', errorData);
+        throw new Error(`Server error: ${response.status}`);
       }
 
+      const userData = await response.json();
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
       // 設置登入狀態
       setIsLoggedIn(true);
       localStorage.setItem('isLoggedIn', 'true');
@@ -83,7 +69,7 @@ const LoginPage = () => {
       }, 1000); // 給使用者一個視覺反饋的時間
 
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       setError(error.message || 'An error occurred during login');
     }
   };
@@ -116,7 +102,8 @@ const LoginPage = () => {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         credentials: 'include',
         mode: 'cors'
@@ -163,7 +150,8 @@ const LoginPage = () => {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         credentials: 'include',
         mode: 'cors'
