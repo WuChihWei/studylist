@@ -37,30 +37,18 @@ console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 app.options('*', cors());
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
-    /\.vercel\.app$/,
-    /\.railway\.app$/
-  ],
+  origin: true, // 允許所有來源
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
-  console.log('\n=== Incoming Request ===');
-  console.log(`Timestamp: ${new Date().toISOString()}`);
-  console.log(`Method: ${req.method}`);
-  console.log(`URL: ${req.url}`);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Query:', req.query);
-  console.log('Body:', req.body);
-  console.log('======================\n');
+  console.log(`${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
   next();
 });
 
