@@ -34,57 +34,41 @@ const router = Router({ mergeParams: true });
 
 router.use(authMiddleware);
 
-const deleteMaterial: RequestHandler = async (req, res) => {
+router.delete('/:topicId/:categoryType/:materialId', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { firebaseUID, topicId, materialId } = req.params;
-    
-    console.log('Delete material request:', {
-      params: { firebaseUID, topicId, materialId }
-    });
+    const { topicId, categoryType, materialId } = req.params;
+    const user = await User.findOne({ firebaseUID: req.user?.uid });
 
-    const user = await User.findOne({ firebaseUID });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const topic = user.topics.id(topicId);
-    if (!topic || !topic.categories) {
-      return res.status(404).json({ error: 'Topic not found or invalid structure' });
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
     }
 
-    let materialDeleted = false;
-    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
-    
-    for (const type of categoryTypes) {
-      if (!topic.categories[type] || !Array.isArray(topic.categories[type])) {
-        continue;
-      }
-
-      const materials = topic.categories[type];
-      const materialIndex = materials.findIndex(
-        m => m._id.toString() === materialId
-      );
-      
-      if (materialIndex !== -1) {
-        materials.splice(materialIndex, 1);
-        materialDeleted = true;
-        break;
-      }
+    if (!topic.categories) {
+      return res.status(404).json({ error: 'Categories not found' });
     }
 
-    if (!materialDeleted) {
+    const materials = topic.categories[categoryType as CategoryType];
+    if (!materials) {
+      return res.status(404).json({ error: 'Category type not found' });
+    }
+
+    const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+    if (materialIndex === -1) {
       return res.status(404).json({ error: 'Material not found' });
     }
 
+    materials.splice(materialIndex, 1);
     await user.save();
-    return res.status(200).json({ message: 'Material deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting material:', error);
-    return res.status(500).json({ error: 'Server error' });
-  }
-};
 
-// DELETE /api/users/:firebaseUID/topics/:topicId/materials/:materialId
-router.delete('/:materialId', deleteMaterial);
+    res.json({ message: 'Material deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deleting material' });
+  }
+});
 
 export default router;

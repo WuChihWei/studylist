@@ -38,7 +38,8 @@ app.use(cors({
   origin: [
     process.env.CLIENT_URL || 'http://localhost:3000',
     'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
-    /\.vercel\.app$/  // This will allow all vercel.app subdomains
+    /\.vercel\.app$/,
+    /\.railway\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

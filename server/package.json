@@ -2,27 +2,31 @@
     "name": "studylist-server",
     "version": "1.0.0",
     "private": true,
+    "engines": {
+        "node": ">=18.0.0"
+    },
     "scripts": {
         "dev": "nodemon --exec ts-node -r dotenv/config src/index.ts",
         "build": "tsc",
-        "start": "node dist/index.js"
+        "start": "node dist/index.js",
+        "postinstall": "npm run build"
     },
     "dependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/node": "^20.17.12",
+        "@types/stripe": "^8.0.417",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "express": "^4.18.2",
         "firebase-admin": "^13.0.2",
         "mongoose": "^8.0.0",
         "stripe": "^17.6.0",
-        "@types/stripe": "^8.0.417"
+        "typescript": "^5.7.3"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
         "@types/express": "^4.17.21",
-        "@types/node": "^20.17.12",
-        "nodemon": "^3.0.2",
-        "ts-node": "^10.9.2",
-        "ts-node-dev": "^2.0.0",
-        "typescript": "^5.7.3"
+        "@types/node": "^20.17.12"
     }
 }

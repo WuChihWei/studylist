@@ -532,7 +532,7 @@ export const uncompleteMaterial = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const topic = user.topics.find(t => t._id.toString() === topicId);
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
     if (!topic || !topic.categories) {
       return res.status(404).json({ error: 'Topic not found' });
     }
@@ -616,5 +616,30 @@ export const uncompleteMaterial = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error in uncompleteMaterial:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const updateTopic = async (req: Request, res: Response) => {
+  try {
+    const { topicId } = req.params;
+    const { name } = req.body;
+    const user = await User.findOne({ firebaseUID: req.user?.uid });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    topic.name = name;
+    await user.save();
+
+    res.json(topic);
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating topic' });
   }
 };
