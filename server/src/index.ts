@@ -40,6 +40,7 @@ app.use((req, res, next) => {
   console.log('Timestamp:', new Date().toISOString());
   console.log('Method:', req.method);
   console.log('URL:', req.url);
+  console.log('Origin:', req.headers.origin);
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
   
   // Log response with proper typing
@@ -58,11 +59,7 @@ app.use((req, res, next) => {
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://studylist-client.vercel.app',
-    /\.vercel\.app$/
-  ],
+  origin: ['http://localhost:3000', 'https://studylist-client.vercel.app'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
@@ -104,6 +101,38 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
+  });
+});
+
+// Test endpoints
+app.get('/test/cors', (req, res) => {
+  res.json({ message: 'CORS test successful' });
+});
+
+app.get('/test/auth', (req, res) => {
+  const token = 'test_token';
+  const testUrl = `${req.protocol}://${req.get('host')}/api/users/test123`;
+  
+  fetch(testUrl, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    res.json({
+      message: 'Internal auth test',
+      testUrl,
+      response: data
+    });
+  })
+  .catch(error => {
+    res.json({
+      message: 'Internal auth test failed',
+      testUrl,
+      error: error.message
+    });
   });
 });
 
