@@ -34,42 +34,48 @@ console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
-// 1. 首先配置 CORS
+// CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://studylist-client.vercel.app',
-    'https://studylist-client-git-main-yichenlai.vercel.app'
-  ],
+  origin: '*',  // 暫時允許所有來源
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: true
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
 
-// 2. 基本中間件
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 3. 請求日誌
+// Request logging
 app.use((req, res, next) => {
   console.log('\n=== Request Details ===');
+  console.log('Time:', new Date().toISOString());
   console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Body:', req.body);
-  console.log('=====================\n');
+  console.log('Path:', req.path);
+  console.log('Headers:', req.headers);
   next();
 });
 
-// 4. 健康檢查端點（不需要認證）
+// Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
 });
 
-// 5. API 路由（需要認證）
+// Protected routes
 app.use('/api/users', authMiddleware);
 
-// 6. OPTIONS 請求處理
-app.options('*', cors(corsOptions));
+// Export for testing
+export default app;
