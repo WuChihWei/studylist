@@ -47,45 +47,34 @@ export const useUserData = () => {
   const fetchUserData = async (currentUser: any, forceRefresh = false) => {
     if (isLoading) return;
     
+    console.log('=== Fetching User Data ===');
+    console.log('Current user:', currentUser?.uid);
+    
     try {
       setLoading(true);
-      const startTime = performance.now();
-      
-      // 如果不是強制刷新，才檢查快取
-      if (!forceRefresh && !isOnline()) {
-        console.log('Offline - using cached data if available');
-        const cacheKey = `userData_${currentUser.uid}`;
-        const cachedData = sessionStorage.getItem(cacheKey);
-        
-        if (cachedData) {
-          const { data, timestamp } = JSON.parse(cachedData);
-          const age = Math.round((Date.now() - timestamp) / 1000);
-          console.log(`Using cached data, age: ${age} seconds`);
-          setUserData(data);
-          return;
-        }
-        throw new Error('No cached data available and device is offline');
-      }
+      const token = await currentUser.getIdToken(true); // 強制刷新 token
+      console.log('Token obtained successfully');
 
-      const token = await currentUser.getIdToken();
       const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include'
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      const cacheKey = `userData_${currentUser.uid}`;
-      
-      sessionStorage.setItem(cacheKey, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
+      console.log('User data received:', data);
       
       setUserData(data);
     } catch (error) {

@@ -40,18 +40,16 @@ app.use(express.urlencoded({ extended: true }));
 // CORS configuration
 const corsOptions = {
   origin: [
-    'http://localhost:3000',
+    process.env.CLIENT_URL || 'http://localhost:3000',
     'https://studylist-client.vercel.app',
-    /\.vercel\.app$/
+    /\.vercel\.app$/,
+    /\.railway\.app$/
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true,
-  preflightContinue: false
+  maxAge: 86400 // 24 hours
 };
-
-// Apply CORS before routes
-app.use(cors(corsOptions));
 
 // Debug logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -82,6 +80,19 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// 添加測試路由（放在所有路由之前）
+app.get('/test/auth', authMiddleware, (req: Request, res: Response) => {
+  console.log('=== Test Auth Route ===');
+  console.log('Request headers:', req.headers);
+  console.log('User:', req.user);
+  res.json({
+    success: true,
+    message: 'Authentication successful',
+    user: req.user,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/test/cors', (req: Request, res: Response) => {
   res.json({
     success: true,
@@ -97,8 +108,8 @@ app.use('/api/users', authMiddleware);
 // API routes
 app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
-app.use('/api/topics', topicsRouter);
-app.use('/api/materials', materialRoutes);
+app.use('/api/users/:userId/topics', topicsRouter);
+app.use('/api/users/:userId/materials', materialRoutes);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {

@@ -35,27 +35,42 @@ console.log('Firebase admin initialization status:', admin.apps.length ? 'Initia
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   console.log('\n=== Auth Middleware ===');
-  console.log('Method:', req.method);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  
+  console.log('Request path:', req.path);
+  console.log('Request method:', req.method);
+  console.log('Request headers:', {
+    authorization: req.headers.authorization ? 'Present' : 'Missing',
+    origin: req.headers.origin,
+    host: req.headers.host
+  });
+
   if (req.method === 'OPTIONS') {
     return next();
   }
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    console.log('No valid authorization header found');
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.log('Authentication failed: No valid authorization header');
+      return res.status(401).json({
+        error: 'Authentication required',
+        details: 'No valid authorization token provided'
+      });
+    }
+
     const token = authHeader.split('Bearer ')[1];
+    console.log('Token received, verifying...');
+
     const decodedToken = await admin.auth().verifyIdToken(token);
+    console.log('Token verified successfully for user:', decodedToken.uid);
+    
     req.user = decodedToken;
-    console.log('Token verified for user:', decodedToken.uid);
     next();
   } catch (error) {
-    console.error('Token verification failed:', error);
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Authentication error:', error);
+    return res.status(401).json({
+      error: 'Authentication failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
   }
 };

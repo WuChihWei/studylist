@@ -11,6 +11,7 @@ const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const stripeRoutes_1 = __importDefault(require("./routes/stripeRoutes"));
 const topics_1 = __importDefault(require("./routes/topics"));
 const materialRoutes_1 = __importDefault(require("./routes/materialRoutes"));
+const { authMiddleware } = require("./middleware/authMiddleware");
 // 在任何其他代碼之前加載環境變數
 dotenv_1.default.config();
 // 添加調試信息
@@ -28,17 +29,19 @@ console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 // Middleware
-app.use((0, cors_1.default)({
+const corsOptions = {
     origin: [
         process.env.CLIENT_URL || 'http://localhost:3000',
-        'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+        'https://studylist-client.vercel.app',
         /\.vercel\.app$/,
-        /\.railway\.app$/ // Add this line for Railway domains
+        /\.railway\.app$/
     ],
-    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
+    maxAge: 86400 // 24 hours
+};
+app.use(cors_1.default(corsOptions));
 app.use(express_1.default.json());
 app.use((req, res, next) => {
     console.log('\n=== Incoming Request ===');
@@ -75,6 +78,16 @@ app.get('/health', (req, res) => {
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString()
     });
+});
+// 添加測試路由
+app.get('/test/auth', authMiddleware, (req: Request, res: Response) => {
+  console.log('=== Test Auth Route ===');
+  console.log('User:', req.user);
+  res.json({
+    success: true,
+    message: 'Authentication successful',
+    user: req.user
+  });
 });
 // API routes - order matters!
 app.use('/api/users/:firebaseUID/topics/:topicId/materials', materialRoutes_1.default);
