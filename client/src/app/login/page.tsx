@@ -51,7 +51,7 @@ const LoginPage = () => {
         method: 'GET',
         headers: requestHeaders,
         mode: 'cors',
-        credentials: 'include'
+        credentials: 'same-origin'
       });
       
       console.log('6. Response received:', {

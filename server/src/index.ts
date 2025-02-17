@@ -24,6 +24,17 @@ console.log('Starting server with MongoDB URI:',
   process.env.MONGODB_URI ? 'URI exists' : 'URI missing'
 );
 
+// 在 server 端添加環境變量檢查
+console.log('Environment Check:', {
+  CLIENT_URL: process.env.CLIENT_URL,
+  NODE_ENV: process.env.NODE_ENV,
+  ALLOWED_ORIGINS: [
+    process.env.CLIENT_URL,
+    'http://localhost:3000',
+    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app'
+  ]
+});
+
 const app = express();
 // Render 會自動設置 PORT 環境變量
 const PORT = process.env.PORT || 3001;
@@ -39,19 +50,45 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',
-    'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
-    /\.vercel\.app$/,
-    /\.railway\.app$/
-  ],
+  origin: function (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
+    const allowedOrigins = [
+      process.env.CLIENT_URL,
+      'http://localhost:3000',
+      'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app',
+      /\.vercel\.app$/,
+      /\.railway\.app$/
+    ].filter(Boolean); // 移除 undefined 值
+    
+    console.log('CORS Check:', {
+      requestOrigin: origin,
+      allowedOrigins,
+      clientUrl: process.env.CLIENT_URL
+    });
+
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return allowedOrigin === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log(`Origin ${origin} not allowed by CORS`);
+      callback(new Error(`Origin ${origin} not allowed`));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
   exposedHeaders: ['Authorization'],
-  maxAge: 86400,
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  maxAge: 86400
 };
 
 // CORS logging middleware
