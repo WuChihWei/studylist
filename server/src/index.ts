@@ -89,8 +89,7 @@ app.get('/test/auth', authMiddleware, (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'Authentication successful',
-    user: req.user,
-    timestamp: new Date().toISOString()
+    user: req.user
   });
 });
 
@@ -106,6 +105,13 @@ app.get('/test/cors', (req: Request, res: Response) => {
 // Protected routes
 app.use('/api/users', authMiddleware);
 
+// 在所有路由之前添加
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // API routes
 app.use('/api/users', userRoutes);
 app.use('/api/stripe', stripeRoutes);
@@ -120,11 +126,29 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler);
 
+// 添加在所有路由之後
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error('Global error handler:', err);
+  
+  if (err.name === 'FirebaseAuthError') {
+    return res.status(401).json({
+      error: 'Authentication failed',
+      message: err.message
+    });
+  }
+  
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred'
+  });
+});
+
 // 404 handler (must be last)
 app.use((req: Request, res: Response) => {
+  console.log(`[404] Route not found: ${req.method} ${req.url}`);
   res.status(404).json({
     error: 'Route not found',
-    path: req.path,
+    path: req.url,
     method: req.method
   });
 });
