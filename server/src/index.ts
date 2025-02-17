@@ -34,6 +34,8 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
 // Middleware
+app.options('*', cors());
+
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -45,7 +47,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600 // 緩存預檢請求結果 10 分鐘
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 app.use(express.json());
 
@@ -59,6 +62,20 @@ app.use((req, res, next) => {
   console.log('Body:', req.body);
   console.log('======================\n');
   next();
+});
+
+// 在所有路由之前添加
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+
+  // 處理 OPTIONS 請求
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
 });
 
 // 數據庫狀態映射
