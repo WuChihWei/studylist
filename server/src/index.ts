@@ -34,110 +34,73 @@ console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
 
-// Debug logging for all requests
+// Debug logging middleware
 app.use((req, res, next) => {
   console.log('\n=== INCOMING REQUEST ===');
   console.log('Timestamp:', new Date().toISOString());
   console.log('Method:', req.method);
   console.log('URL:', req.url);
-  console.log('Origin:', req.headers.origin);
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  
-  // Log response with proper typing
-  const oldSend = res.send;
-  res.send = function(body: any) {
-    console.log('\n=== OUTGOING RESPONSE ===');
-    console.log('Status:', res.statusCode);
-    console.log('Headers:', JSON.stringify(res.getHeaders(), null, 2));
-    console.log('Body:', body);
-    console.log('========================\n');
-    return oldSend.call(res, body);
-  };
-  
   next();
 });
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://studylist-client.vercel.app'],
+  origin: [
+    'http://localhost:3000',
+    'https://studylist-client.vercel.app',
+    /\.vercel\.app$/
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
 };
 
+// Apply middlewares
 app.use(cors(corsOptions));
-
-// Handle OPTIONS requests explicitly
-app.options('*', (req, res) => {
-  console.log('\n=== OPTIONS Request Handler ===');
-  console.log('Origin:', req.headers.origin);
-  
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
-  
-  console.log('Response Headers:', res.getHeaders());
-  res.status(204).end();
-});
-
-// Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging
-app.use((req, res, next) => {
-  console.log('\n=== Request Details ===');
-  console.log('Time:', new Date().toISOString());
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Origin:', req.headers.origin);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  next();
+// Test routes (before auth middleware)
+app.get('/test/cors', (req, res) => {
+  console.log('CORS test endpoint hit');
+  res.json({
+    message: 'CORS test successful',
+    headers: req.headers,
+    origin: req.headers.origin
+  });
 });
 
-// Health check endpoint
+app.get('/test/headers', (req, res) => {
+  console.log('Headers test endpoint hit');
+  res.json({
+    message: 'Headers test',
+    headers: req.headers,
+    authorization: req.headers.authorization || 'No auth header'
+  });
+});
+
+// Health check
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
 });
 
-// Test endpoints
-app.get('/test/cors', (req, res) => {
-  res.json({ message: 'CORS test successful' });
-});
-
-app.get('/test/auth', (req, res) => {
-  const token = 'test_token';
-  const testUrl = `${req.protocol}://${req.get('host')}/api/users/test123`;
-  
-  fetch(testUrl, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    res.json({
-      message: 'Internal auth test',
-      testUrl,
-      response: data
-    });
-  })
-  .catch(error => {
-    res.json({
-      message: 'Internal auth test failed',
-      testUrl,
-      error: error.message
-    });
-  });
-});
-
 // Protected routes
 app.use('/api/users', authMiddleware);
+
+// 404 handler
+app.use((req, res) => {
+  console.log('404 Not Found:', req.path);
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.path,
+    method: req.method
+  });
+});
 
 // Export for testing
 export default app;
