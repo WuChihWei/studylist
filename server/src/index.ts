@@ -65,19 +65,40 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const dbState = mongoose.connection.readyState;
+  const dbStateMap: { [key: number]: string } = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
+  
+  res.json({
+    status: 'ok',
+    server: 'running',
+    mongodb: dbStateMap[dbState] || 'unknown',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.get('/test/cors', (req: Request, res: Response) => {
   res.json({
     success: true,
     message: 'CORS test successful',
-    headers: req.headers
+    headers: req.headers,
+    origin: req.headers.origin || 'no origin'
   });
 });
 
 // Protected routes
 app.use('/api/users', authMiddleware);
+
+// API routes
+app.use('/api/users', userRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/topics', topicsRouter);
+app.use('/api/materials', materialRoutes);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
