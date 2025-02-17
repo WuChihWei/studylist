@@ -58,6 +58,7 @@ const corsOptions = {
       process.env.CLIENT_URL,
       'http://localhost:3000',
       'https://studylist-coral.vercel.app',
+      'https://studylist-du1fecbz3-wuchihweis-projects.vercel.app',
       'https://studylist-wuchihweis-projects.vercel.app'
     ].filter(Boolean);
     
@@ -78,6 +79,12 @@ const corsOptions = {
   exposedHeaders: ['Authorization'],
   maxAge: 86400
 };
+
+// Add Private Network Access header
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
+  next();
+});
 
 // CORS logging middleware
 app.use((req, res, next) => {

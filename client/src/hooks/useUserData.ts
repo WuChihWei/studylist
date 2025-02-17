@@ -55,7 +55,8 @@ export const useUserData = () => {
       const token = await currentUser.getIdToken(forceRefresh);
       console.log('Token obtained:', token ? 'Yes' : 'No');
       
-      const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
+      const apiUrl = 'https://studylistserver-production.up.railway.app';
+      const response = await fetch(`${apiUrl}/api/users/${currentUser.uid}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
