@@ -5,13 +5,26 @@
 
 }
 
+.categoriesContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
 
 .categoryTabs {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px dashed #dcdcdc;
+  gap: 8px;
+}
+
+.viewToggle {
+  display: flex;
+  gap: 4px;
+  margin-left: 16px;
+}
+
+.activeView {
+  background-color: #f5f5f5;
 }
 
 .categoryTab {
@@ -127,20 +140,32 @@
   /* padding: 4px 8px; */
 }
 
+.addFormContainer {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 800px;
+  z-index: 50;
+}
+
 .addForm {
-  border-bottom: 1px solid #eee;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eee;
 }
 
 .addMaterialRow {
   display: flex;
   align-items: center;
-  padding: 14px 10px;
   gap: 12px;
 }
 
 .addButtonContainer {
-  display: flex;
-  align-items: center;
+  flex-shrink: 0;
 }
 
 .addButton {
@@ -159,10 +184,7 @@
 
 .inputGroup {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: #909090;
+  min-width: 0;
 }
 
 .addInput, .urlInput {
@@ -194,10 +216,7 @@
 }
 
 .typeIconContainer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  color: #b3b3b3;
+  flex-shrink: 0;
 }
 
 .typeDropdown {
@@ -455,10 +474,82 @@
   .materialName {
     max-width: 200px;
   }
+  
+  .categoriesContainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .viewToggle {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 480px) {
   .materialName {
     max-width: 150px;
+  }
+}
+
+.gridView {
+  display: grid;
+  gap: 1rem;
+  /* padding: 1rem; */
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .gridView {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gridCard {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.gridCardContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.gridCardHeader {
+  flex-shrink: 0;
+}
+
+.gridCardList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 300px;
+}
+
+.emptyState {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.materialCard {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+
+.materialCard:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 640px) {
+  .addFormContainer {
+    width: 95%;
+    bottom: 16px;
   }
 }

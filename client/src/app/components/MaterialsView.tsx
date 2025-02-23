@@ -6,7 +6,7 @@ import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { MdWeb } from "react-icons/md";
-import { BsGrid } from "react-icons/bs";
+import { BsGrid, BsListUl } from "react-icons/bs";
 import { IoChevronDownSharp } from "react-icons/io5";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MdOutlineEdit } from "react-icons/md";
@@ -14,8 +14,30 @@ import { IoClose } from "react-icons/io5";
 import { auth } from '../firebase/firebaseConfig';
 import { useUserData } from '../../hooks/useUserData';
 import { IconType } from 'react-icons';
-
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Plus, MoreHorizontal, Link } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
+import { columns } from "./columns"
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -25,7 +47,7 @@ interface MaterialsViewProps {
   activeTab: string;
 }
 
-const TYPE_ICONS: Record<string, IconType> = {
+export const TYPE_ICONS: Record<string, IconType> = {
   video: FiVideo,
   book: FiBook,
   podcast: HiOutlineMicrophone,
@@ -47,6 +69,8 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
   const [editedTitle, setEditedTitle] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [showUrlInput, setShowUrlInput] = useState(false);
 
   const categoryIcons = {
     all: <span className={styles.categoryIcon}><BsGrid size={18} /></span>,
@@ -77,6 +101,18 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     }
     return categories[activeCategory].map(m => ({ ...m, type: activeCategory }));
   };
+
+  const data = getAllMaterials().map((material, index) => ({
+    ...material,
+    index: index + 1,
+    type: material.type as Material['type']
+  }))
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   const MoreMenu = ({ 
     materialId, 
@@ -190,47 +226,194 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     }
   };
 
+  const ViewToggle = () => (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setViewMode('list')}
+        className={viewMode === 'list' ? 'bg-accent' : ''}
+      >
+        <BsListUl size={20} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setViewMode('grid')}
+        className={viewMode === 'grid' ? 'bg-accent' : ''}
+      >
+        <BsGrid size={20} />
+      </Button>
+    </div>
+  );
+
   return (
     <div className={styles.materialsContainer}>
-      <div className={styles.categoryTabs}>
-        <button
-          className={`${styles.categoryTab} ${activeCategory === 'all' ? styles.active : ''}`}
-          onClick={() => setActiveCategory('all')}
-        >
-          {categoryIcons.all}
-          <span>All ({getCategoryCount('all')})</span>
-        </button>
-        <button
-          className={`${styles.categoryTab} ${activeCategory === 'webpage' ? styles.active : ''}`}
-          onClick={() => setActiveCategory('webpage')}
-        >
-          {categoryIcons.webpage}
-          <span>Web ({getCategoryCount('webpage')})</span>
-        </button>
-        <button
-          className={`${styles.categoryTab} ${activeCategory === 'video' ? styles.active : ''}`}
-          onClick={() => setActiveCategory('video')}
-        >
-          {categoryIcons.video}
-          <span>Video ({getCategoryCount('video')})</span>
-        </button>
-        <button
-          className={`${styles.categoryTab} ${activeCategory === 'podcast' ? styles.active : ''}`}
-          onClick={() => setActiveCategory('podcast')}
-        >
-          {categoryIcons.podcast}
-          <span>Podcast ({getCategoryCount('podcast')})</span>
-        </button>
-        <button
-          className={`${styles.categoryTab} ${activeCategory === 'book' ? styles.active : ''}`}
-          onClick={() => setActiveCategory('book')}
-        >
-          {categoryIcons.book}
-          <span>Book ({getCategoryCount('book')})</span>
-        </button>
+      <div className={styles.categoriesContainer}>
+        <div className={styles.categoryTabs}>
+          <button
+            className={`${styles.categoryTab} ${activeCategory === 'all' ? styles.active : ''}`}
+            onClick={() => setActiveCategory('all')}
+          >
+            {categoryIcons.all}
+            <span>All ({getCategoryCount('all')})</span>
+          </button>
+          <button
+            className={`${styles.categoryTab} ${activeCategory === 'webpage' ? styles.active : ''}`}
+            onClick={() => setActiveCategory('webpage')}
+          >
+            {categoryIcons.webpage}
+            <span>Web ({getCategoryCount('webpage')})</span>
+          </button>
+          <button
+            className={`${styles.categoryTab} ${activeCategory === 'video' ? styles.active : ''}`}
+            onClick={() => setActiveCategory('video')}
+          >
+            {categoryIcons.video}
+            <span>Video ({getCategoryCount('video')})</span>
+          </button>
+          <button
+            className={`${styles.categoryTab} ${activeCategory === 'podcast' ? styles.active : ''}`}
+            onClick={() => setActiveCategory('podcast')}
+          >
+            {categoryIcons.podcast}
+            <span>Podcast ({getCategoryCount('podcast')})</span>
+          </button>
+          <button
+            className={`${styles.categoryTab} ${activeCategory === 'book' ? styles.active : ''}`}
+            onClick={() => setActiveCategory('book')}
+          >
+            {categoryIcons.book}
+            <span>Book ({getCategoryCount('book')})</span>
+          </button>
+        </div>
+        <div className={styles.viewToggle}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setViewMode('list')}
+            className={viewMode === 'list' ? styles.activeView : ''}
+          >
+            <BsListUl size={18} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setViewMode('grid')}
+            className={viewMode === 'grid' ? styles.activeView : ''}
+          >
+            <BsGrid size={18} />
+          </Button>
+        </div>
       </div>
 
       <div className={styles.materialsList}>
+        {viewMode === 'list' ? (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className="p-2">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="p-2">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                      No materials found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <div className={styles.gridView}>
+            {(['webpage', 'video', 'podcast', 'book'] as const).map((category) => (
+              <Card key={category} className={`p-4 overflow-hidden ${styles.gridCard}`}>
+                <CardContent className={`p-0 ${styles.gridCardContent}`}>
+                  <div className={`flex items-center gap-2 mb-4 ${styles.gridCardHeader}`}>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                      {React.createElement(TYPE_ICONS[category], { 
+                        size: 16,
+                        className: "text-primary"
+                      })}
+                    </div>
+                    <h3 className="font-medium capitalize">{category}</h3>
+                    <span className="text-sm text-muted-foreground">
+                      ({categories[category]?.length || 0})
+                    </span>
+                  </div>
+                  
+                  <div className={`space-y-2 pr-2 ${styles.gridCardList}`}>
+                    {(categories[category] || []).length > 0 ? (
+                      (categories[category] || []).map((material, index) => (
+                        <div 
+                          key={material._id} 
+                          className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50"
+                        >
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
+                            <span className="text-sm text-muted-foreground flex-shrink-0">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium truncate block">
+                              {truncateTitle(material.title || '', 30)}
+                            </span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="flex-shrink-0"
+                            onClick={() => setOpenMoreMenu(material._id || null)}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                          {openMoreMenu === material._id && (
+                            <MoreMenu
+                              materialId={material._id || ''}
+                              title={material.title || ''}
+                              type={category}
+                              onClose={() => setOpenMoreMenu(null)}
+                              index={index}
+                            />
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className={styles.emptyState}>
+                        No materials
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.addFormContainer}>
         <form onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
@@ -240,164 +423,73 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
             url: formData.get('url'),
             rating: 5
           });
+          setShowUrlInput(false);
           (e.target as HTMLFormElement).reset();
         }} className={styles.addForm}>
           <div className={styles.addMaterialRow}>
             <div className={styles.addButtonContainer}>
-              <button type="submit" className={styles.addButton}>+</button>
+              <Button type="submit" variant="ghost" size="icon" className={styles.centerIcon}>
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
             <div className={styles.typeIconContainer}>
-              {categoryIcons[selectedType]}
-              <button 
-                type="button" 
-                className={styles.dropdownButton}
-                onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-              >
-                <IoChevronDownSharp size={14} />
-              </button>
-              {isTypeDropdownOpen && (
-                <div className={styles.typeDropdown}>
-                  <div className={styles.dropdownHeader}>
-                    <div className={styles.typeOptions}>
-                      <button
-                        type="button"
-                        className={styles.typeOption}
-                        onClick={() => {
-                          setSelectedType('webpage');
-                          setIsTypeDropdownOpen(false);
-                        }}
-                      >
-                        <MdWeb size={18} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.typeOption}
-                        onClick={() => {
-                          setSelectedType('video');
-                          setIsTypeDropdownOpen(false);
-                        }}
-                      >
-                        <FiVideo size={18} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.typeOption}
-                        onClick={() => {
-                          setSelectedType('podcast');
-                          setIsTypeDropdownOpen(false);
-                        }}
-                      >
-                        <HiOutlineMicrophone size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.typeOption}
-                        onClick={() => {
-                          setSelectedType('book');
-                          setIsTypeDropdownOpen(false);
-                        }}
-                      >
-                        <FiBook size={18} />
-                      </button>
-                    </div>
-                    <button 
-                      type="button"
-                      className={styles.closeButton}
-                      onClick={() => setIsTypeDropdownOpen(false)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`flex items-center gap-1 ${styles.centerIcon}`}>
+                    {categoryIcons[selectedType]}
+                    <IoChevronDownSharp size={14} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => setSelectedType('webpage')}>
+                    <MdWeb size={18} className="mr-2" />
+                    <span>Webpage</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedType('video')}>
+                    <FiVideo size={18} className="mr-2" />
+                    <span>Video</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedType('podcast')}>
+                    <HiOutlineMicrophone size={18} className="mr-2" />
+                    <span>Podcast</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSelectedType('book')}>
+                    <FiBook size={18} className="mr-2" />
+                    <span>Book</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className={styles.inputGroup}>
-              <input
-                type="text"
-                name="title"
-                placeholder="Add Material..."
-                className={styles.addInput}
-                required
-              />
-              <input
-                type="url"
-                name="url"
-                placeholder="Url(Optional)"
-                className={styles.urlInput}
-              />
+              <div className="flex items-center gap-2 w-full">
+                <Input
+                  type="text"
+                  name="title"
+                  placeholder="Add Material..."
+                  required
+                  className={styles.centerText}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowUrlInput(!showUrlInput)}
+                  className={`${styles.centerIcon} ${showUrlInput ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  <Link className="h-4 w-4" />
+                </Button>
+              </div>
+              {showUrlInput && (
+                <Input
+                  type="url"
+                  name="url"
+                  placeholder="Url(Optional)"
+                  className={`mt-2 ${styles.centerText}`}
+                />
+              )}
             </div>
           </div>
         </form>
-
-        <div className={styles.materialsListContent}>
-          {getAllMaterials().map((material, index) => (
-            <div key={index} className={styles.materialItem}>
-              <div className={styles.materialLeft}>
-                <span className={styles.materialNumber}>{index + 1}</span>
-                <div className={styles.materialPreview}>
-                  {TYPE_ICONS[material.type] ? (
-                    React.createElement(TYPE_ICONS[material.type], { 
-                      size: 16,
-                      className: styles[`icon${material.type}`]
-                    })
-                  ) : (
-                    <div className={styles.previewPlaceholder} />
-                  )}
-                </div>
-                {editingMaterial === material._id ? (
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    const success = await onUpdateMaterial(material._id!, editedTitle);
-                    if (success) {
-                      setEditingMaterial(null);
-                    } else {
-                      console.error('Failed to update material');
-                    }
-                  }}>
-                    <input
-                      type="text"
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
-                      className={styles.editInput}
-                      autoFocus
-                    />
-                  </form>
-                ) : (
-                  <span className={`${styles.materialName} ${material.url ? styles.hasUrl : ''}`}>
-                    {material.url ? (
-                      <a 
-                        href={material.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                      >
-                        {truncateTitle(material.title)}
-                      </a>
-                    ) : (
-                      truncateTitle(material.title)
-                    )}
-                  </span>
-                )}
-              </div>
-              <div className={styles.moreButtonContainer}>
-                <button 
-                  className={styles.moreButton}
-                  onClick={() => setOpenMoreMenu(material._id ? material._id : null)}
-                >
-                  ⋯
-                </button>
-                {openMoreMenu === material._id && (
-                  <MoreMenu
-                    materialId={material._id!}
-                    title={material.title}
-                    type={material.type as keyof Categories}
-                    onClose={() => setOpenMoreMenu(null)}
-                    index={index}
-                  />
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );
