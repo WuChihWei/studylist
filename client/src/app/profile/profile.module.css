@@ -53,8 +53,8 @@
 
 .avatarArea {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background-color: blue;
 }
@@ -111,7 +111,7 @@
   color: #c6c6c6;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   transition: all 0.2s;
 }
 

@@ -351,63 +351,67 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
         ) : (
           <div className={styles.gridView}>
             {(['webpage', 'video', 'podcast', 'book'] as const).map((category) => (
-              <Card key={category} className={`p-4 overflow-hidden ${styles.gridCard}`}>
-                <CardContent className={`p-0 ${styles.gridCardContent}`}>
-                  <div className={`flex items-center gap-2 mb-4 ${styles.gridCardHeader}`}>
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
-                      {React.createElement(TYPE_ICONS[category], { 
-                        size: 16,
-                        className: "text-primary"
-                      })}
-                    </div>
-                    <h3 className="font-medium capitalize">{category}</h3>
+              <div key={category} className={styles.gridSection}>
+                <div className={styles.gridSectionHeader}>
+                  <div className="flex items-center gap-2">
+                    {React.createElement(TYPE_ICONS[category], { 
+                      size: 16,
+                      className: "text-primary"
+                    })}
+                    <h5 className="font-medium capitalize">{category}</h5>
                     <span className="text-sm text-muted-foreground">
                       ({categories[category]?.length || 0})
                     </span>
                   </div>
-                  
-                  <div className={`space-y-2 pr-2 ${styles.gridCardList}`}>
-                    {(categories[category] || []).length > 0 ? (
-                      (categories[category] || []).map((material, index) => (
-                        <div 
-                          key={material._id} 
-                          className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50"
-                        >
-                          <div className="flex items-center gap-4 min-w-0 flex-1">
-                            <span className="text-sm text-muted-foreground flex-shrink-0">
-                              {index + 1}
-                            </span>
-                            <span className="text-sm font-medium truncate block">
-                              {truncateTitle(material.title || '', 30)}
-                            </span>
-                          </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="flex-shrink-0"
-                            onClick={() => setOpenMoreMenu(material._id || null)}
+                </div>
+                
+                <Card className={`overflow-hidden ${styles.gridCard}`}>
+                  <CardContent className={`p-4 ${styles.gridCardContent}`}>
+                    <div className={`space-y-2 ${styles.gridCardList}`}>
+                      {(categories[category] || []).length > 0 ? (
+                        (categories[category] || []).map((material, index) => (
+                          <div 
+                            key={material._id} 
+                            className={styles.gridListItem}
                           >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                          {openMoreMenu === material._id && (
-                            <MoreMenu
-                              materialId={material._id || ''}
-                              title={material.title || ''}
-                              type={category}
-                              onClose={() => setOpenMoreMenu(null)}
-                              index={index}
-                            />
-                          )}
+                            <div className="flex items-center gap-4 min-w-0 flex-1">
+                              <span className={styles.itemNumber}>
+                                {index + 1}
+                              </span>
+                              <div className={styles.itemContent}>
+                                <span className={styles.itemTitle}>
+                                  {truncateTitle(material.title || '', 30)}
+                                </span>
+                              </div>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className={styles.moreButton}
+                              onClick={() => setOpenMoreMenu(material._id || null)}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            {openMoreMenu === material._id && (
+                              <MoreMenu
+                                materialId={material._id || ''}
+                                title={material.title || ''}
+                                type={category}
+                                onClose={() => setOpenMoreMenu(null)}
+                                index={index}
+                              />
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className={styles.emptyState}>
+                          No materials
                         </div>
-                      ))
-                    ) : (
-                      <div className={styles.emptyState}>
-                        No materials
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         )}
@@ -427,58 +431,54 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           (e.target as HTMLFormElement).reset();
         }} className={styles.addForm}>
           <div className={styles.addMaterialRow}>
-            <div className={styles.addButtonContainer}>
-              <Button type="submit" variant="ghost" size="icon" className={styles.centerIcon}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className={styles.typeIconContainer}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={`flex items-center gap-1 ${styles.centerIcon}`}>
-                    {categoryIcons[selectedType]}
-                    <IoChevronDownSharp size={14} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => setSelectedType('webpage')}>
-                    <MdWeb size={18} className="mr-2" />
-                    <span>Webpage</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedType('video')}>
-                    <FiVideo size={18} className="mr-2" />
-                    <span>Video</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedType('podcast')}>
-                    <HiOutlineMicrophone size={18} className="mr-2" />
-                    <span>Podcast</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSelectedType('book')}>
-                    <FiBook size={18} className="mr-2" />
-                    <span>Book</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className={styles.inputGroup}>
-              <div className="flex items-center gap-2 w-full">
-                <Input
-                  type="text"
-                  name="title"
-                  placeholder="Add Material..."
-                  required
-                  className={styles.centerText}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowUrlInput(!showUrlInput)}
-                  className={`${styles.centerIcon} ${showUrlInput ? 'text-primary' : 'text-muted-foreground'}`}
-                >
-                  <Link className="h-4 w-4" />
+            <Button type="submit" variant="ghost" size="icon" className={styles.centerIcon}>
+              <Plus className="h-4 w-4" />
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className={styles.centerIcon}>
+                  {categoryIcons[selectedType]}
                 </Button>
-              </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onSelect={() => setSelectedType('webpage')}>
+                  <MdWeb size={18} className="mr-2" />
+                  <span>Webpage</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedType('video')}>
+                  <FiVideo size={18} className="mr-2" />
+                  <span>Video</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedType('podcast')}>
+                  <HiOutlineMicrophone size={18} className="mr-2" />
+                  <span>Podcast</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedType('book')}>
+                  <FiBook size={18} className="mr-2" />
+                  <span>Book</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className={styles.inputGroup}>
+              <Input
+                type="text"
+                name="title"
+                placeholder="Add Material..."
+                required
+                className={styles.centerText}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowUrlInput(prev => !prev)}
+                className={`${styles.centerIcon} ${showUrlInput ? 'text-primary' : 'text-muted-foreground'}`}
+              >
+                <Link className="h-4 w-4" />
+              </Button>
+              
               {showUrlInput && (
                 <Input
                   type="url"
