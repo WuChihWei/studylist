@@ -9,6 +9,7 @@ interface ContributionData {
 
 interface ContributionGraphProps {
   data?: ContributionData[];
+  activeView: string;
 }
 
 // 將函數移到組件外部
@@ -26,7 +27,7 @@ const generateSquares = (startDate: Date, totalDays: number, contributionData: C
   });
 };
 
-const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
+const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) => {
   console.log('5. ContributionGraph received data:', data);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -55,16 +56,16 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
     }
   }, [data]);
 
-  const getContributionColor = (count: number, studyCount?: number) => {
+  const getContributionColor = (count: number, studyCount: number = 0) => {
     // 如果有學習記錄，優先顯示學習顏色
-    if (studyCount !== undefined && studyCount > 0) {
+    if (studyCount > 0) {
       if (studyCount === 1) return 'var(--study-l1)';
       if (studyCount === 2) return 'var(--study-l2)';
       if (studyCount === 3) return 'var(--study-l3)';
-      if (studyCount >= 4) return 'var(--study-l4)';
+      return 'var(--study-l4)';
     }
     
-    // 否則顯示收藏顏色
+    // 如果只有收藏記錄
     if (count === 0) return 'var(--contribution-empty)';
     if (count <= 1) return 'var(--contribution-l1)';
     if (count <= 3) return 'var(--contribution-l2)';
@@ -117,22 +118,39 @@ const ContributionGraph = ({ data = [] }: ContributionGraphProps) => {
   return (
     <div className={styles.graphContainer}>
       <div className={styles.header}>
-        <div className={styles.yearLabel}>{currentYear}</div>
+        <div className={styles.yearInfo}>
+          <span className={styles.yearLabel}>{currentYear}</span>
+          <div className={styles.collectLegend}>
+            {activeView === 'materials' ? (
+              <>
+                <span>No Collect</span>
+                <div className={`${styles.collectScale} ${styles.materialsScale}`}>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                </div>
+                <span>Great Collect</span>
+              </>
+            ) : (
+              <>
+                <span>Only Collect</span>
+                <div className={`${styles.collectScale} ${styles.studyScale}`}>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                  <div className={styles.collectDot}></div>
+                </div>
+                <span>Finished</span>
+              </>
+            )}
+          </div>
+        </div>
         <div className={styles.navigationButtons}>
-          <button 
-            className={styles.navButton}
-            onClick={() => handleScroll('left')}
-            title="Scroll left"
-          >
-            ◀
-          </button>
-          <button 
-            className={styles.navButton}
-            onClick={() => handleScroll('right')}
-            title="Scroll right"
-          >
-            ▶
-          </button>
+          <button className={styles.navButton} onClick={() => handleScroll('left')}>◀</button>
+          <button className={styles.navButton} onClick={() => handleScroll('right')}>▶</button>
         </div>
       </div>
       <div className={styles.graphScrollContainer} ref={scrollContainerRef}>

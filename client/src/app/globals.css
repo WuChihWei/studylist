@@ -120,23 +120,67 @@ a {
 }
 
 @layer base {
-  h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-4xl;
+  /* Display Text */
+  .display-2xl {
+    @apply text-8xl font-bold tracking-tight;  /* 96px */
+  }
+  .display-xl {
+    @apply text-7xl font-bold tracking-tight;  /* 72px */
+  }
+  .display-lg {
+    @apply text-6xl font-bold tracking-tight;  /* 60px */
   }
 
-  h2 {
-    @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+  /* Headings */
+  h1, .h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;  /* 36px/48px */
+  }
+  h2, .h2 {
+    @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;  /* 30px */
+  }
+  h3, .h3 {
+    @apply scroll-m-20 text-2xl font-semibold tracking-tight;  /* 24px */
+  }
+  h4, .h4 {
+    @apply scroll-m-20 text-xl font-semibold tracking-tight;  /* 20px */
+  }
+  h5, .h5 {
+    @apply scroll-m-14 text-lg font-semibold tracking-tight;  /* 18px */
+  }
+  h6, .h6 {
+    @apply scroll-m-14 text-sm font-semibold tracking-tight;  /* 16px */
   }
 
-  h3 {
-    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+  /* Body Text */
+  .text-body-lg {
+    @apply text-lg font-normal;  /* 18px */
+  }
+  .text-body {
+    @apply text-base font-normal;  /* 16px */
+  }
+  .text-body-sm {
+    @apply text-sm font-normal;  /* 14px */
+  }
+  .text-body-xs {
+    @apply text-xs font-normal;  /* 12px */
   }
 
-  h4 {
-    @apply scroll-m-20 text-xl font-semibold tracking-tight;
+  /* Caption & Helper Text */
+  .text-caption {
+    @apply text-sm font-normal text-muted-foreground;  /* 14px */
+  }
+  .text-helper {
+    @apply text-xs font-normal text-muted-foreground;  /* 12px */
   }
 
-  h5 {
-    @apply scroll-m-14 text-base font-semibold tracking-tight;
+  /* Button Text */
+  .text-button-lg {
+    @apply text-lg font-medium;  /* 18px */
+  }
+  .text-button {
+    @apply text-base font-medium;  /* 16px */
+  }
+  .text-button-sm {
+    @apply text-sm font-medium;  /* 14px */
   }
 }

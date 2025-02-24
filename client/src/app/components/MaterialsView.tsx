@@ -23,21 +23,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
-import { createColumns } from "./columns"
 import { NoteCard } from "./NoteCard"
+import { ListItem } from './ListItem';
 
 interface MaterialsViewProps {
   categories: Categories;
@@ -173,25 +160,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     );
   };
 
-  const table = useReactTable({
-    data,
-    columns: useMemo(() => createColumns(
-      setOpenMoreMenu, 
-      openMoreMenu, 
-      onDeleteMaterial, 
-      MoreMenu,
-      onUpdateMaterial,
-      notePopup,
-      setNotePopup
-    ), [openMoreMenu, onDeleteMaterial, onUpdateMaterial, notePopup]),
-    getCoreRowModel: getCoreRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10
-      }
-    }
-  });
-
   // 點擊外部時關閉 MoreMenu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -258,300 +226,165 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     }
   };
 
-  const ViewToggle = () => (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setViewMode('list')}
-        className={viewMode === 'list' ? 'bg-accent' : ''}
-      >
-        <BsListUl size={20} />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setViewMode('grid')}
-        className={viewMode === 'grid' ? 'bg-accent' : ''}
-      >
-        <BsGrid size={20} />
-      </Button>
-    </div>
-  );
+  // const ViewToggle = () => (
+  //   <div className="flex items-center gap-2">
+  //     <Button
+  //       variant="ghost"
+  //       size="icon"
+  //       onClick={() => setViewMode('list')}
+  //       className={viewMode === 'list' ? 'bg-accent' : ''}
+  //     >
+  //       <BsListUl size={20} />
+  //     </Button>
+  //     <Button
+  //       variant="ghost"
+  //       size="icon"
+  //       onClick={() => setViewMode('grid')}
+  //       className={viewMode === 'grid' ? 'bg-accent' : ''}
+  //     >
+  //       <BsGrid size={20} />
+  //     </Button>
+  //   </div>
+  // );
 
-  const GridItem = ({ material, index, category }: { material: Material, index: number, category: Material['type'] }) => {
-    const materialId = material._id;
-    if (!materialId) return null;
-
-    const handleMoreClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setOpenMoreMenu(openMoreMenu === materialId ? null : materialId);
-    };
-
+  const MaterialsList = ({ materials, category }: { materials: Material[], category: string }) => {
     return (
-      <div className={styles.gridListItem}>
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <div className="text-sm text-muted-foreground pl-2">{index}</div>
-          <div className="flex items-center pl-2">
-            {TYPE_ICONS[category] && React.createElement(TYPE_ICONS[category], { 
-              size: 16, 
-              className: "text-primary" 
-            })}
-          </div>
-          <span className="font-medium text-left pl-2">{material.title}</span>
+      <div className={styles.listContainer}>
+        <div className={styles.listHeader}>
+          <div className={styles.headerNo}>No.</div>
+          <div className={styles.headerType}>Type</div>
+          <div className={styles.headerTitle}>Title</div>
         </div>
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="float-right"
-            onClick={handleMoreClick}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-          {openMoreMenu === materialId && (
-            <MoreMenu
-              materialId={materialId}
-              title={material.title || 'Untitled'}
-              type={category}
-              onClose={() => setOpenMoreMenu(null)}
-              onDelete={async () => {
-                console.log('Deleting material:', materialId);
-                return onDeleteMaterial(materialId);
+        <div className={styles.listContent}>
+          {materials.map((material, index) => (
+            <ListItem
+              key={material._id}
+              material={material}
+              index={index + 1}
+              categoryIcons={categoryIcons}
+              onEdit={(material) => {
+                setNotePopup({
+                  isOpen: true,
+                  materialId: material._id || '',
+                  title: material.title || '',
+                  note: material.note || ''
+                });
               }}
+              onDelete={onDeleteMaterial}
             />
-          )}
+          ))}
         </div>
       </div>
     );
   };
 
+  const CollectLegend = () => (
+    <div className={styles.collectLegend}>
+      <span>No Collect</span>
+      <div className={styles.collectScale}>
+        <div className={styles.collectDot}></div>
+        <div className={styles.collectDot}></div>
+        <div className={styles.collectDot}></div>
+        <div className={styles.collectDot}></div>
+        <div className={styles.collectDot}></div>
+      </div>
+      <span>Great Collect</span>
+    </div>
+  );
+
   return (
-    <div className={styles.materialsContainer}>
-      <div className={styles.categoriesContainer}>
-        <div className={styles.categoryTabs}>
-          <button
-            className={`${styles.categoryTab} ${activeCategory === 'all' ? styles.active : ''}`}
-            onClick={() => setActiveCategory('all')}
-          >
-            {categoryIcons.all}
-            <span>All ({getCategoryCount('all')})</span>
-          </button>
-          <button
-            className={`${styles.categoryTab} ${activeCategory === 'webpage' ? styles.active : ''}`}
-            onClick={() => setActiveCategory('webpage')}
-          >
-            {categoryIcons.webpage}
-            <span>Web ({getCategoryCount('webpage')})</span>
-          </button>
-          <button
-            className={`${styles.categoryTab} ${activeCategory === 'video' ? styles.active : ''}`}
-            onClick={() => setActiveCategory('video')}
-          >
-            {categoryIcons.video}
-            <span>Video ({getCategoryCount('video')})</span>
-          </button>
-          <button
-            className={`${styles.categoryTab} ${activeCategory === 'podcast' ? styles.active : ''}`}
-            onClick={() => setActiveCategory('podcast')}
-          >
-            {categoryIcons.podcast}
-            <span>Podcast ({getCategoryCount('podcast')})</span>
-          </button>
-          <button
-            className={`${styles.categoryTab} ${activeCategory === 'book' ? styles.active : ''}`}
-            onClick={() => setActiveCategory('book')}
-          >
-            {categoryIcons.book}
-            <span>Book ({getCategoryCount('book')})</span>
-          </button>
-        </div>
-        <div className={styles.viewToggle}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setViewMode('list')}
-            className={viewMode === 'list' ? styles.activeView : ''}
-          >
-            <BsListUl size={18} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setViewMode('grid')}
-            className={viewMode === 'grid' ? styles.activeView : ''}
-          >
-            <BsGrid size={18} />
-          </Button>
-        </div>
-      </div>
-
-      <div className={styles.materialsList}>
-        {viewMode === 'list' ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className="p-2">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="p-2">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell 
-                      colSpan={table.getAllColumns().length} 
-                      className="h-24 text-center"
-                    >
-                      No materials found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className={styles.gridView}>
-            {(['webpage', 'video', 'podcast', 'book'] as const).map((category) => (
-              <div key={category} className={styles.gridSection}>
-                <div className={styles.gridSectionHeader}>
-                  <div className="flex items-center gap-2">
-                    {React.createElement(TYPE_ICONS[category], { 
-                      size: 16,
-                      className: "text-primary"
-                    })}
-                    <h5 className="font-medium capitalize">{category}</h5>
-                    <span className="text-sm text-muted-foreground">
-                      ({categories[category]?.length || 0})
-                    </span>
-                  </div>
-                </div>
-                
-                <Card className={`overflow-hidden ${styles.gridCard}`}>
-                  <CardContent className={`p-4 ${styles.gridCardContent}`}>
-                    <div className={`space-y-2 ${styles.gridCardList}`}>
-                      {(categories[category] || []).length > 0 ? (
-                        (categories[category] || []).map((material, index) => (
-                          <GridItem key={material._id} material={material} index={index + 1} category={category} />
-                        ))
-                      ) : (
-                        <div className={styles.emptyState}>
-                          No materials
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className={styles.addFormContainer}>
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          onAddMaterial({
-            title: formData.get('title'),
-            type: selectedType,
-            url: formData.get('url'),
-            rating: 5
-          });
-          setShowUrlInput(false);
-          (e.target as HTMLFormElement).reset();
-        }} className={styles.addForm}>
-          <div className={styles.addMaterialRow}>
-            <Button type="submit" variant="ghost" size="icon" className={styles.centerIcon}>
-              <Plus className="h-4 w-4" />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className={styles.centerIcon}>
-                  {categoryIcons[selectedType]}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onSelect={() => setSelectedType('webpage')}>
-                  <MdWeb size={18} className="mr-2" />
-                  <span>Webpage</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedType('video')}>
-                  <FiVideo size={18} className="mr-2" />
-                  <span>Video</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedType('podcast')}>
-                  <HiOutlineMicrophone size={18} className="mr-2" />
-                  <span>Podcast</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedType('book')}>
-                  <FiBook size={18} className="mr-2" />
-                  <span>Book</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <div className={styles.inputGroup}>
-              <Input
-                type="text"
-                name="title"
-                placeholder="Add Material..."
-                required
-                className={styles.centerText}
-              />
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.categoriesContainer}>
+            <div className={styles.categoryTabs}>
+              <button
+                className={`${styles.categoryTab} ${activeCategory === 'all' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('all')}
+              >
+                {categoryIcons.all}
+                <span>All ({getCategoryCount('all')})</span>
+              </button>
+              <button
+                className={`${styles.categoryTab} ${activeCategory === 'webpage' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('webpage')}
+              >
+                {categoryIcons.webpage}
+                <span>Web ({getCategoryCount('webpage')})</span>
+              </button>
+              <button
+                className={`${styles.categoryTab} ${activeCategory === 'video' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('video')}
+              >
+                {categoryIcons.video}
+                <span>Video ({getCategoryCount('video')})</span>
+              </button>
+              <button
+                className={`${styles.categoryTab} ${activeCategory === 'podcast' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('podcast')}
+              >
+                {categoryIcons.podcast}
+                <span>Podcast ({getCategoryCount('podcast')})</span>
+              </button>
+              <button
+                className={`${styles.categoryTab} ${activeCategory === 'book' ? styles.active : ''}`}
+                onClick={() => setActiveCategory('book')}
+              >
+                {categoryIcons.book}
+                <span>Book ({getCategoryCount('book')})</span>
+              </button>
+            </div>
+            <div className={styles.viewToggle}>
               <Button
-                type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => setShowUrlInput(prev => !prev)}
-                className={`${styles.centerIcon} ${showUrlInput ? 'text-primary' : 'text-muted-foreground'}`}
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? styles.activeView : ''}
               >
-                <Link className="h-4 w-4" />
+                <BsListUl size={18} />
               </Button>
-              
-              {showUrlInput && (
-                <Input
-                  type="url"
-                  name="url"
-                  placeholder="Url(Optional)"
-                  className={`mt-2 ${styles.centerText}`}
-                />
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewMode('grid')}
+                className={viewMode === 'grid' ? styles.activeView : ''}
+              >
+                <BsGrid size={18} />
+              </Button>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+        <div className={styles.materials}>
+          <div className={styles.materialsList}>
+            {viewMode === 'list' ? (
+              <MaterialsList 
+                materials={data} 
+                category="all"
+              />
+            ) : (
+              <div className={styles.gridView}>
+                {(['webpage', 'video', 'podcast', 'book'] as const).map((type) => (
+                  <MaterialsList 
+                    key={type} 
+                    materials={categories[type] || []} 
+                    category={type}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-      <NoteCard
-        isOpen={notePopup.isOpen}
-        title={notePopup.title}
-        note={notePopup.note}
-        onClose={() => setNotePopup(prev => ({ ...prev, isOpen: false }))}
-        onSave={async (note) => {
-          await onUpdateMaterial(notePopup.materialId, { note });
-        }}
-      />
+          <NoteCard
+            isOpen={notePopup.isOpen}
+            title={notePopup.title}
+            note={notePopup.note}
+            onClose={() => setNotePopup(prev => ({ ...prev, isOpen: false }))}
+            onSave={async (note) => {
+              await onUpdateMaterial(notePopup.materialId, { note });
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

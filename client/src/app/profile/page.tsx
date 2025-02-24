@@ -12,6 +12,7 @@ import MaterialsView from '../components/MaterialsView';
 import StudyListView from '../components/StudyListView';
 import { auth } from '../firebase/firebaseConfig';
 import { RiDeleteBin6Line } from 'react-icons/ri';
+// import Navbar from '../components/Navbar';
 
 
 export default function ProfilePage() {
@@ -151,6 +152,25 @@ export default function ProfilePage() {
     setDeleteConfirmation({ isOpen: false, topicId: null });
   };
 
+  const handleAddMaterial = async (material: any) => {
+    if (!material.title?.trim()) {
+      alert('Please enter a title');
+      return;
+    }
+
+    const success = await addMaterial({
+      title: material.title.trim(),
+      type: material.type,
+      url: material.url?.trim(),
+      rating: material.rating,
+      dateAdded: new Date()
+    }, activeTab);
+
+    if (!success) {
+      alert('Failed to add material. Please try again.');
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!userData) return <div>Please log in</div>;
   
@@ -203,7 +223,7 @@ export default function ProfilePage() {
             </div>
           ))}
           
-          <form onSubmit={handleSubmit} className={styles.addForm}>
+          {/* <form onSubmit={handleSubmit} className={styles.addForm}>
             <div className={styles.inputGroup}>
               <div className={styles.nameGroup}>
                 <input
@@ -226,7 +246,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             </div>
-          </form>
+          </form> */}
         </div>
       </div>
     );
@@ -273,7 +293,10 @@ export default function ProfilePage() {
           </div>
 
           <div className={styles.contributionSection}>
-            <ContributionGraph data={getContributionData()} />
+            <ContributionGraph 
+              data={getContributionData()} 
+              activeView={activeView}
+            />
           </div>
 
         </div>
@@ -389,7 +412,7 @@ export default function ProfilePage() {
             </button>
           </div>
           
-          <div className={styles.collectLegend}>
+          {/* <div className={styles.collectLegend}>
             {activeView === 'materials' ? (
               <>
                 <span>No Collect</span>
@@ -415,7 +438,7 @@ export default function ProfilePage() {
                 <span>Finished</span>
               </>
             )}
-          </div>
+          </div> */}
         </div>
 
         {activeView === 'materials' ? (
@@ -505,6 +528,8 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* <Navbar onAddMaterial={handleAddMaterial} /> */}
     </div>
   );
 }

@@ -148,3 +148,47 @@
   position: relative;
   white-space: nowrap;
 }
+
+.yearInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.yearSelector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.collectLegend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.collectScale {
+  display: flex;
+  gap: 4px;
+}
+
+.collectDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.materialsScale .collectDot:nth-child(1) { background: var(--contribution-empty); }
+.materialsScale .collectDot:nth-child(2) { background: var(--contribution-l1); }
+.materialsScale .collectDot:nth-child(3) { background: var(--contribution-l2); }
+.materialsScale .collectDot:nth-child(4) { background: var(--contribution-l3); }
+.materialsScale .collectDot:nth-child(5) { background: var(--contribution-l4); }
+
+.studyScale .collectDot:nth-child(1) { background: var(--contribution-empty); }
+.studyScale .collectDot:nth-child(2) { background: var(--study-l1); }
+.studyScale .collectDot:nth-child(3) { background: var(--study-l2); }
+.studyScale .collectDot:nth-child(4) { background: var(--study-l3); }
+.studyScale .collectDot:nth-child(5) { background: var(--study-l4); }
