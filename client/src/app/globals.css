@@ -57,7 +57,21 @@ a {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.5rem;  
+
+    /* Materials colors (收藏) */
+    --materials-empty: #f3f3f3;
+    --materials-l1: #dedede;
+    --materials-l2: #c4c4c4;
+    --materials-l3: #888888;
+    --materials-l4: #434343;
+
+    /* Study list colors (學習) */
+    --studylist-empty: #f3f3f3;
+    --studylist-l1: #9be9b4;
+    --studylist-l2: #5ed183;
+    --studylist-l3: #30a150;
+    --studylist-l4: #095c35;
   }
   .dark {
     --background: 0 0% 3.9%;

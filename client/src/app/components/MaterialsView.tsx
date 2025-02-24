@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Material, Categories } from '../../types/User';
 import styles from './MaterialsView.module.css';
 import { LuGlobe } from "react-icons/lu";
@@ -22,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, MoreHorizontal, Link } from "lucide-react"
+import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -37,13 +36,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { columns } from "./columns"
+import { createColumns } from "./columns"
+import { NoteCard } from "./NoteCard"
 
 interface MaterialsViewProps {
   categories: Categories;
   onAddMaterial: (material: any) => void;
   onDeleteMaterial: (materialId: string) => Promise<boolean>;
-  onUpdateMaterial: (materialId: string, title: string) => Promise<boolean>;
+  onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
   activeTab: string;
 }
 
@@ -71,6 +71,17 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
   const [userData, setUserData] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [notePopup, setNotePopup] = useState<{
+    isOpen: boolean;
+    materialId: string;
+    title: string;
+    note: string;
+  }>({
+    isOpen: false,
+    materialId: '',
+    title: '',
+    note: ''
+  });
 
   const categoryIcons = {
     all: <span className={styles.categoryIcon}><BsGrid size={18} /></span>,
@@ -102,77 +113,98 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     return categories[activeCategory].map(m => ({ ...m, type: activeCategory }));
   };
 
-  const data = getAllMaterials().map((material, index) => ({
-    ...material,
-    index: index + 1,
-    type: material.type as Material['type']
-  }))
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
+  const data = useMemo(() => {
+    return getAllMaterials().map((material, index) => ({
+      ...material,
+      index: index + 1,
+      type: material.type as Material['type']
+    }));
+  }, [categories, activeCategory]);
 
   const MoreMenu = ({ 
     materialId, 
     title,
     type,
     onClose,
-    index
+    onDelete
   }: { 
     materialId: string, 
     title: string,
     type: keyof Categories,
     onClose: () => void,
-    index: number
+    onDelete: () => Promise<boolean>
   }) => {
-    const handleDelete = async () => {
+    const handleDelete = async (e: React.MouseEvent) => {
+      e.stopPropagation();
       try {
-        const success = await onDeleteMaterial(materialId);
+        console.log('Deleting material:', { materialId, title, type });
+        const success = await onDelete();
         if (success) {
           onClose();
         }
       } catch (error) {
-        console.error('Error in handleDelete:', error);
+        console.error('Error deleting material:', error);
       }
-    };
-
-    const handleEdit = () => {
-      setEditingMaterial(materialId);
-      setEditedTitle(title);
-      onClose();
     };
 
     return (
       <div className={styles.moreMenu}>
-        <button 
-          className={styles.moreMenuItem}
-          onClick={handleEdit}
-        >
-          <div className={styles.menuIconContainer}>
-            <MdOutlineEdit size={18} />
-          </div>
-        </button>
-        <button 
+        <Button
+          variant="ghost"
+          size="sm"
           className={styles.moreMenuItem}
           onClick={handleDelete}
         >
-          <div className={styles.menuIconContainer}>
-            <RiDeleteBin6Line size={18} />
-          </div>
-        </button>
-        <button 
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           className={styles.moreMenuItem}
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
         >
-          <div className={styles.menuIconContainer}>
-            <IoClose size={18} />
-          </div>
-        </button>
+          <IoClose className="h-4 w-4" />
+        </Button>
       </div>
     );
   };
+
+  const table = useReactTable({
+    data,
+    columns: useMemo(() => createColumns(
+      setOpenMoreMenu, 
+      openMoreMenu, 
+      onDeleteMaterial, 
+      MoreMenu,
+      onUpdateMaterial,
+      notePopup,
+      setNotePopup
+    ), [openMoreMenu, onDeleteMaterial, onUpdateMaterial, notePopup]),
+    getCoreRowModel: getCoreRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10
+      }
+    }
+  });
+
+  // 點擊外部時關閉 MoreMenu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMoreMenu && !(event.target as Element).closest('.moreMenu')) {
+        setOpenMoreMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMoreMenu]);
 
   const isOnline = () => {
     return typeof window !== 'undefined' && window.navigator.onLine;
@@ -246,6 +278,53 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
       </Button>
     </div>
   );
+
+  const GridItem = ({ material, index, category }: { material: Material, index: number, category: Material['type'] }) => {
+    const materialId = material._id;
+    if (!materialId) return null;
+
+    const handleMoreClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setOpenMoreMenu(openMoreMenu === materialId ? null : materialId);
+    };
+
+    return (
+      <div className={styles.gridListItem}>
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          <div className="text-sm text-muted-foreground pl-2">{index}</div>
+          <div className="flex items-center pl-2">
+            {TYPE_ICONS[category] && React.createElement(TYPE_ICONS[category], { 
+              size: 16, 
+              className: "text-primary" 
+            })}
+          </div>
+          <span className="font-medium text-left pl-2">{material.title}</span>
+        </div>
+        <div className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="float-right"
+            onClick={handleMoreClick}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+          {openMoreMenu === materialId && (
+            <MoreMenu
+              materialId={materialId}
+              title={material.title || 'Untitled'}
+              type={category}
+              onClose={() => setOpenMoreMenu(null)}
+              onDelete={async () => {
+                console.log('Deleting material:', materialId);
+                return onDeleteMaterial(materialId);
+              }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className={styles.materialsContainer}>
@@ -340,7 +419,10 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                    <TableCell 
+                      colSpan={table.getAllColumns().length} 
+                      className="h-24 text-center"
+                    >
                       No materials found.
                     </TableCell>
                   </TableRow>
@@ -370,38 +452,7 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                     <div className={`space-y-2 ${styles.gridCardList}`}>
                       {(categories[category] || []).length > 0 ? (
                         (categories[category] || []).map((material, index) => (
-                          <div 
-                            key={material._id} 
-                            className={styles.gridListItem}
-                          >
-                            <div className="flex items-center gap-4 min-w-0 flex-1">
-                              <span className={styles.itemNumber}>
-                                {index + 1}
-                              </span>
-                              <div className={styles.itemContent}>
-                                <span className={styles.itemTitle}>
-                                  {truncateTitle(material.title || '', 30)}
-                                </span>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className={styles.moreButton}
-                              onClick={() => setOpenMoreMenu(material._id || null)}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                            {openMoreMenu === material._id && (
-                              <MoreMenu
-                                materialId={material._id || ''}
-                                title={material.title || ''}
-                                type={category}
-                                onClose={() => setOpenMoreMenu(null)}
-                                index={index}
-                              />
-                            )}
-                          </div>
+                          <GridItem key={material._id} material={material} index={index + 1} category={category} />
                         ))
                       ) : (
                         <div className={styles.emptyState}>
@@ -491,6 +542,16 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           </div>
         </form>
       </div>
+
+      <NoteCard
+        isOpen={notePopup.isOpen}
+        title={notePopup.title}
+        note={notePopup.note}
+        onClose={() => setNotePopup(prev => ({ ...prev, isOpen: false }))}
+        onSave={async (note) => {
+          await onUpdateMaterial(notePopup.materialId, { note });
+        }}
+      />
     </div>
   );
 }

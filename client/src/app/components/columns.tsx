@@ -4,12 +4,31 @@ import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { TYPE_ICONS } from "./MaterialsView"
 import React from "react"
+import { NoteCard } from "./NoteCard"
 
 type TableMaterial = Material & {
   index: number;
 }
 
-export const columns: ColumnDef<TableMaterial>[] = [
+export const createColumns = (
+  setOpenMoreMenu: (id: string | null) => void,
+  openMoreMenu: string | null,
+  onDeleteMaterial: (id: string) => Promise<boolean>,
+  MoreMenu: React.ComponentType<any>,
+  onUpdateMaterial: (id: string, updates: Partial<Material>) => Promise<boolean>,
+  notePopup: {
+    isOpen: boolean;
+    materialId: string;
+    title: string;
+    note: string;
+  },
+  setNotePopup: (popup: {
+    isOpen: boolean;
+    materialId: string;
+    title: string;
+    note: string;
+  }) => void
+): ColumnDef<TableMaterial>[] => [
   {
     accessorKey: "index",
     header: "No.",
@@ -37,8 +56,23 @@ export const columns: ColumnDef<TableMaterial>[] = [
     accessorKey: "title",
     header: "Title",
     cell: ({ row }) => {
-      const title = row.getValue("title") as string
-      return <span className="font-medium text-left pl-2">{title}</span>
+      const title = row.getValue("title") as string;
+      const material = row.original;
+      return (
+        <div 
+          className="font-medium text-left pl-2 cursor-pointer hover:text-primary"
+          onClick={() => {
+            setNotePopup({
+              isOpen: true,
+              materialId: material._id || '',
+              title: material.title || '',
+              note: material.note || ''
+            });
+          }}
+        >
+          {title}
+        </div>
+      );
     },
   },
   {
@@ -47,9 +81,33 @@ export const columns: ColumnDef<TableMaterial>[] = [
     cell: ({ row }) => {
       const material = row.original
       return (
-        <Button variant="ghost" size="icon" className="float-right">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
+        <div className="relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="float-right"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpenMoreMenu(material._id || null);
+            }}
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+          {openMoreMenu === material._id && (
+            <MoreMenu
+              materialId={material._id || ''}
+              title={material.title || 'Untitled'}
+              type={material.type}
+              onClose={() => setOpenMoreMenu(null)}
+              onDelete={async () => {
+                if (material._id) {
+                  console.log('Delete triggered for:', material._id);
+                  await onDeleteMaterial(material._id);
+                }
+              }}
+            />
+          )}
+        </div>
       )
     },
   },

@@ -7,6 +7,7 @@ export interface Material {
     dateAdded: Date;
     completed?: boolean;
     readingTime?: number;
+    note?: string;
 }
 
 export interface Categories {

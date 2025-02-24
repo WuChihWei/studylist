@@ -3,11 +3,11 @@
   --square-gap: 2px;
   --week-width: calc(var(--square-size) + var(--square-gap));
   /* Collect colors */
-  --contribution-empty: #ebedf0;
-  --contribution-l1: #9bd4e9;
-  --contribution-l2: #84a3d7;
-  --contribution-l3: #5e79be;
-  --contribution-l4: rgb(35, 88, 135);
+  --contribution-empty: #f3f3f3;
+  --contribution-l1: #dedede;
+  --contribution-l2: #c4c4c4;
+  --contribution-l3: #888888;
+  --contribution-l4: rgb(137, 137, 137);
   /* Study colors */
   --study-l1: #9be9b4;
   --study-l2: #5ed183;
