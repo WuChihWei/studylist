@@ -3,11 +3,15 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  border-bottom: 1px dashed gainsboro;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+
 }
 
 .categoryTabs {
   display: flex;
-  gap: 8px;
+  gap: 20px;
 }
 
 .viewToggle {

@@ -351,7 +351,7 @@ export default function ProfilePage() {
         className="border-r"
       />
       
-      <div className="flex-1">
+      <div className="flex-1 p-14 flex flex-col gap-2">
         {/* Profile Header Section */}
         <div className="">
           <div className={styles.profileInfo}>
@@ -367,14 +367,15 @@ export default function ProfilePage() {
                       className={styles.avatar}
                     />
                   </div>
+                  <div>
+                  <Button variant="outline" onClick={handleEditProfile} className={styles.editButton}>
+                    Edit
+                  </Button>
+                  </div>
                 </div>
                 <div className={styles.rightSection}>
-                  <h1 className="text-2xl font-semibold">{userData?.name}</h1>
+                  <h4 className="">{userData?.name}</h4>
                   <p className={styles.bio}>{userData?.bio || 'Introduce yourself'}</p>
-                  <Button variant="outline" onClick={handleEditProfile}>
-                    <MdEdit className="mr-2" />
-                    Edit Profile
-                  </Button>
                 </div>
               </div>
             </div>
@@ -389,7 +390,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Topic Header Section */}
-        <div className=" border-b border-t">
+        <div className=" border-b border-t pt-2 pb-2">
           <div className="flex justify-between">
             <div className="flex items-center">
               {editingTopicId === activeTab ? (
@@ -408,7 +409,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h1 className=" font-semibold">
+                  <h1 className="">
                     {userData?.topics.find(t => t._id === activeTab)?.name}
                   </h1>
                   <Button 
@@ -425,7 +426,7 @@ export default function ProfilePage() {
             {/* Left Column - Topic Tabs & Contributors */}
             <div className="flex flex-col">
               {/* Topic Tabs */}
-              <div className="flex items-start gap-0 bg-slate-400">
+              <div className="flex items-center gap-0">
                 {userData?.topics?.map((topic) => (
                   <TopicTab
                     key={topic._id}
@@ -435,7 +436,8 @@ export default function ProfilePage() {
                   />
                 ))}
                 <button onClick={handleAddTopic} className={styles.addTopicButton}>
-                  <FaPlus />
+                  {/* <FaPlus /> */}
+                  +
                 </button>
               </div>
 

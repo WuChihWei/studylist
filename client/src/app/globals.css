@@ -149,7 +149,7 @@ a {
 
   /* Headings */
   h1, .h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;  /* 36px/48px */
+    @apply scroll-m-20 text-4xl font-extrabold tracking-normal lg:text-5xl;  /* 36px/48px */
   }
   h2, .h2 {
     @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;  /* 30px */
