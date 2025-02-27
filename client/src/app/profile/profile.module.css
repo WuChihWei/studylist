@@ -49,6 +49,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* background-color: blue; */
+
 }
 
 .avatarArea {
@@ -84,42 +86,69 @@
 .topicSection {
   background: white;
   border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+
   /* padding: 1.5rem; */
+}
+
+.topicHeaderContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 1rem;
 }
 
 .topicHeader {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
+  background-color: antiquewhite;
+
+}
+
+.topicMainInfo {
+  display: flex;
   align-items: center;
-  padding-bottom: 1rem;
-  padding-top: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-  border-top: 1px solid #e0e0e0;
+}
+
+.topicTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
 }
 
 .topicTabs {
   display: flex;
   align-items: center;
-  border-radius: 6px;
+  gap: 0.5rem;
 }
 
 .topicTab {
-  padding: 0.5rem 1rem;
-  border: none;
-  background: none;
-  color: #c6c6c6;
+  padding: 8px 16px;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 0.9rem;
   transition: all 0.2s;
+  white-space: nowrap;
+  color: #666;
 }
 
 .topicTab.active {
-  background: white;
+  background: #f5f5f5;
   color: #333;
   font-weight: 500;
-  /* box-shadow: 0 1px 3px rgba(0,0,0,0.1); */
+}
+
+.tabContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabName {
+  font-size: 14px;
 }
 
 .materialsGrid {
@@ -572,18 +601,18 @@
 }
 
 /* Materials view colors */
-.materialsScale .collectDot:nth-child(1) { background-color: var(--materials-empty); }
-.materialsScale .collectDot:nth-child(2) { background-color: var(--materials-l1); }
-.materialsScale .collectDot:nth-child(3) { background-color: var(--materials-l2); }
-.materialsScale .collectDot:nth-child(4) { background-color: var(--materials-l3); }
-.materialsScale .collectDot:nth-child(5) { background-color: var(--materials-l4); }
+.materialsScale .collectDot:nth-child(1) { background-color: var(--collection-empty); }
+.materialsScale .collectDot:nth-child(2) { background-color: var(--collection-l1); }
+.materialsScale .collectDot:nth-child(3) { background-color: var(--collection-l2); }
+.materialsScale .collectDot:nth-child(4) { background-color: var(--collection-l3); }
+.materialsScale .collectDot:nth-child(5) { background-color: var(--collection-l4); }
 
 /* Study list colors */
-.studyScale .collectDot:nth-child(1) { background-color: var(--studylist-l1); }
-.studyScale .collectDot:nth-child(2) { background-color: var(--studylist-l2); }
-.studyScale .collectDot:nth-child(3) { background-color: var(--studylist-l3); }
-.studyScale .collectDot:nth-child(4) { background-color: var(--studylist-l4); }
-.studyScale .collectDot:nth-child(5) { background-color: var(--studylist-l4); }
+.studyScale .collectDot:nth-child(1) { background-color: var(--study-l1); }
+.studyScale .collectDot:nth-child(2) { background-color: var(--study-l2); }
+.studyScale .collectDot:nth-child(3) { background-color: var(--study-l3); }
+.studyScale .collectDot:nth-child(4) { background-color: var(--study-l4); }
+.studyScale .collectDot:nth-child(5) { background-color: var(--study-l4); }
 
 .modalOverlay {
   position: fixed;
@@ -668,9 +697,52 @@
   .rightSection {
     width: 100%;
     align-items: center;
+  
   }
 
   .bio {
     text-align: center;
   }
+}
+
+.members {
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: -8px;
+}
+
+.memberWrapper {
+  position: relative;
+}
+
+.memberAvatar {
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.memberWrapper:hover .memberAvatar {
+  transform: translateY(-2px);
+}
+
+.memberTooltip {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.memberWrapper:hover .memberTooltip {
+  opacity: 1;
 }

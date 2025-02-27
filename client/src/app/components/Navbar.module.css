@@ -122,4 +122,23 @@
 .addButton span {
   font-size: 1.2rem;
   font-weight: 500;
+}
+
+.dropdownContent {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 8px;
+}
+
+.dropdownItem {
+  padding: 8px 16px;
+  color: #222;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+}
+
+.dropdownItem:hover {
+  background-color: #f7f7f7;
 } 

@@ -17,9 +17,16 @@ export interface Categories {
     podcast: Material[];
 }
 
+interface Participant {
+    userId: string;
+    name: string;
+    photoURL: string;
+}
+
 export interface Topic {
     _id?: string;
     name: string;
+    participants: Participant[];
     categories: Categories;
     createdAt?: Date;
 }

@@ -171,6 +171,12 @@ export default function ProfilePage() {
     }
   };
 
+  const handleTabClick = (topicId: string | undefined) => {
+    if (topicId) {
+      setActiveTab(topicId);
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!userData) return <div>Please log in</div>;
   
@@ -252,6 +258,104 @@ export default function ProfilePage() {
     );
   };
 
+  const TopicHeader = ({ topic }) => {
+    return (
+      <div className={styles.topicHeaderContainer}>
+        <div className={styles.topicMainInfo}>
+          <h2 className={styles.topicTitle}>
+            {topic.name}
+          </h2>
+        </div>
+      </div>
+    );
+  };
+
+  // 定義 TopicTab 組件
+  interface TopicTabProps {
+    topic: {
+      _id?: string;
+      name: string;
+    };
+    isActive: boolean;
+    onClick: () => void;
+  }
+
+  const TopicTab = ({ topic, isActive, onClick }: TopicTabProps) => {
+    return (
+      <div 
+        className={`${styles.topicTab} ${isActive ? styles.active : ''}`}
+        onClick={onClick}
+      >
+        <div className={styles.tabContent}>
+          <span className={styles.tabName}>{topic.name}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const TopicLayout = () => {
+    return (
+      <div className={styles.rightSection}>
+        <div className={styles.topicHeaderContainer}>
+          {/* <div className={styles.topicMainInfo}>
+            <h2 className={styles.topicTitle}>
+              {userData?.topics?.find(t => t._id === activeTab)?.name || 'Topic 1'}
+            </h2>
+          </div> */}
+
+          <div className={styles.topicTabs}>
+            {userData?.topics?.map((topic) => (
+              <TopicTab
+                key={topic._id}
+                topic={topic}
+                isActive={activeTab === topic._id}
+                onClick={() => handleTabClick(topic._id)}
+              />
+            ))}
+            <button onClick={handleAddTopic} className={styles.addTopicButton}>
+              <FaPlus />
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.members}>
+          {(() => {
+            const currentTopic = userData?.topics?.find(t => t._id === activeTab);
+            const participants = currentTopic?.participants;
+
+            if (participants && participants.length > 0) {
+              return participants.map((participant, index) => (
+                <div key={index} className={styles.memberWrapper}>
+                  <Image 
+                    src={participant.photoURL || '/default-avatar.png'}
+                    alt={participant.name}
+                    width={20}
+                    height={20}
+                    className={styles.memberAvatar}
+                  />
+                  <span className={styles.memberTooltip}>{participant.name}</span>
+                </div>
+              ));
+            }
+            
+            return (
+              <div className={styles.memberWrapper}>
+                <Image 
+                  src={userData?.photoURL || '/default-avatar.png'}
+                  alt={userData?.name || 'User'}
+                  width={20}
+                  height={20}
+                  className={styles.memberAvatar}
+                />
+                <span className={styles.memberTooltip}>{userData?.name || 'User'}</span>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.profileContainer}>
       <div className={styles.profileHeader}>
@@ -281,7 +385,7 @@ export default function ProfilePage() {
                 </button>
               </div>
               
-              <div className={styles.rightSection}>
+              <div className={styles.avatarSection}>
                 <span className={styles.profileLink}>
                   {userData?.name || userData?.name?.split(' ')[0] || 'user'}
                 </span>
@@ -343,57 +447,13 @@ export default function ProfilePage() {
                 >
                   <MdEdit size={20} /> 
                 </button>
-                <h1>{userData?.topics?.find(t => t._id === activeTab)?.name}</h1>
+                <TopicHeader 
+                  topic={userData?.topics?.find(t => t._id === activeTab) || { name: '', participants: [] }}
+                />
               </div>
             )}
           </div>
-          <div className={styles.topicTabs}>
-            {userData?.topics?.map(topic => (
-              <div key={topic._id} className={styles.topicTabWrapper}>
-                {editingTopicId === topic._id ? (
-                  <div className={styles.topicEditContainer}>
-                    <input
-                      type="text"
-                      value={editedTopicName}
-                      onChange={(e) => setEditedTopicName(e.target.value)}
-                      className={styles.topicEditInput}
-                    />
-                    <button
-                      onClick={() => handleSaveTopicName(topic._id || '')}
-                      className={`${styles.iconButton} ${styles.confirmButton}`}
-                      aria-label="Confirm edit"
-                    >
-                      <FaCheck />
-                    </button>
-                    <button
-                      onClick={handleCancelEditTopic}
-                      className={`${styles.iconButton} ${styles.cancelButton}`}
-                      aria-label="Cancel edit"
-                    >
-                      <FaTimes />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTopic(topic._id || '')}
-                      className={`${styles.iconButton} ${styles.deleteButton}`}
-                      aria-label="Delete topic"
-                    >
-                      <RiDeleteBin6Line />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className={`${styles.topicTab} ${activeTab === topic._id ? styles.active : ''}`}
-                    onClick={() => setActiveTab(topic._id || '')}
-                  >
-                    {topic.name}
-                  </button>
-                )}
-              </div>
-            ))}
-            <button onClick={handleAddTopic} className={styles.addTopicButton}>
-              <FaPlus />
-            </button>
-          </div>
+          <TopicLayout />
         </div>
         
         <div className={styles.viewTabsContainer}>
@@ -411,34 +471,6 @@ export default function ProfilePage() {
               Study List
             </button>
           </div>
-          
-          {/* <div className={styles.collectLegend}>
-            {activeView === 'materials' ? (
-              <>
-                <span>No Collect</span>
-                <div className={`${styles.collectScale} ${styles.materialsScale}`}>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                </div>
-                <span>Great Collect</span>
-              </>
-            ) : (
-              <>
-                <span>Only Collect</span>
-                <div className={`${styles.collectScale} ${styles.studyScale}`}>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                </div>
-                <span>Finished</span>
-              </>
-            )}
-          </div> */}
         </div>
 
         {activeView === 'materials' ? (

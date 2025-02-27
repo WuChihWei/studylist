@@ -278,19 +278,19 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     );
   };
 
-  const CollectLegend = () => (
-    <div className={styles.collectLegend}>
-      <span>No Collect</span>
-      <div className={styles.collectScale}>
-        <div className={styles.collectDot}></div>
-        <div className={styles.collectDot}></div>
-        <div className={styles.collectDot}></div>
-        <div className={styles.collectDot}></div>
-        <div className={styles.collectDot}></div>
-      </div>
-      <span>Great Collect</span>
-    </div>
-  );
+  // const CollectLegend = () => (
+  //   <div className={styles.collectLegend}>
+  //     <span>No Collect</span>
+  //     <div className={styles.collectScale}>
+  //       <div className={styles.collectDot}></div>
+  //       <div className={styles.collectDot}></div>
+  //       <div className={styles.collectDot}></div>
+  //       <div className={styles.collectDot}></div>
+  //       <div className={styles.collectDot}></div>
+  //     </div>
+  //     <span>Great Collect</span>
+  //   </div>
+  // );
 
   return (
     <div className={styles.container}>

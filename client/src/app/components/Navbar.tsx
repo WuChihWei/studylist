@@ -21,12 +21,15 @@ interface NavbarProps {
     url: string | null;
     rating: number;
   }) => void;
+  activeTopicId?: string;
 }
 
-const Navbar = ({ onAddMaterial }: NavbarProps) => {
+const Navbar = ({ onAddMaterial, activeTopicId }: NavbarProps) => {
   const [selectedType, setSelectedType] = useState('webpage')
   const [showUrlInput, setShowUrlInput] = useState(false)
   const pathname = usePathname()
+
+  console.log('Navbar - activeTopicId:', activeTopicId);
 
   const categoryIcons = {
     webpage: <MdWeb size={18} />,
@@ -39,9 +42,19 @@ const Navbar = ({ onAddMaterial }: NavbarProps) => {
     e.preventDefault();
     if (!onAddMaterial) return;
     
+    console.log('Navbar handleSubmit - activeTopicId:', activeTopicId);
+    
+    if (!activeTopicId) {
+      console.log('No activeTopicId in handleSubmit');
+      alert('Please select a topic first');
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const title = formData.get('title')?.toString() || '';
     const url = formData.get('url')?.toString() || null;
+    
+    console.log('Navbar handleSubmit - form data:', { title, url, type: selectedType });
     
     onAddMaterial({
       title,
@@ -141,27 +154,20 @@ const Navbar = ({ onAddMaterial }: NavbarProps) => {
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <Link href="/profile" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  My Profile
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/login" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Login
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-
-            <NavigationMenuItem>
-              <Link href="/signup" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Signup
-                </NavigationMenuLink>
-              </Link>
+              <NavigationMenuTrigger>Account</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <div className={styles.dropdownContent}>
+                  <Link href="/profile" className={styles.dropdownItem}>
+                    My Profile
+                  </Link>
+                  <Link href="/login" className={styles.dropdownItem}>
+                    Log in
+                  </Link>
+                  <Link href="/signup" className={styles.dropdownItem}>
+                    Sign up
+                  </Link>
+                </div>
+              </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
