@@ -1,13 +1,13 @@
 import React from "react"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/app/components/ui/button"
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/app/components/ui/card"
+import { Textarea } from "@/app/components/ui/textarea"
 
 interface NoteCardProps {
   isOpen: boolean

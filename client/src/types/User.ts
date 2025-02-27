@@ -23,12 +23,19 @@ interface Participant {
     photoURL: string;
 }
 
+export interface Contributor {
+    id: string;
+    name: string;
+    photoURL?: string;
+}
+
 export interface Topic {
     _id?: string;
     name: string;
     participants: Participant[];
     categories: Categories;
     createdAt?: Date;
+    contributors?: Contributor[];
 }
 
 interface ContributionData {

@@ -18,11 +18,11 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@/app/components/ui/dropdown-menu"
+import { Card, CardContent } from "@/app/components/ui/card"
+import { Button } from "@/app/components/ui/button"
 import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Input } from "@/app/components/ui/input"
 import { NoteCard } from "./NoteCard"
 import { ListItem } from './ListItem';
 

@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Material } from "@/types/User"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/app/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { TYPE_ICONS } from "./MaterialsView"
 import React from "react"

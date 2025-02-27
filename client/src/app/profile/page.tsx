@@ -12,8 +12,10 @@ import MaterialsView from '../components/MaterialsView';
 import StudyListView from '../components/StudyListView';
 import { auth } from '../firebase/firebaseConfig';
 import { RiDeleteBin6Line } from 'react-icons/ri';
-// import Navbar from '../components/Navbar';
-
+import { Sidebar } from "@/app/components/ui/sidebar"
+import { Button } from "@/app/components/ui/button"
+import { EditProfileDialog } from "../components/EditProfileDialog"
+import { Input } from "@/app/components/ui/input"
 
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic } = useUserData();
@@ -60,28 +62,19 @@ export default function ProfilePage() {
 
   // 處理個人資料編輯
   const handleEditProfile = () => {
-    router.push('/profile/edit');
-  };
+    setEditedName(userData?.name || '')
+    setEditedBio(userData?.bio || '')
+    setIsEditing(true)
+  }
 
-  const handleSaveProfile = async () => {
-    console.log('Saving profile with:', { editedName, editedBio });
-    const success = await updateProfile({ 
-      name: editedName, 
-      bio: editedBio 
-    });
-    
-    console.log('Save result:', success);
-    if (success) {
-      setIsEditing(false);
-      // 更新本地顯示
-      if (userData) {
-        setEditedName(userData.name || '');
-        setEditedBio(userData.bio || 'Introduce yourself');
-      }
-    } else {
-      alert('Failed to update profile. Please try again.');
+  const handleSaveProfile = async (name: string, bio: string) => {
+    try {
+      await updateProfile({ name, bio })
+      setIsEditing(false)
+    } catch (error) {
+      console.error('Error updating profile:', error)
     }
-  };
+  }
 
   // 處理Topic編輯
   const handleEditTopic = (topicId: string, currentName: string) => {
@@ -263,7 +256,7 @@ export default function ProfilePage() {
       <div className={styles.topicHeaderContainer}>
         <div className={styles.topicMainInfo}>
           <h2 className={styles.topicTitle}>
-            {topic.name}
+            {/* {topic.name} */}
           </h2>
         </div>
       </div>
@@ -297,12 +290,6 @@ export default function ProfilePage() {
     return (
       <div className={styles.rightSection}>
         <div className={styles.topicHeaderContainer}>
-          {/* <div className={styles.topicMainInfo}>
-            <h2 className={styles.topicTitle}>
-              {userData?.topics?.find(t => t._id === activeTab)?.name || 'Topic 1'}
-            </h2>
-          </div> */}
-
           <div className={styles.topicTabs}>
             {userData?.topics?.map((topic) => (
               <TopicTab
@@ -357,211 +344,199 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className={styles.profileContainer}>
-      <div className={styles.profileHeader}>
-        <div className={styles.profileInfo}>
-          
-          <div className={styles.profileUser}>
-            <div className={styles.avatarSection}>
-              <div className={styles.avatarArea}>
-                {userData?.photoURL ? (
-                  <Image
-                    src={userData.photoURL}
-                    alt={userData?.name || 'Profile'}
-                    fill
-                    className={styles.avatar}
-                    priority
-                  />
-                ) : (
-                  <div className={styles.defaultAvatar}>
-                    <FaImage size={40} color="#666" />
-                  </div>
-                )}
-                <button 
-                  onClick={() => router.push('/profile/edit')} 
-                  className={styles.editButton}
-                >
-                  Edit
-                </button>
-              </div>
-              
+    <div className="flex min-h-screen">
+      <Sidebar 
+        activeView={activeView} 
+        onViewChange={setActiveView} 
+        className="border-r"
+      />
+      
+      <div className="flex-1">
+        {/* Profile Header Section */}
+        <div className="">
+          <div className={styles.profileInfo}>
+            <div className={styles.profileUser}>
               <div className={styles.avatarSection}>
-                <span className={styles.profileLink}>
-                  {userData?.name || userData?.name?.split(' ')[0] || 'user'}
-                </span>
-                <div className={styles.bio}>
-                  {userData?.bio || 'No bio yet'}
+                <div className={styles.leftSection}>
+                  <div className={styles.avatarArea}>
+                    <Image 
+                      src={userData?.photoURL || '/default-avatar.png'}
+                      alt={userData?.name || 'User'}
+                      width={120}
+                      height={120}
+                      className={styles.avatar}
+                    />
+                  </div>
+                </div>
+                <div className={styles.rightSection}>
+                  <h1 className="text-2xl font-semibold">{userData?.name}</h1>
+                  <p className={styles.bio}>{userData?.bio || 'Introduce yourself'}</p>
+                  <Button variant="outline" onClick={handleEditProfile}>
+                    <MdEdit className="mr-2" />
+                    Edit Profile
+                  </Button>
                 </div>
               </div>
             </div>
+            
+            <div className={styles.contributionSection}>
+              <ContributionGraph 
+                data={getContributionData()}
+                activeView={activeView}
+              />
+            </div>
           </div>
-
-          <div className={styles.contributionSection}>
-            <ContributionGraph 
-              data={getContributionData()} 
-              activeView={activeView}
-            />
-          </div>
-
         </div>
-      </div>
 
-      <div className={styles.topicSection}>
-        <div className={styles.topicHeader}>
-          <div className={styles.mainTopicContainer}>
-            {editingTopicId === activeTab ? (
-              <div className={styles.topicEditContainer}>
-                <input
-                  type="text"
-                  value={editedTopicName}
-                  onChange={(e) => setEditedTopicName(e.target.value)}
-                  className={styles.topicEditInput}
-                />
-                <button
-                  onClick={() => handleSaveTopicName(activeTab)}
-                  className={`${styles.iconButton} ${styles.confirmButton}`}
-                  aria-label="Confirm edit"
-                >
-                  <FaCheck />
-                </button>
-                <button
-                  onClick={handleCancelEditTopic}
-                  className={`${styles.iconButton} ${styles.cancelButton}`}
-                  aria-label="Cancel edit"
-                >
-                  <FaTimes />
-                </button>
-                <button
-                  onClick={() => handleDeleteTopic(activeTab)}
-                  className={`${styles.iconButton} ${styles.deleteButton}`}
-                  aria-label="Delete topic"
-                >
-                  <RiDeleteBin6Line />
+        {/* Topic Header Section */}
+        <div className=" border-b border-t">
+          <div className="flex justify-between">
+            <div className="flex items-center">
+              {editingTopicId === activeTab ? (
+                <div className={styles.topicEditContainer}>
+                  <Button size="sm" onClick={() => handleSaveTopicName(activeTab)}>
+                    <FaCheck className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleCancelEditTopic}>
+                    <FaTimes className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    value={editedTopicName}
+                    onChange={(e) => setEditedTopicName(e.target.value)}
+                    className="w-[200px]"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h1 className=" font-semibold">
+                    {userData?.topics.find(t => t._id === activeTab)?.name}
+                  </h1>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleEditTopic(activeTab, userData?.topics.find(t => t._id === activeTab)?.name || '')}
+                  >
+                    <MdEdit className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Left Column - Topic Tabs & Contributors */}
+            <div className="flex flex-col">
+              {/* Topic Tabs */}
+              <div className="flex items-start gap-0 bg-slate-400">
+                {userData?.topics?.map((topic) => (
+                  <TopicTab
+                    key={topic._id}
+                    topic={topic}
+                    isActive={activeTab === topic._id}
+                    onClick={() => handleTabClick(topic._id)}
+                  />
+                ))}
+                <button onClick={handleAddTopic} className={styles.addTopicButton}>
+                  <FaPlus />
                 </button>
               </div>
-            ) : (
-              <div className={styles.mainTopicWrapper}>
-                <button
-                  className={styles.editTopicButton}
-                  onClick={() => handleEditTopic(activeTab || '', userData?.topics?.find(t => t._id === activeTab)?.name || '')}
-                >
-                  <MdEdit size={20} /> 
-                </button>
-                <TopicHeader 
-                  topic={userData?.topics?.find(t => t._id === activeTab) || { name: '', participants: [] }}
-                />
+
+              {/* Contributors Section */}
+              <div className="flex justify-end">
+                <div className="flex">
+                  {userData?.topics.find(t => t._id === activeTab)?.contributors?.map((contributor, index) => (
+                    <Image
+                      key={contributor.id}
+                      src={contributor.photoURL || '/default-avatar.png'}
+                      alt={contributor.name}
+                      width={32}
+                      height={32}
+                      className="rounded-full border-2 border-white"
+                    />
+                  )) || (
+                    <Image
+                      src={userData?.photoURL || '/default-avatar.png'}
+                      alt={userData?.name || 'User'}
+                      width={32}
+                      height={32}
+                      className="rounded-full border-2 border-white"
+                    />
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-          <TopicLayout />
-        </div>
-        
-        <div className={styles.viewTabsContainer}>
-          <div className={styles.viewTabs}>
-            <button 
-              className={`${styles.viewTab} ${activeView === 'materials' ? styles.active : ''}`}
-              onClick={() => setActiveView('materials')}
-            >
-              Materials
-            </button>
-            <button 
-              className={`${styles.viewTab} ${activeView === 'studylist' ? styles.active : ''}`}
-              onClick={() => setActiveView('studylist')}
-            >
-              Study List
-            </button>
+            </div>
+
+            {/* Right Column - Active Topic Title */}
+            
           </div>
         </div>
 
-        {activeView === 'materials' ? (
-          <MaterialsView 
-            categories={userData?.topics.find(t => t._id?.toString() === activeTab)?.categories || {
-              webpage: [],
-              video: [],
-              podcast: [],
-              book: []
-            }}
-            onAddMaterial={(material) => addMaterial(material, activeTab)}
-            onDeleteMaterial={async (materialId) => {
-              try {
-                const success = await deleteMaterial(materialId, activeTab);
-                if (!success) {
-                  throw new Error('Failed to delete material');
+        {/* Content Section */}
+        <div className="">
+          {activeView === 'materials' ? (
+            <MaterialsView 
+              categories={userData?.topics.find(t => t._id?.toString() === activeTab)?.categories || {
+                webpage: [],
+                video: [],
+                podcast: [],
+                book: []
+              }}
+              onAddMaterial={(material) => addMaterial(material, activeTab)}
+              onDeleteMaterial={async (materialId) => {
+                try {
+                  const success = await deleteMaterial(materialId, activeTab);
+                  if (!success) throw new Error('Failed to delete material');
+                  return true;
+                } catch (error) {
+                  console.error('Error deleting material:', error);
+                  return false;
                 }
-                return true;
-              } catch (error) {
-                console.error('Error deleting material:', error);
-                return false;
-              }
-            }}
-            onUpdateMaterial={async (materialId, title) => {
-              try {
-                const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({ title }),
-                });
-                if (!response.ok) throw new Error('Failed to update material');
-                return true;
-              } catch (error) {
-                console.error('Error updating material:', error);
-                return false;
-              }
-            }}
-            activeTab={activeTab}
-          />
-        ) : (
-          <StudyListView 
-            categories={userData?.topics.find(t => t._id === activeTab)?.categories || {
-              webpage: [],
-              video: [],
-              podcast: [],
-              book: []
-            }}
-            onCompleteMaterial={async (materialId, isCompleted) => {
-              try {
+              }}
+              onUpdateMaterial={async (materialId, updates) => {
+                try {
+                  const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updates),
+                  });
+                  if (!response.ok) throw new Error('Failed to update material');
+                  return true;
+                } catch (error) {
+                  console.error('Error updating material:', error);
+                  return false;
+                }
+              }}
+              activeTab={activeTab}
+            />
+          ) : (
+            <StudyListView 
+              categories={userData?.topics.find(t => t._id === activeTab)?.categories || {
+                webpage: [],
+                video: [],
+                podcast: [],
+                book: []
+              }}
+              onCompleteMaterial={async (materialId, isCompleted) => {
                 if (isCompleted) {
                   await uncompleteMaterial(materialId, activeTab);
                 } else {
                   await completeMaterial(materialId, activeTab);
                 }
-              } catch (error) {
-                console.error('Failed to toggle material completion:', error);
-              }
-            }}
-            unitMinutes={unitMinutes}
-            onUnitMinutesChange={setUnitMinutes}
-            topicId={activeTab}
-          />
-        )}
-      </div>
-
-      {deleteConfirmation.isOpen && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h2>Delete Topic</h2>
-            <p>Are you sure you want to delete this topic? This action cannot be undone.</p>
-            <div className={styles.modalButtons}>
-              <button
-                onClick={handleConfirmDelete}
-                className={styles.deleteButton}
-              >
-                Delete
-              </button>
-              <button
-                onClick={handleCancelDelete}
-                className={styles.cancelButton}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+              }}
+              unitMinutes={unitMinutes}
+              onUnitMinutesChange={setUnitMinutes}
+              topicId={activeTab}
+            />
+          )}
         </div>
-      )}
-
-      {/* <Navbar onAddMaterial={handleAddMaterial} /> */}
+      </div>
+      <EditProfileDialog
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        onSave={handleSaveProfile}
+        initialName={userData?.name || ''}
+        initialBio={userData?.bio || ''}
+      />
     </div>
   );
 }
