@@ -147,7 +147,7 @@ app.use('/api/users', authMiddleware);
 // API routes
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/stripe', authMiddleware, stripeRoutes);
-app.use('/api/users/:userId/topics', authMiddleware, topicsRouter);
+app.use('/api/users/:firebaseUID/topics', topicsRouter);
 app.use('/api/users/:userId/materials', authMiddleware, materialRoutes);
 
 // Error handling middleware

@@ -28,7 +28,7 @@ router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
 router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.user as DecodedIdToken;
+    const { firebaseUID } = req.params;
     const { topicId, materialId } = req.params;
     
     const user = await User.findOne({ firebaseUID });
@@ -59,7 +59,7 @@ router.delete('/:topicId/materials/:materialId', async (req: Request, res: Respo
     }
 
     await user.save();
-    return res.json({ message: 'Material deleted successfully' });
+    return res.json(user);
   } catch (error) {
     console.error('Error deleting material:', error);
     return res.status(500).json({ error: 'Internal server error' });
