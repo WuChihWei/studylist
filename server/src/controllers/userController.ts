@@ -647,13 +647,17 @@ export const updateTopic = async (req: Request, res: Response) => {
 export const updateMaterialProgress = async (req: Request, res: Response) => {
   try {
     const { firebaseUID, topicId, materialId } = req.params;
-    const { completedUnits, readingTime } = req.body;
+    const { completedUnits, readingTime, totalUnits } = req.body;
     
     console.log('updateMaterialProgress called:', {
       params: { firebaseUID, topicId, materialId },
-      body: { completedUnits, readingTime }
+      body: { completedUnits, readingTime, totalUnits }
     });
     
+    if (!totalUnits) {
+      return res.status(400).json({ error: 'totalUnits is required' });
+    }
+
     const today = new Date().toISOString().split('T')[0];
     
     const user = await User.findOne({ firebaseUID });
@@ -678,8 +682,11 @@ export const updateMaterialProgress = async (req: Request, res: Response) => {
         console.log('Found material:', {
           id: material._id,
           type,
-          currentUnits: material.completedUnits
+          currentUnits: material.completedUnits,
+          totalUnits
         });
+
+        const progress = Math.min(Math.round((completedUnits / totalUnits) * 100), 100);
 
         // Update material progress
         const updatePath = `topics.$[topic].categories.${type}.$[material]`;
@@ -691,7 +698,8 @@ export const updateMaterialProgress = async (req: Request, res: Response) => {
           { 
             $set: {
               [`${updatePath}.completedUnits`]: completedUnits,
-              [`${updatePath}.readingTime`]: readingTime
+              [`${updatePath}.readingTime`]: readingTime,
+              [`${updatePath}.progress`]: progress
             }
           },
           {

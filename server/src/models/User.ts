@@ -25,6 +25,10 @@ const MaterialSchema = new mongoose.Schema({
   readingTime: {
     type: Number,
     default: 0
+  },
+  progress: {
+    type: Number,
+    default: 0
   }
 });
 
