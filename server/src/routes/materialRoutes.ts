@@ -15,6 +15,8 @@ interface Material {
   url?: string;
   rating?: number;
   notes?: string;
+  completedUnits?: number;
+  readingTime?: number;
 }
 
 type CategoryType = 'webpage' | 'video' | 'podcast' | 'book';
