@@ -163,12 +163,8 @@ app.use(errorHandler);
 
 // 404 handler (must be last)
 app.use('*', (req, res) => {
-  console.log(`Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl,
-    method: req.method
-  });
+  console.log('Unmatched route:', req.method, req.originalUrl);
+  res.status(404).json({ error: 'Route not found' });
 });
 
 // Export for testing

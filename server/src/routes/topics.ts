@@ -18,6 +18,8 @@ router.use((req, res, next) => {
     params: req.params,
     body: req.body
   });
+  console.log('Route params:', req.params);
+  console.log('Full path:', req.originalUrl);
   next();
 });
 
