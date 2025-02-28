@@ -28,7 +28,7 @@ router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
 router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
+    const { firebaseUID } = req.params;  // 從 URL 參數獲取
     const { topicId, materialId } = req.params;
     
     const user = await User.findOne({ firebaseUID });
