@@ -354,23 +354,75 @@ export const useUserData = () => {
 
   const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
     try {
-      console.log('\n=== Delete Material (Local Only) ===');
+      console.log('\n=== Delete Material Test Started ===');
       
-      // 更新本地狀態
+      const user = auth.currentUser;
+      if (!user) {
+        console.log('Test Failed: No user logged in');
+        throw new Error('No user logged in');
+      }
+
+      // Find material type
+      const topic = userData?.topics.find(t => t._id === topicId);
+      if (!topic) {
+        console.log('Test Failed: Topic not found');
+        throw new Error('Topic not found');
+      }
+
+      let materialType: keyof Categories | null = null;
+      for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+        if (topic.categories[type].some(m => m._id === materialId)) {
+          materialType = type;
+          break;
+        }
+      }
+
+      if (!materialType) {
+        console.log('Test Failed: Material type not found');
+        throw new Error('Material type not found');
+      }
+
+      // Use the endpoint that matches your server's route structure
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      
+      console.log('Testing endpoint:', endpoint);
+
+      const token = await user.getIdToken();
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('Response:', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Error response:', errorText);
+        throw new Error(`Failed to delete material: ${response.status}`);
+      }
+
+      // Update local state
       setUserData(prevData => {
         if (!prevData) return null;
         
         const updatedTopics = prevData.topics.map(topic => {
           if (topic._id !== topicId) return topic;
           
+          // Only update the category containing the material
+          const updatedCategories = { ...topic.categories };
+          updatedCategories[materialType as keyof Categories] = 
+            updatedCategories[materialType as keyof Categories].filter(m => m._id !== materialId);
+          
           return {
             ...topic,
-            categories: {
-              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
-              video: topic.categories.video.filter(m => m._id !== materialId),
-              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
-              book: topic.categories.book.filter(m => m._id !== materialId)
-            }
+            categories: updatedCategories
           };
         });
 
@@ -380,11 +432,14 @@ export const useUserData = () => {
         };
       });
 
-      console.log('=== Local Delete Completed ===');
+      console.log('=== Delete Material Test Completed Successfully ===');
       return true;
     } catch (error) {
-      console.error('=== Local Delete Failed ===');
-      console.error('Error details:', error);
+      console.error('=== Delete Material Test Failed ===');
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       return false;
     }
   };

@@ -46,6 +46,9 @@ console.log('=== Server Configuration ===');
 console.log('PORT:', PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('MongoDB URI exists:', !!process.env.MONGODB_URI);
+console.log('Registering routes:');
+console.log('- /api/users/:firebaseUID/topics');
+console.log('- /api/users/:userId/materials');
 
 // Basic middleware
 app.use(express.json());
@@ -159,11 +162,11 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 app.use(errorHandler);
 
 // 404 handler (must be last)
-app.use((req: Request, res: Response) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+app.use('*', (req, res) => {
+  console.log(`Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     error: 'Route not found',
-    path: req.url,
+    path: req.originalUrl,
     method: req.method
   });
 });

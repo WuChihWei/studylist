@@ -28,7 +28,8 @@ router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
 router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
+    // Instead, get it from req.user
+    const firebaseUID = req.user?.uid;
     const { topicId, materialId } = req.params;
     
     const user = await User.findOne({ firebaseUID });
@@ -96,5 +97,8 @@ router.delete('/:topicId', async (req: Request, res: Response) => {
 });
 
 console.log('Topics routes initialized');
+console.log('Registering routes:');
+console.log('- /api/users/:firebaseUID/topics');
+console.log('- /api/users/:userId/materials');
 
 export default router;
