@@ -1,14 +1,11 @@
 import mongoose from 'mongoose';
 
-const materialSchema = new mongoose.Schema({
+const MaterialSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['webpage', 'book', 'video', 'podcast'],
+    enum: ['webpage', 'video', 'podcast', 'book'],
     required: true
   },
-  title: String,
-  url: String,
-  rating: Number,
   completed: {
     type: Boolean,
     default: false
@@ -16,14 +13,26 @@ const materialSchema = new mongoose.Schema({
   dateAdded: {
     type: Date,
     default: Date.now
+  },
+  title: String,
+  url: String,
+  rating: Number,
+  notes: String,
+  completedUnits: {
+    type: Number,
+    default: 0
+  },
+  readingTime: {
+    type: Number,
+    default: 0
   }
 });
 
 const categorySchema = new mongoose.Schema({
-  webpage: [materialSchema],
-  video: [materialSchema],
-  book: [materialSchema],
-  podcast: [materialSchema]
+  webpage: [MaterialSchema],
+  video: [MaterialSchema],
+  book: [MaterialSchema],
+  podcast: [MaterialSchema]
 });
 
 const topicSchema = new mongoose.Schema({

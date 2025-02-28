@@ -643,3 +643,92 @@ export const updateTopic = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error updating topic' });
   }
 };
+
+export const updateMaterialProgress = async (req: Request, res: Response) => {
+  try {
+    const { userId: firebaseUID, topicId, materialId } = req.params;
+    const { completedUnits, readingTime } = req.body;
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    const user = await User.findOne({ firebaseUID });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    if (!topic || !topic.categories) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
+    
+    for (const type of categoryTypes) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
+      const material = materials.find(m => m._id?.toString() === materialId);
+      if (material) {
+        // Update material progress
+        const updatePath = `topics.$[topic].categories.${type}.$[material]`;
+        const updatedUser = await User.findOneAndUpdate(
+          { 
+            firebaseUID,
+            'topics._id': topicId,
+            'contributions.date': today
+          },
+          { 
+            $set: {
+              [`${updatePath}.completedUnits`]: completedUnits,
+              [`${updatePath}.readingTime`]: readingTime
+            },
+            $inc: { 'contributions.$[contrib].studyCount': 1 }
+          },
+          {
+            arrayFilters: [
+              { 'topic._id': topicId },
+              { 'material._id': materialId },
+              { 'contrib.date': today }
+            ],
+            new: true
+          }
+        );
+
+        if (!updatedUser) {
+          // If no contribution exists for today, create one
+          const userWithNewContrib = await User.findOneAndUpdate(
+            { firebaseUID },
+            {
+              $set: {
+                [`${updatePath}.completedUnits`]: completedUnits,
+                [`${updatePath}.readingTime`]: readingTime
+              },
+              $push: {
+                contributions: {
+                  date: today,
+                  count: 0,
+                  studyCount: 1
+                }
+              }
+            },
+            {
+              arrayFilters: [
+                { 'topic._id': topicId },
+                { 'material._id': materialId }
+              ],
+              new: true
+            }
+          );
+          return res.json(userWithNewContrib);
+        }
+
+        return res.json(updatedUser);
+      }
+    }
+    
+    return res.status(404).json({ error: 'Material not found' });
+  } catch (error) {
+    console.error('Error updating material progress:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

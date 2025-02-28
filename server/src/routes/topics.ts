@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addTopic, addMaterial, completeMaterial, uncompleteMaterial } from '../controllers/userController';
+import { addTopic, addMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 import { User } from '../models/User';
 import { Request, Response } from 'express';
@@ -18,6 +18,12 @@ router.post('/:topicId/materials', addMaterial);
 // Complete/uncomplete material
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
+
+router.put(
+  '/users/:userId/topics/:topicId/materials/:materialId/progress',
+  authMiddleware,
+  updateMaterialProgress
+);
 
 router.delete('/:topicId', async (req: Request, res: Response) => {
   try {
