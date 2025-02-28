@@ -354,39 +354,9 @@ export const useUserData = () => {
 
   const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
-
-      // Find the material type first
-      const topic = userData?.topics.find(t => t._id === topicId);
-      if (!topic) throw new Error('Topic not found');
-
-      let materialType: keyof Categories | null = null;
-      for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
-        if (topic.categories[type].some(m => m._id === materialId)) {
-          materialType = type;
-          break;
-        }
-      }
-
-      if (!materialType) throw new Error('Material type not found');
-
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/${materialType}/${materialId}`;
-      const token = await user.getIdToken();
+      console.log('\n=== Delete Material (Local Only) ===');
       
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete material: ${response.status}`);
-      }
-
-      // Update local state
+      // 更新本地狀態
       setUserData(prevData => {
         if (!prevData) return null;
         
@@ -396,8 +366,10 @@ export const useUserData = () => {
           return {
             ...topic,
             categories: {
-              ...topic.categories,
-              [materialType!]: topic.categories[materialType!].filter(m => m._id !== materialId)
+              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+              video: topic.categories.video.filter(m => m._id !== materialId),
+              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+              book: topic.categories.book.filter(m => m._id !== materialId)
             }
           };
         });
@@ -408,9 +380,11 @@ export const useUserData = () => {
         };
       });
 
+      console.log('=== Local Delete Completed ===');
       return true;
     } catch (error) {
-      console.error('Delete material error:', error);
+      console.error('=== Local Delete Failed ===');
+      console.error('Error details:', error);
       return false;
     }
   };
