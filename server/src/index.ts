@@ -115,6 +115,18 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// 在掛載路由之前添加
+app.use((req, res, next) => {
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    params: req.params,
+    query: req.query,
+    body: req.body
+  });
+  next();
+});
+
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({
@@ -161,10 +173,18 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler);
 
-// 404 handler (must be last)
+// 在所有路由之後添加
 app.use('*', (req, res) => {
-  console.log('Unmatched route:', req.method, req.originalUrl);
-  res.status(404).json({ error: 'Route not found' });
+  console.log('Route not found:', {
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+  res.status(404).json({
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
 });
 
 // Export for testing
