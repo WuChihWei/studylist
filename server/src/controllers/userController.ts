@@ -646,29 +646,48 @@ export const updateTopic = async (req: Request, res: Response) => {
 
 export const updateMaterialProgress = async (req: Request, res: Response) => {
   try {
-    const { userId: firebaseUID, topicId, materialId } = req.params;
+    const { firebaseUID, topicId, materialId } = req.params;
     const { completedUnits, readingTime } = req.body;
+    
+    console.log('updateMaterialProgress called:', {
+      params: { firebaseUID, topicId, materialId },
+      body: { completedUnits, readingTime }
+    });
     
     const today = new Date().toISOString().split('T')[0];
     
     const user = await User.findOne({ firebaseUID });
     if (!user) {
+      console.log('User not found:', firebaseUID);
       return res.status(404).json({ error: 'User not found' });
     }
 
     const topic = user.topics.find(t => t._id?.toString() === topicId);
-    if (!topic || !topic.categories) {
+    if (!topic) {
       return res.status(404).json({ error: 'Topic not found' });
     }
 
-    const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
-    
-    for (const type of categoryTypes) {
+    if (!topic.categories) {
+      return res.status(404).json({ error: 'Categories not found' });
+    }
+
+    let materialFound = false;
+    for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
       const materials = topic.categories[type];
-      if (!Array.isArray(materials)) continue;
+      if (!Array.isArray(materials)) {
+        console.log(`Invalid materials array for type ${type}`);
+        continue;
+      }
 
       const material = materials.find(m => m._id?.toString() === materialId);
       if (material) {
+        materialFound = true;
+        console.log('Found material:', {
+          id: material._id,
+          type,
+          currentUnits: material.completedUnits
+        });
+
         // Update material progress
         const updatePath = `topics.$[topic].categories.${type}.$[material]`;
         const updatedUser = await User.findOneAndUpdate(
@@ -725,8 +744,14 @@ export const updateMaterialProgress = async (req: Request, res: Response) => {
         return res.json(updatedUser);
       }
     }
-    
-    return res.status(404).json({ error: 'Material not found' });
+    if (!materialFound) {
+      if (topic.categories) {
+        // console.log('Material not found:', { topicId, availableMaterials: Object.keys(topic.categories).flatMap(type => topic.categories[type as keyof typeof topic.categories]) });
+      } else {
+        console.log('Material not found:', { topicId, availableMaterials: [] });
+      }
+      return res.status(404).json({ error: 'Material not found' });
+    }
   } catch (error) {
     console.error('Error updating material progress:', error);
     res.status(500).json({ error: 'Internal server error' });

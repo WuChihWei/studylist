@@ -9,21 +9,25 @@ const router = Router({ mergeParams: true });
 // 添加身份驗證中間件
 router.use(authMiddleware);
 
-// POST /api/users/:firebaseUID/topics
-router.post('/', addTopic);
+// 添加路由日誌中間件
+router.use((req, res, next) => {
+  console.log('Route accessed:', {
+    method: req.method,
+    path: req.originalUrl,
+    params: req.params,
+    body: req.body
+  });
+  next();
+});
 
-// Add material to specific topic
+// 材料相關路由
 router.post('/:topicId/materials', addMaterial);
-
-// Complete/uncomplete material
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
+router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
 
-router.put(
-  '/users/:userId/topics/:topicId/materials/:materialId/progress',
-  authMiddleware,
-  updateMaterialProgress
-);
+// 主題相關路由
+router.post('/', addTopic);
 
 router.delete('/:topicId', async (req: Request, res: Response) => {
   try {
