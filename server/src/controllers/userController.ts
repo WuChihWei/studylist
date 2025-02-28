@@ -650,55 +650,62 @@ export const updateTopic = async (req: Request, res: Response) => {
 
 export const updateMaterialProgress = async (req: Request, res: Response) => {
   try {
+    console.log('4. Controller received request:', {
+      params: req.params,
+      body: req.body
+    });
+
     const { firebaseUID, topicId, materialId } = req.params;
     const { completedUnits, readingTime, totalUnits } = req.body;
-    
-    console.log('updateMaterialProgress called:', {
-      params: { firebaseUID, topicId, materialId },
-      body: { completedUnits, readingTime, totalUnits }
-    });
-    
-    if (!totalUnits) {
-      return res.status(400).json({ error: 'totalUnits is required' });
-    }
 
-    const today = new Date().toISOString().split('T')[0];
-    
+    console.log('5. Finding user:', firebaseUID);
     const user = await User.findOne({ firebaseUID });
     if (!user) {
-      console.log('User not found:', firebaseUID);
       return res.status(404).json({ error: 'User not found' });
     }
+    
+    console.log('6. Finding topic:', {
+      topicId,
+      foundUser: !!user,
+      topicsCount: user.topics.length
+    });
 
     const topic = user.topics.find(t => t._id?.toString() === topicId);
     if (!topic || !topic.categories) {
       return res.status(404).json({ error: 'Topic not found' });
     }
+    
+    console.log('7. Finding material:', {
+      materialId,
+      foundTopic: !!topic,
+      categoriesExist: !!topic.categories
+    });
 
     let materialFound = false;
     for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
       const materials = topic.categories[type];
       if (!Array.isArray(materials)) continue;
 
-      const material = materials.find(m => m._id?.toString() === materialId);
-      if (material) {
-        materialFound = true;
-        console.log('Found material:', {
-          id: material._id,
-          type,
-          currentUnits: material.completedUnits,
-          totalUnits
-        });
+      console.log(`8. Checking ${type} materials:`, {
+        materialsCount: materials.length,
+        materialIds: materials.map(m => m._id?.toString())
+      });
 
+      const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+      
+      if (materialIndex !== -1) {
+        materialFound = true;
+        console.log('9. Material found:', {
+          type,
+          index: materialIndex,
+          currentMaterial: materials[materialIndex]
+        });
+        
         const progress = Math.min(Math.round((completedUnits / totalUnits) * 100), 100);
 
-        // Update material progress
         const updatePath = `topics.$[topic].categories.${type}.$[material]`;
         const updatedUser = await User.findOneAndUpdate(
-          { 
-            firebaseUID,
-            'topics._id': topicId
-          },
+          { firebaseUID },
           { 
             $set: {
               [`${updatePath}.completedUnits`]: completedUnits,
@@ -719,30 +726,16 @@ export const updateMaterialProgress = async (req: Request, res: Response) => {
           return res.status(404).json({ error: 'Failed to update material' });
         }
 
-        // Update contribution count separately
-        await User.findOneAndUpdate(
-          { 
-            firebaseUID,
-            'contributions.date': today 
-          },
-          { 
-            $inc: { 'contributions.$.studyCount': 1 }
-          },
-          { 
-            new: true,
-            upsert: true,
-            setDefaultsOnInsert: true 
-          }
-        );
-
         return res.json(updatedUser);
       }
     }
-    
-    return res.status(404).json({ error: 'Material not found' });
+
+    if (!materialFound) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
   } catch (error) {
-    console.error('Error updating material progress:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in updateMaterialProgress:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addTopic, addMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } from '../controllers/userController';
+import { addTopic, addMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress, updateExistingMaterials } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 import { User } from '../models/User';
 import { Request, Response } from 'express';
@@ -25,6 +25,9 @@ router.post('/:topicId/materials', addMaterial);
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
+
+// 更新所有現有材料的路由
+router.put('/materials/update-all', updateExistingMaterials);
 
 // 主題相關路由
 router.post('/', addTopic);
