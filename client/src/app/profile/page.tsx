@@ -482,9 +482,9 @@ export default function ProfilePage() {
                 book: []
               }}
               onAddMaterial={(material) => addMaterial(material, activeTab)}
-              onDeleteMaterial={async (materialId, type) => {
+              onDeleteMaterial={async (materialId) => {
                 try {
-                  const success = await deleteMaterial(materialId, activeTab, type);
+                  const success = await deleteMaterial(materialId, activeTab);
                   if (!success) throw new Error('Failed to delete material');
                   return true;
                 } catch (error) {

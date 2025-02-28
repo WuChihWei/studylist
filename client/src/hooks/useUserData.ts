@@ -352,12 +352,12 @@ export const useUserData = () => {
     }
   };
 
-  const deleteMaterial = async (materialId: string, topicId: string, type: keyof Categories): Promise<boolean> => {
+  const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/${String(type)}/${materialId}`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
       const token = await user.getIdToken();
       
       const response = await fetch(endpoint, {
@@ -379,11 +379,14 @@ export const useUserData = () => {
         const updatedTopics = prevData.topics.map(topic => {
           if (topic._id !== topicId) return topic;
           
+          // 在所有類別中查找並刪除指定 ID 的材料
           return {
             ...topic,
             categories: {
-              ...topic.categories,
-              [type]: topic.categories[type].filter(m => m._id !== materialId)
+              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+              video: topic.categories.video.filter(m => m._id !== materialId),
+              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+              book: topic.categories.book.filter(m => m._id !== materialId)
             }
           };
         });
