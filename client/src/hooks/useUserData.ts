@@ -376,28 +376,26 @@ export const useUserData = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Delete material failed:', errorData);
-        return false;
+        const errorText = await response.text();
+        console.error('Delete material error response:', errorText);
+        throw new Error(`Failed to delete material: ${response.status}`);
       }
 
-      // 更新本地狀態而不是重新獲取所有數據
+      // Update local state
       setUserData(prevData => {
         if (!prevData) return null;
         
         const updatedTopics = prevData.topics.map(topic => {
           if (topic._id !== topicId) return topic;
           
-          const updatedCategories = { ...topic.categories };
-          for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
-            updatedCategories[type] = updatedCategories[type].filter(
-              m => m._id !== materialId
-            );
-          }
-          
           return {
             ...topic,
-            categories: updatedCategories
+            categories: {
+              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+              video: topic.categories.video.filter(m => m._id !== materialId),
+              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+              book: topic.categories.book.filter(m => m._id !== materialId)
+            }
           };
         });
 
@@ -453,6 +451,53 @@ export const useUserData = () => {
     }
   };
 
+  const updateMaterialProgress = async (
+    materialId: string,
+    topicId: string,
+    updates: {
+      completedUnits: number;
+      completed: boolean;
+      readingTime: number;
+    }
+  ): Promise<boolean> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('No user logged in');
+
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/progress`;
+      const token = await user.getIdToken();
+      
+      console.log('Updating material progress:', {
+        endpoint,
+        updates,
+        materialId,
+        topicId
+      });
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Update progress error:', errorText);
+        throw new Error(`Failed to update progress: ${response.status}`);
+      }
+
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
+      return true;
+    } catch (error) {
+      console.error('Error updating material progress:', error);
+      return false;
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -465,6 +510,7 @@ export const useUserData = () => {
     completeMaterial,
     uncompleteMaterial,
     deleteMaterial,
-    deleteTopic
+    deleteTopic,
+    updateMaterialProgress
   };
 };

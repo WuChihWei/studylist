@@ -18,7 +18,7 @@ import { EditProfileDialog } from "../components/EditProfileDialog"
 import { Input } from "@/app/components/ui/input"
 
 export default function ProfilePage() {
-  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic } = useUserData();
+  const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic, updateMaterialProgress } = useUserData();
   const [activeTab, setActiveTab] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -494,17 +494,23 @@ export default function ProfilePage() {
               }}
               onUpdateMaterial={async (materialId, updates) => {
                 try {
-                  const response = await fetch(`/api/materials/${activeTab}/${materialId}`, {
-                    method: 'PATCH',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updates),
-                  });
-                  if (!response.ok) throw new Error('Failed to update material');
+                  const user = auth.currentUser;
+                  if (!user) throw new Error('No user logged in');
+                  
+                  if (updates.completed) {
+                    await completeMaterial(materialId, activeTab);
+                  } else {
+                    await updateMaterialProgress(materialId, activeTab, {
+                      completedUnits: updates.completedUnits as number,
+                      completed: updates.completed as boolean,
+                      readingTime: updates.readingTime as number
+                    });
+                  }
+                  
+                  await fetchUserData(user);
                   return true;
                 } catch (error) {
-                  console.error('Error updating material:', error);
+                  console.error('Error in onUpdateMaterial:', error);
                   return false;
                 }
               }}
@@ -528,6 +534,28 @@ export default function ProfilePage() {
               unitMinutes={unitMinutes}
               onUnitMinutesChange={setUnitMinutes}
               topicId={activeTab}
+              onUpdateMaterial={async (materialId, updates) => {
+                try {
+                  const user = auth.currentUser;
+                  if (!user) throw new Error('No user logged in');
+                  
+                  if (updates.completed) {
+                    await completeMaterial(materialId, activeTab);
+                  } else {
+                    await updateMaterialProgress(materialId, activeTab, {
+                      completedUnits: updates.completedUnits as number,
+                      completed: updates.completed as boolean,
+                      readingTime: updates.readingTime as number
+                    });
+                  }
+                  
+                  await fetchUserData(user);
+                  return true;
+                } catch (error) {
+                  console.error('Error in onUpdateMaterial:', error);
+                  return false;
+                }
+              }}
             />
           )}
         </div>

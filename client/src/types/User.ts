@@ -8,6 +8,7 @@ export interface Material {
     completed?: boolean;
     readingTime?: number;
     note?: string;
+    completedUnits?: number;
 }
 
 export interface Categories {

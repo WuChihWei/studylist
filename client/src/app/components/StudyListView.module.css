@@ -18,12 +18,11 @@
 }
 
 .materialItem {
-  display: flex;
+  display: grid;
+  grid-template-columns: 50px 100px 50px 1fr 100px 120px;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
-  transition: background-color 0.2s;
 }
 
 .materialItem.completed {
@@ -57,9 +56,18 @@
   color: #666;
 }
 
+.materialNameContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .materialName {
-  font-size: 14px;
-  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 600px;
 }
 
 .materialRight {
@@ -183,4 +191,73 @@
 .minutesInput:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.materialsHeader {
+  display: grid;
+  grid-template-columns: 50px 100px 50px 1fr 100px 120px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  font-weight: 500;
+  color: #666;
+}
+
+.materialProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unitsProgress {
+  display: flex;
+  gap: 4px;
+}
+
+.unitBlock {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #eee;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.unitBlock:hover {
+  background: #ddd;
+}
+
+.unitBlock.completed {
+  background: #4169E1;
+}
+
+.unitBlock.completed:hover {
+  background: #3158D0;
+}
+
+.unitsEdit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.unitsInput {
+  width: 50px;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.unitsInput:focus {
+  outline: none;
+  border-color: #4169E1;
+}
+
+.progressText {
+  color: #666;
+  font-size: 14px;
+  text-align: right;
 }

@@ -5,6 +5,7 @@ import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import CircleProgress from './ui/circleProgress';
 
 interface StudyListViewProps {
   categories: Categories;
@@ -12,14 +13,16 @@ interface StudyListViewProps {
   unitMinutes: number;
   onUnitMinutesChange: (minutes: number) => void;
   topicId: string;
+  onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
 }
 
 export default function StudyListView({ 
   categories, 
   onCompleteMaterial,
-  unitMinutes,
+  unitMinutes = 6,
   onUnitMinutesChange,
-  topicId
+  topicId,
+  onUpdateMaterial
 }: StudyListViewProps) {
   const [completedMaterials, setCompletedMaterials] = useState<Set<string>>(() => {
     const completed = new Set<string>();
@@ -100,7 +103,7 @@ export default function StudyListView({
 
   const estimateTimeUnits = (material: Material & { type: keyof Categories }) => {
     if (!material.readingTime) {
-      return '?';
+      return 6;
     }
     return Math.ceil(material.readingTime / unitMinutes);
   };
@@ -151,6 +154,56 @@ export default function StudyListView({
     }
   };
 
+  const handleUnitComplete = async (material: Material & { type: keyof Categories }, clickedIndex: number) => {
+    if (!material._id) return;
+    
+    console.log('1. Starting handleUnitComplete:', {
+      materialId: material._id,
+      clickedIndex,
+      currentCompletedUnits: material.completedUnits
+    });
+
+    if (clickedIndex < (material.completedUnits || 0)) {
+      console.log('2. Clicked on already completed unit, returning');
+      return;
+    }
+
+    const newCompletedUnits = clickedIndex + 1;
+    const totalUnits = estimateTimeUnits(material);
+    
+    console.log('3. Preparing update:', {
+      newCompletedUnits,
+      totalUnits,
+      readingTime: totalUnits * unitMinutes
+    });
+
+    try {
+      const success = await onUpdateMaterial(material._id, {
+        completedUnits: newCompletedUnits,
+        completed: newCompletedUnits === totalUnits,
+        readingTime: totalUnits * unitMinutes
+      });
+      
+      console.log('4. Update result:', { success });
+
+      if (success) {
+        const newCompleted = new Set(completedMaterials);
+        if (newCompletedUnits === totalUnits) {
+          newCompleted.add(material._id);
+        } else {
+          newCompleted.delete(material._id);
+        }
+        setCompletedMaterials(newCompleted);
+        console.log('5. Local state updated:', {
+          totalCompleted: newCompleted.size,
+          isFullyCompleted: newCompletedUnits === totalUnits
+        });
+      }
+    } catch (error) {
+      console.error('6. Error updating units:', error);
+    }
+  };
+
   return (
     <div className={styles.materialsContainer}>
       <div className={styles.header}>
@@ -162,8 +215,9 @@ export default function StudyListView({
               min="1"
               max="120"
               value={unitMinutes}
+              placeholder="6"
               onChange={(e) => {
-                const value = parseInt(e.target.value);
+                const value = parseInt(e.target.value) || 6;
                 if (value > 0 && value <= 120) {
                   onUnitMinutesChange(value);
                 }
@@ -173,7 +227,7 @@ export default function StudyListView({
             <span>mins/unit</span>
           </div>
         </div>
-        <div className={styles.headerRight}>
+        {/* <div className={styles.headerRight}>
           <div className={styles.progressBar}>
             <div 
               className={styles.progressFill} 
@@ -182,38 +236,78 @@ export default function StudyListView({
               }} 
             />
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className={styles.materialsList}>
+        <div className={styles.materialsHeader}>
+          <span>#</span>
+          <span>Process</span>
+          <span>Type</span>
+          <span>Name</span>
+          <span>Units</span>
+          <span>Progress</span>
+        </div>
         <div className={styles.materialsListContent}>
-          {getAllMaterials().map((material, index) => (
-            <div 
-              key={material._id || index} 
-              className={`${styles.materialItem} ${
-                completedMaterials.has(material._id || '') ? styles.completed : ''
-              }`}
-            >
-              <div className={styles.materialLeft}>
-                <button
-                  onClick={() => handleComplete(material)}
-                  className={`${styles.completeButton} ${material.completed ? styles.completed : ''}`}
-                >
-                  {material.completed && <FaCheck />}
-                </button>
+          {getAllMaterials().map((material, index) => {
+            const totalUnits = estimateTimeUnits(material);
+            const completedUnits = material.completedUnits || 0;
+            const progress = completedUnits / totalUnits;
+
+            return (
+              <div 
+                key={material._id || index} 
+                className={styles.materialItem}
+              >
                 <span className={styles.materialNumber}>{index + 1}</span>
+                <div className={styles.materialProgress}>
+                  <CircleProgress progress={progress} />
+                  <span>{`${completedUnits}/${totalUnits}`}</span>
+                </div>
                 <div className={styles.materialPreview}>
                   {typeIcons[material.type]}
                 </div>
-                <span className={styles.materialName}>{material.title}</span>
+                <div className={styles.materialNameContainer}>
+                  <span className={styles.materialName} title={material.title || ''}>
+                    {material.title ? 
+                      (material.title.length > 60 ? `${material.title.slice(0, 60)}...` : material.title)
+                      : 'Untitled'
+                    }
+                  </span>
+                  <div className={styles.unitsProgress}>
+                    {Array.from({ length: totalUnits }).map((_, i) => (
+                      <div 
+                        key={i}
+                        className={`${styles.unitBlock} ${i < completedUnits ? styles.completed : ''}`}
+                        onClick={() => handleUnitComplete(material, i)}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.unitsEdit}>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={totalUnits}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      if (value > 0 && value <= 100) {
+                        onUpdateMaterial(material._id!, {
+                          readingTime: value * unitMinutes
+                        });
+                      }
+                    }}
+                    className={styles.unitsInput}
+                  />
+                  <span>units</span>
+                </div>
+                <div className={styles.progressText}>
+                  {Math.round(progress * 100)}% Complete
+                </div>
               </div>
-              <div className={styles.materialRight}>
-                <span className={`${styles.units} ${estimateTimeUnits(material) === '?' ? styles.unknown : ''}`}>
-                  {estimateTimeUnits(material)} units
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
