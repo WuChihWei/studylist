@@ -26,7 +26,7 @@ router.post('/:topicId/materials', addMaterial);
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
-router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
+router.delete('/:topicId/:materialId', async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;  // 從 URL 參數獲取
     const { topicId, materialId } = req.params;

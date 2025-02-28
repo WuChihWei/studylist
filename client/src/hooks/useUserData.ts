@@ -357,15 +357,8 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/${materialId}`;
       const token = await user.getIdToken();
-      
-      console.log('Delete material request:', {
-        endpoint,
-        materialId,
-        topicId,
-        userUid: user.uid
-      });
       
       const response = await fetch(endpoint, {
         method: 'DELETE',
@@ -376,8 +369,6 @@ export const useUserData = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Delete material error response:', errorText);
         throw new Error(`Failed to delete material: ${response.status}`);
       }
 
