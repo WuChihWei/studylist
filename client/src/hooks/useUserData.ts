@@ -357,7 +357,7 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/${materialId}`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
       const token = await user.getIdToken();
       
       const response = await fetch(endpoint, {
@@ -379,6 +379,7 @@ export const useUserData = () => {
         const updatedTopics = prevData.topics.map(topic => {
           if (topic._id !== topicId) return topic;
           
+          // 在所有類別中查找並刪除指定 ID 的材料
           return {
             ...topic,
             categories: {

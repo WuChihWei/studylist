@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Material, Categories } from '../../types/User';
+import { Material, Categories } from '@/types/User';
 import styles from './MaterialsView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
@@ -26,9 +26,17 @@ import { Input } from "@/app/components/ui/input"
 import { NoteCard } from "./NoteCard"
 import { ListItem } from './ListItem';
 
+interface MaterialInput {
+  title: string;
+  type: keyof Categories;
+  url?: string;
+  rating?: number;
+  dateAdded: Date;
+}
+
 interface MaterialsViewProps {
   categories: Categories;
-  onAddMaterial: (material: any) => void;
+  onAddMaterial: (material: MaterialInput) => Promise<boolean>;
   onDeleteMaterial: (materialId: string) => Promise<boolean>;
   onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
   activeTab: string;
@@ -270,7 +278,9 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                   note: material.note || ''
                 });
               }}
-              onDelete={onDeleteMaterial}
+              onDelete={async (materialId) => {
+                return await onDeleteMaterial(materialId);
+              }}
             />
           ))}
         </div>

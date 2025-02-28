@@ -26,9 +26,9 @@ router.post('/:topicId/materials', addMaterial);
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
-router.delete('/:topicId/:materialId', async (req: Request, res: Response) => {
+router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;  // 從 URL 參數獲取
+    const { firebaseUID } = req.params;
     const { topicId, materialId } = req.params;
     
     const user = await User.findOne({ firebaseUID });
@@ -42,6 +42,7 @@ router.delete('/:topicId/:materialId', async (req: Request, res: Response) => {
     }
 
     let materialDeleted = false;
+    // 遍歷所有類別查找並刪除指定 ObjectId 的材料
     for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
       const materials = topic.categories[type];
       if (!Array.isArray(materials)) continue;
