@@ -37,7 +37,7 @@ interface MaterialInput {
 interface MaterialsViewProps {
   categories: Categories;
   onAddMaterial: (material: MaterialInput) => Promise<boolean>;
-  onDeleteMaterial: (materialId: string) => Promise<boolean>;
+  onDeleteMaterial: (materialId: string, type: keyof Categories) => Promise<boolean>;
   onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
   activeTab: string;
 }
@@ -279,7 +279,7 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 });
               }}
               onDelete={async (materialId) => {
-                return await onDeleteMaterial(materialId);
+                return await onDeleteMaterial(materialId, material.type as keyof Categories);
               }}
             />
           ))}
