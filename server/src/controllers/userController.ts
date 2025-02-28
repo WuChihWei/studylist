@@ -137,13 +137,17 @@ export const addMaterial = async (req: Request, res: Response) => {
       });
     }
 
-    // Create new material
+    // Create new material with progress field
     const newMaterial = {
       type,
       title,
       url: url || null,
       rating: rating || 5,
-      dateAdded: new Date()
+      dateAdded: new Date(),
+      completedUnits: 0,
+      readingTime: 0,
+      progress: 0,
+      completed: false
     };
 
     // Get today's date in YYYY-MM-DD format
