@@ -745,3 +745,41 @@ export const updateMaterialProgress = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const updateExistingMaterials = async (req: Request, res: Response) => {
+  try {
+    const { firebaseUID } = req.params;
+    
+    const user = await User.findOne({ firebaseUID });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // 遍歷所有主題和材料
+    const updatedUser = await User.findOneAndUpdate(
+      { firebaseUID },
+      {
+        $set: {
+          'topics.$[].categories.webpage.$[].progress': 0,
+          'topics.$[].categories.video.$[].progress': 0,
+          'topics.$[].categories.podcast.$[].progress': 0,
+          'topics.$[].categories.book.$[].progress': 0,
+          'topics.$[].categories.webpage.$[].completedUnits': 0,
+          'topics.$[].categories.video.$[].completedUnits': 0,
+          'topics.$[].categories.podcast.$[].completedUnits': 0,
+          'topics.$[].categories.book.$[].completedUnits': 0,
+          'topics.$[].categories.webpage.$[].readingTime': 0,
+          'topics.$[].categories.video.$[].readingTime': 0,
+          'topics.$[].categories.podcast.$[].readingTime': 0,
+          'topics.$[].categories.book.$[].readingTime': 0
+        }
+      },
+      { new: true }
+    );
+
+    return res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating existing materials:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
