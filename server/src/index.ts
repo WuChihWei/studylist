@@ -197,43 +197,63 @@ app.delete('/test/delete-material', authMiddleware, (req: Request, res: Response
 // Protected routes
 app.use('/api/users', authMiddleware);
 
-// IMPORTANT: Direct material routes MUST be registered BEFORE the nested routes
-// Direct material routes to avoid nesting issues
-app.delete('/api/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  console.log('⭐ Direct material delete route triggered:', {
-    topicId: req.params.topicId,
-    materialId: req.params.materialId,
-    userId: req.query.userId
-  });
-  
-  const { userId } = req.query;
-  if (!userId) {
-    console.log('Direct material delete route: Missing userId in query parameters');
-    return res.status(400).json({ error: 'Missing userId in query parameters' });
-  }
-  
-  // Add userId to params for controller
-  req.params.userId = userId as string;
-  
-  // Call the controller directly
-  deleteMaterial(req, res, next);
+// 路由挂载前添加调试日志
+console.log('=== Route Setup ===');
+console.log('Registering routes...');
+
+// API 路由
+app.use('/api/users/:userId/topics', topicRoutes);
+
+// 添加直接路由以防止嵌套路由问题
+app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
+  console.log('⭐ Direct material delete route triggered');
+  console.log('Params:', req.params);
+  console.log('Forwarding to materialController.deleteMaterial');
+  require('./controllers/materialController').deleteMaterial(req, res, next);
 });
 
-// Explicitly add the nested route directly too
-app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  console.log('⭐ Nested material delete route triggered:', {
-    userId: req.params.userId,
-    topicId: req.params.topicId,
-    materialId: req.params.materialId
-  });
-  
-  deleteMaterial(req, res, next);
+// 添加直接路由以便于调试
+app.get('/api/routes', (req, res) => {
+  console.log('Routes debug endpoint accessed');
+  try {
+    interface RouteInfo {
+      path: string;
+      methods: string[];
+    }
+    
+    const routes: RouteInfo[] = [];
+    app._router.stack.forEach((middleware: any) => {
+      if(middleware.route) { // routes registered directly on the app
+        routes.push({
+          path: middleware.route.path,
+          methods: Object.keys(middleware.route.methods)
+        });
+      } else if(middleware.name === 'router') { // router middleware
+        middleware.handle.stack.forEach((handler: any) => {
+          if(handler.route) {
+            const path = handler.route.path;
+            routes.push({
+              path: middleware.regexp.toString() + path,
+              methods: Object.keys(handler.route.methods)
+            });
+          }
+        });
+      }
+    });
+    res.json({ routes });
+  } catch (error) {
+    console.error('Error generating routes list:', error);
+    res.status(500).json({ error: 'Failed to generate routes list' });
+  }
 });
+
+// 路由注册后添加确认日志
+console.log('Routes registered successfully');
+console.log('Material delete route registered at: /api/users/:userId/topics/:topicId/materials/:materialId');
 
 // API routes
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/stripe', authMiddleware, stripeRoutes);
-app.use('/api/users/:userId/topics', topicRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

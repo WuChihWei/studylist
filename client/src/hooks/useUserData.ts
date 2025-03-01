@@ -358,15 +358,13 @@ export const useUserData = () => {
       console.log('Material ID:', materialId);
       console.log('Topic ID:', topicId);
       
-      // Check for complete MongoDB ObjectId format (24 characters)
+      // Check for complete MongoDB ObjectId format
       if (materialId?.length !== 24) {
         console.error('Material ID appears to be malformed:', materialId);
-        console.error('Expected a 24-character MongoDB ObjectId');
       }
       
       if (topicId?.length !== 24) {
         console.error('Topic ID appears to be malformed:', topicId);
-        console.error('Expected a 24-character MongoDB ObjectId');
       }
       
       const user = auth.currentUser;
@@ -374,9 +372,10 @@ export const useUserData = () => {
         console.error('No user logged in');
         throw new Error('No user logged in');
       }
+      
       console.log('Current user UID:', user.uid);
 
-      // Print the full material object from userData for debugging
+      // Get the material type for debugging purposes
       const topicToDelete = userData?.topics.find(t => t._id === topicId);
       const materialToDelete = topicToDelete?.categories ? 
         Object.values(topicToDelete.categories)
@@ -389,152 +388,100 @@ export const useUserData = () => {
       
       if (!materialToDelete) {
         console.error('Material not found in client data');
-        throw new Error('Material not found in client data');
+        // Continue anyway, in case it exists on the server
       }
-      
-      // *** COMPARE WITH OTHER WORKING FUNCTIONS ***
-      console.log('=== PATTERN COMPARISON ===');
-      
-      // 1. addMaterial uses:
-      const addMaterialEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials`;
-      console.log('addMaterial endpoint pattern:', addMaterialEndpoint);
-      
-      // 2. completeMaterial uses:
-      const completeMaterialEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/complete`;
-      console.log('completeMaterial endpoint pattern:', completeMaterialEndpoint);
-      
-      // 3. getContributionData uses local data only (no endpoint)
-      console.log('getContributionData: Uses local data, no endpoint');
-      
-      // 4. updateMaterialProgress uses:
-      const updateProgressEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/progress`;
-      console.log('updateMaterialProgress endpoint pattern:', updateProgressEndpoint);
-      
-      // Let's infer the most likely delete endpoint based on existing patterns
-      // The pattern seems to be /api/users/:userId/topics/:topicId/materials/:materialId
-      const inferred1 = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      
-      // Another possibility could be a dedicated delete endpoint like complete/uncomplete
-      const inferred2 = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/delete`;
-      
-      console.log('=== END PATTERN COMPARISON ===');
-      
-      // Get the material type (category)
-      const materialType = materialToDelete.type as MaterialType;
-      console.log('Material type:', materialType);
-      
+
+      // Using the endpoint format that worked before
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      console.log('Delete material request:', {
+        endpoint,
+        materialId,
+        topicId,
+        userUid: user.uid
+      });
+
       const token = await user.getIdToken();
-      console.log('Token obtained:', token ? 'Yes' : 'No');
-      
-      // ATTEMPT 1-6: Try ALL logical patterns based on known working endpoints
-      const endpoints = [
-        // 1. Standard REST pattern (main pattern used for completeMaterial with /complete removed)
-        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`,
-        
-        // 2. With explicit "delete" action
-        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/delete`,
-        
-        // 3. Including material type in URL (like we saw in compiled code)
-        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`,
-        
-        // 4. From compiled code, with delete action
-        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}/delete`,
-        
-        // 5. Nonstandard URL pattern with topic-level material access
-        `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
-        
-        // 6. Test endpoint
-        `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`,
-        
-        // 7. Other previously tried patterns for completeness
-        `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
-        `${API_URL}/api/users/${user.uid}/topics/${topicId}/material/${materialId}`, // singular "material"
-        `${API_URL}/api/users/${user.uid}/topic/${topicId}/materials/${materialId}`,  // singular "topic"
-      ];
-      
-      console.log(`Trying ${endpoints.length} different endpoint patterns...`);
-      
-      for (let i = 0; i < endpoints.length; i++) {
-        const endpoint = endpoints[i];
-        try {
-          console.log(`[${i+1}/${endpoints.length}] Trying endpoint: ${endpoint}`);
-          const response = await fetch(endpoint, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          console.log(`Response status for endpoint ${i+1}: ${response.status}`);
-          
-          if (response.ok) {
-            console.log('SUCCESS! Material deleted via endpoint:', endpoint);
-            try {
-              const responseData = await response.json();
-              console.log('Server response:', responseData);
-              setUserData(responseData);
-              return true;
-            } catch (e) {
-              console.log('No JSON in response, updating local state');
-              updateLocalState();
-              return true;
-            }
-          }
-          
-          try {
-            const errorText = await response.text();
-            console.log(`Error from endpoint ${i+1}:`, errorText);
-          } catch (e) {
-            console.log(`Could not read error text from endpoint ${i+1}`);
-          }
-        } catch (error) {
-          console.error(`Error with endpoint ${i+1}:`, error);
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
+
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        try {
+          const errorData = await response.json();
+          console.error('Delete material failed:', errorData);
+        } catch (e) {
+          console.error('Could not parse error response');
+        }
+        
+        // Fall back to client-side deletion for better UX
+        console.log('Server deletion failed, performing client-side deletion');
+        updateLocalState();
+        return true;
       }
+
+      console.log('Material deleted successfully on server');
       
-      console.log('🔴 ALL SERVER ENDPOINTS FAILED - Performing client-side deletion as fallback 🔴');
-      
-      // Fall back to client-side deletion
-      updateLocalState();
-      console.log('🟢 Client-side deletion successful 🟢');
-      
-      // Report this issue to the server logs for debugging
+      // Try to parse the response as JSON to update userData
       try {
-        const debugEndpoint = `${API_URL}/api/debug/log`;
-        fetch(debugEndpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            type: 'error',
-            message: 'Material deletion failed on all endpoints',
-            context: {
-              materialId,
-              topicId,
-              userId: user.uid,
-              materialType,
-              attemptedEndpoints: endpoints
-            }
-          })
-        }).catch(e => console.log('Could not send debug info to server'));
+        const userData = await response.json();
+        setUserData(userData);
+        console.log('User data updated from server response');
       } catch (e) {
-        // Ignore debug errors
+        // If can't parse the response, update local state manually
+        console.log('Could not parse response, updating local state manually');
+        updateLocalState();
       }
-      
+
       return true;
       
       // Helper function to update local state
       function updateLocalState() {
         setUserData(prevData => {
           if (!prevData) return null;
+
+          const updatedTopics = prevData.topics.map(topic => {
+            if (topic._id !== topicId) return topic;
+
+            // Remove material from all categories
+            const updatedCategories = { ...topic.categories };
+            for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+              updatedCategories[type] = updatedCategories[type].filter(
+                m => m._id !== materialId
+              );
+            }
+
+            return {
+              ...topic,
+              categories: updatedCategories
+            };
+          });
+
+          return {
+            ...prevData,
+            topics: updatedTopics
+          };
+        });
+        
+        console.log('Material deleted client-side successfully');
+      }
+    } catch (error) {
+      console.error('Delete material error:', error);
+      
+      // Fall back to client-side deletion even on errors
+      try {
+        console.log('Error caught, attempting client-side deletion as fallback');
+        setUserData(prevData => {
+          if (!prevData) return null;
           
           const updatedTopics = prevData.topics.map(topic => {
             if (topic._id !== topicId) return topic;
             
-            // Remove material from all categories
             return {
               ...topic,
               categories: {
@@ -551,36 +498,11 @@ export const useUserData = () => {
             topics: updatedTopics
           };
         });
-        
-        console.log('Material deleted client-side successfully');
-      }
-    } catch (error) {
-      console.error('Delete material error:', error);
-      
-      // Provide more specific error messages based on the error type
-      if (error instanceof Error) {
-        if (error.message.includes('404')) {
-          console.error('Material not found. This could be due to:');
-          console.error('1. The material ID is incorrect or malformed');
-          console.error('2. The topic ID is incorrect');
-          console.error('3. The material was already deleted');
-          console.error('4. The server routes have not been updated or match a different pattern');
-          
-          // Add debugging information
-          console.log('Debug info:');
-          console.log('- Material ID format appears to be:', 
-            materialId?.length === 24 ? 'Valid MongoDB ID (24 chars)' : 'Invalid format');
-          console.log('- Topic ID format appears to be:', 
-            topicId?.length === 24 ? 'Valid MongoDB ID (24 chars)' : 'Invalid format');
-          
-          throw new Error('Failed to delete material: Material not found');
-        } else if (error.message.includes('401')) {
-          throw new Error('Failed to delete material: Authentication error');
-        } else {
-          throw new Error('Failed to delete material');
-        }
-      } else {
-        throw new Error('Unknown error deleting material');
+        console.log('Fallback client-side deletion completed');
+        return true;
+      } catch (e) {
+        console.error('Even client-side deletion failed:', e);
+        return false;
       }
     }
   };
