@@ -18,8 +18,10 @@ if (!token) {
   process.exit(1);
 }
 
-// Base URL
-const baseUrl = process.env.SERVER_URL || 'http://localhost:3001';
+// Base URL - default to Railway deployment
+const baseUrl = process.env.SERVER_URL || 'https://studylistserver-production.up.railway.app';
+
+console.log(`Testing against server: ${baseUrl}`);
 
 // Test routes
 const routes = [
@@ -46,6 +48,12 @@ const routes = [
     method: 'DELETE',
     url: `${baseUrl}/api/users/${userId}/topics/${topicId}/categories/${categoryType}/materials/${materialId}`,
     description: 'DELETE material'
+  },
+  // Test the direct DELETE route we added as a backup
+  {
+    method: 'DELETE',
+    url: `${baseUrl}/api/users/${userId}/topics/${topicId}/categories/${categoryType}/materials/${materialId}`,
+    description: 'Direct DELETE route'
   }
 ];
 
