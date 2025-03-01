@@ -454,22 +454,17 @@ export const useUserData = () => {
       // 恢复服务器请求
       const token = await user.getIdToken();
       
-      // 使用新的简化端点
-      const endpoint = `${API_URL}/api/delete-material`;
+      // 使用正确的端点 - 改用服务器上实际存在的路由
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
       console.log('发送删除请求到:', endpoint);
       
-      // 使用POST请求体发送参数(虽然是DELETE方法)
+      // 使用DELETE请求
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          userId: user.uid,
-          topicId,
-          materialId
-        })
+        }
       });
       
       console.log('响应状态:', response.status);
