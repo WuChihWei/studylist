@@ -132,21 +132,6 @@ app.get('/deployment-check', (req: Request, res: Response) => {
   });
 });
 
-// Add a fully independent DELETE route for debugging
-app.delete('/api/delete-material-debug/:userId/:topicId/:materialId', authMiddleware, (req, res) => {
-  console.log('⭐⭐⭐ INDEPENDENT DELETE ROUTE HIT ⭐⭐⭐');
-  console.log('Params:', req.params);
-  
-  const { userId, topicId, materialId } = req.params;
-  
-  // Respond with success to test client integration
-  res.status(200).json({
-    success: true,
-    message: 'Debug delete route processed successfully',
-    params: { userId, topicId, materialId }
-  });
-});
-
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({
@@ -277,33 +262,24 @@ app.get('/api/test-routes', (req, res) => {
   }
 });
 
-// *****关键：先注册一个万能材料删除路由（尝试包含材料类型）*****
-app.delete('/api/users/:userId/topics/:topicId/materials/:materialType/:materialId', authMiddleware, (req, res, next) => {
-  console.log('⭐ Delete material with TYPE route triggered');
-  console.log('Params:', req.params);
-  
+// 删除所有现有的复杂DELETE路由处理代码
+// 添加一个简单直接的删除端点
+app.delete('/api/materials/:materialId', authMiddleware, async (req, res, next) => {
   try {
-    // 将类型和ID提取出来
-    const { userId, topicId, materialId, materialType } = req.params;
-    console.log(`删除材料：用户=${userId}, 主题=${topicId}, 材料ID=${materialId}, 类型=${materialType}`);
+    const { materialId } = req.params;
+    const { userId, topicId } = req.query;
     
-    // 将所有参数传递给控制器
-    deleteMaterial(req, res, next);
+    console.log('🔴 DELETE MATERIAL - Simple Route');
+    console.log('MaterialID:', materialId);
+    console.log('UserID:', userId);
+    console.log('TopicID:', topicId);
+    
+    // 调用控制器函数
+    req.params.userId = userId as string;
+    req.params.topicId = topicId as string;
+    
+    await deleteMaterial(req, res, next);
   } catch (error) {
-    console.error('Error in material delete route with type:', error);
-    next(error);
-  }
-});
-
-// 注册标准材料删除路由
-app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  console.log('⭐ Standard delete material route triggered');
-  console.log('Params:', req.params);
-  
-  try {
-    deleteMaterial(req, res, next);
-  } catch (error) {
-    console.error('Error in standard delete route:', error);
     next(error);
   }
 });
