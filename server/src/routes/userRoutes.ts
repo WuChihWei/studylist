@@ -35,7 +35,7 @@ router.post('/users/update-all-bios', updateAllUsersBio);
 // The client is sending to /api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
 // But the router is mounted at /api, so we need to use users/:userId/... (without the leading slash)
 router.delete(
-  '/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
+  'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   (req, res, next) => {
     console.log('Delete material request received:', {
       userId: req.params.userId,
