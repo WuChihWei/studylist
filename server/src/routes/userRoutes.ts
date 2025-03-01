@@ -31,7 +31,7 @@ router.post('/:firebaseUID/topics', addTopic);
 router.put('/:firebaseUID/topics/:topicId', updateTopicName);
 router.post('/users/update-all-bios', updateAllUsersBio);
 router.delete(
-  '/users/:userId/topics/:topicId/materials/:materialId',
+  '/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   deleteMaterial
 );
 

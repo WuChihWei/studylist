@@ -346,13 +346,13 @@ export const useUserData = () => {
     }
   };
 
-  const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
+  const deleteMaterial = async (materialId: string, topicId: string, categoryType: string): Promise<boolean> => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/categories/${categoryType}/materials/${materialId}`;
 
       const response = await fetch(endpoint, {
         method: 'DELETE',

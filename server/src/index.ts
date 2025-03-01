@@ -7,7 +7,7 @@ import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
-import materialRoutes from './routes/materialRoutes';
+import materialRouter from './routes/materialRoutes';
 import { authMiddleware } from './middleware/auth';
 
 // 在任何其他代碼之前加載環境變數
@@ -174,8 +174,8 @@ app.use('/api/users', authMiddleware);
 // Mount routes
 app.use('/api', userRoutes);
 app.use('/api/stripe', stripeRoutes);
-app.use('/api/users/:firebaseUID/topics', topicsRouter);
-app.use('/api/users/:userId/materials', materialRoutes);
+app.use('/api/users/:userId/topics', topicsRouter);
+app.use('/api/users/:userId/materials', materialRouter);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
