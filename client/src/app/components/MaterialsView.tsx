@@ -279,7 +279,7 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 });
               }}
               onDelete={async (materialId) => {
-                return await onDeleteMaterial(materialId, material.type, material.type);
+                return await onDeleteMaterial(materialId, activeTab, material.type);
               }}
             />
           ))}

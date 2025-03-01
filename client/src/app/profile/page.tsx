@@ -506,17 +506,7 @@ export default function ProfilePage() {
                 book: []
               }}
               onAddMaterial={(material) => addMaterial(material, activeTab)}
-              onDeleteMaterial={async (materialId, topicId, categoryType) => {
-                try {
-                  const success = await deleteMaterial(materialId, topicId, categoryType);
-                  if (!success) throw new Error('Failed to delete material');
-                  return true;
-                } catch (error) {
-                  console.error('Error deleting material:', error);
-                  return false;
-                }
-              }}
-              
+              onDeleteMaterial={onDeleteMaterial}
               onUpdateMaterial={async (materialId, updates) => {
                 try {
                   const user = auth.currentUser;
