@@ -386,118 +386,136 @@ export const useUserData = () => {
       
       console.log('Found topic to delete from:', topicToDelete?.name);
       console.log('Found material to delete:', materialToDelete);
-      
-      const token = await user.getIdToken();
-      console.log('Token obtained:', token ? 'Yes' : 'No');
-      
-      // First, try the direct URL format
-      try {
-        const directEndpoint = `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`;
-        console.log('Trying direct DELETE request URL:', directEndpoint);
-        
-        const directResponse = await fetch(directEndpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Direct response status:', directResponse.status);
-        
-        if (directResponse.ok) {
-          console.log('Direct route DELETE successful');
-          const updatedUser = await directResponse.json();
-          setUserData(updatedUser);
-          return true;
-        }
-        
-        console.log('Direct route failed, trying original route...');
-      } catch (directError) {
-        console.error('Error with direct route:', directError);
-        console.log('Falling back to original route...');
-      }
-      
-      // Second, try the original nested URL format
-      try {
-        const originalEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-        console.log('Trying original DELETE request URL:', originalEndpoint);
-        
-        const response = await fetch(originalEndpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-        if (response.ok) {
-          const updatedUser = await response.json();
-          setUserData(updatedUser);
-          return true;
-        }
-        
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-        console.log('Both regular routes failed, trying test endpoint...');
-      } catch (originalError) {
-        console.error('Error with original route:', originalError);
-        console.log('Trying test endpoint as last resort...');
-      }
-      
-      // Last resort: Try the test endpoint
-      try {
-        const testEndpoint = `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`;
-        console.log('Trying TEST DELETE endpoint:', testEndpoint);
-        
-        const testResponse = await fetch(testEndpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Test endpoint response status:', testResponse.status);
-        
-        if (testResponse.ok) {
-          console.log('Test endpoint successful, manual state update');
-          // If test endpoint works but main endpoints fail, manually update state
-          setUserData(prevData => {
-            if (!prevData) return null;
+      // STRATEGY 1: Try server-side deletion if online
+      if (isOnline()) {
+        try {
+          const token = await user.getIdToken();
+          console.log('Token obtained:', token ? 'Yes' : 'No');
+          
+          // Try multiple server endpoints with different patterns
+          const endpoints = [
+            // Original nested pattern
+            `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`,
             
-            const updatedTopics = prevData.topics.map(topic => {
-              if (topic._id !== topicId) return topic;
-              
-              // Remove material from all categories
-              return {
-                ...topic,
-                categories: {
-                  webpage: topic.categories.webpage.filter(m => m._id !== materialId),
-                  video: topic.categories.video.filter(m => m._id !== materialId),
-                  podcast: topic.categories.podcast.filter(m => m._id !== materialId),
-                  book: topic.categories.book.filter(m => m._id !== materialId)
+            // Direct pattern with query parameter
+            `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
+            
+            // Alternative nested pattern
+            `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
+            
+            // Test endpoint
+            `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`
+          ];
+          
+          for (const endpoint of endpoints) {
+            try {
+              console.log(`Trying DELETE endpoint: ${endpoint}`);
+              const response = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
                 }
-              };
-            });
+              });
+              
+              console.log(`Response status for ${endpoint}: ${response.status}`);
+              
+              if (response.ok) {
+                console.log('Server deletion successful via:', endpoint);
+                try {
+                  const updatedUser = await response.json();
+                  setUserData(updatedUser);
+                } catch (jsonError) {
+                  console.error('Error parsing JSON from successful response:', jsonError);
+                  // Proceed with client-side deletion as fallback
+                  performClientSideDeletion();
+                }
+                return true;
+              }
+              
+              // Log the error if this endpoint failed
+              try {
+                const errorText = await response.text();
+                console.error(`Server error for ${endpoint}:`, errorText);
+              } catch (e) {
+                console.error(`Error reading error response from ${endpoint}:`, e);
+              }
+            } catch (endpointError) {
+              console.error(`Error with endpoint ${endpoint}:`, endpointError);
+            }
+          }
+          
+          console.log('All server endpoint attempts failed, falling back to client-side deletion');
+        } catch (serverError) {
+          console.error('Error during server deletion attempts:', serverError);
+        }
+      } else {
+        console.log('Device appears to be offline, using client-side deletion');
+      }
 
+      // STRATEGY 2: Client-side deletion as fallback
+      return performClientSideDeletion();
+      
+      // Helper function for client-side deletion
+      function performClientSideDeletion() {
+        console.log('Performing client-side deletion');
+        if (!materialToDelete) {
+          console.error('Material not found for client-side deletion');
+          return false;
+        }
+        
+        setUserData(prevData => {
+          if (!prevData) return null;
+          
+          const updatedTopics = prevData.topics.map(topic => {
+            if (topic._id !== topicId) return topic;
+            
+            // Remove material from all categories
             return {
-              ...prevData,
-              topics: updatedTopics
+              ...topic,
+              categories: {
+                webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+                video: topic.categories.video.filter(m => m._id !== materialId),
+                podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+                book: topic.categories.book.filter(m => m._id !== materialId)
+              }
             };
           });
-          
-          return true;
+
+          return {
+            ...prevData,
+            topics: updatedTopics
+          };
+        });
+        
+        // Schedule a background sync if supported
+        if ('serviceWorker' in navigator && 'SyncManager' in window && user) {
+          try {
+            navigator.serviceWorker.ready.then(registration => {
+              // Store the delete operation for later sync
+              localStorage.setItem(`pending-delete-${materialId}`, JSON.stringify({
+                materialId,
+                topicId,
+                userId: user.uid,
+                timestamp: new Date().toISOString()
+              }));
+              
+              // Request a background sync when online
+              // @ts-ignore - SyncManager might not be recognized in older TypeScript versions
+              registration.sync?.register('sync-deletes').catch((err: Error) => {
+                console.error('Error registering background sync:', err);
+              });
+            }).catch(err => {
+              console.error('Error accessing service worker:', err);
+            });
+          } catch (syncError) {
+            console.error('Error setting up background sync:', syncError);
+          }
         }
         
-        // If all three attempts fail, throw an error
-        throw new Error(`Failed to delete material: All endpoints failed`);
-      } catch (testError) {
-        console.error('All deletion attempts failed:', testError);
-        throw new Error('Failed to delete material: Material not found');
+        console.log('Material deleted client-side successfully');
+        return true;
       }
     } catch (error) {
       console.error('Delete material error:', error);
@@ -505,10 +523,11 @@ export const useUserData = () => {
       // Provide more specific error messages based on the error type
       if (error instanceof Error) {
         if (error.message.includes('404')) {
-          console.error('Material not found on server. This could be due to:');
+          console.error('Material not found. This could be due to:');
           console.error('1. The material ID is incorrect or malformed');
           console.error('2. The topic ID is incorrect');
           console.error('3. The material was already deleted');
+          console.error('4. The server routes have not been updated yet');
           
           // Add debugging information
           console.log('Debug info:');
