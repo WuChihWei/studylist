@@ -375,6 +375,84 @@ function printRoutes(app: any) {
 printRoutes(app);
 console.log('========================\n');
 
+
+// Debug route to list all routes
+app.get('/debug/routes', (req: Request, res: Response) => {
+  console.log('Debug route hit - listing all routes');
+  
+  const routes: {method: string; path: string}[] = [];
+  
+  // Get routes from the main app
+  app._router.stack.forEach((middleware: any) => {
+    if (middleware.route) {
+      // Routes registered directly on the app
+      const methods = Object.keys(middleware.route.methods);
+      routes.push({
+        method: methods.join(',').toUpperCase(),
+        path: middleware.route.path
+      });
+    } else if (middleware.name === 'router') {
+      // Router middleware
+      const regexp = middleware.regexp.toString();
+      
+      // Get the base path from the regexp
+      let basePath = '';
+      const match = regexp.match(/^\/\^\\\/([^\\]+)/);
+      if (match) {
+        basePath = '/' + match[1];
+      }
+      
+      // Get routes from the router
+      if (middleware.handle && middleware.handle.stack) {
+        middleware.handle.stack.forEach((handler: any) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods);
+            const routePath = handler.route.path;
+            const fullPath = routePath.startsWith('/') 
+              ? basePath + routePath.substring(1) // Handle paths with leading slash
+              : basePath + '/' + routePath;       // Handle paths without leading slash
+            
+            routes.push({
+              method: methods.join(',').toUpperCase(),
+              path: fullPath
+            });
+          }
+        });
+      }
+    }
+  });
+  
+  // Sort routes
+  routes.sort((a, b) => a.path.localeCompare(b.path));
+  
+  res.json({
+    routes,
+    count: routes.length
+  });
+});
+
+// Add a direct debug route for the delete material endpoint
+app.get('/debug/delete-route', (req: Request, res: Response) => {
+  const userId = req.query.userId || 'aot39WjGKBW3ZhnnwPtZZmfXBfi2';
+  const topicId = req.query.topicId || '67a4c31ded27b56fc01cb08e';
+  const categoryType = req.query.categoryType || 'webpage';
+  const materialId = req.query.materialId || '67bb5fbab51519857a1d15a0';
+  
+  const deleteRoute = `/api/users/${userId}/topics/${topicId}/categories/${categoryType}/materials/${materialId}`;
+  
+  res.json({
+    deleteRoute,
+    directRouteExists: true,
+    userRoutesExists: true,
+    params: {
+      userId,
+      topicId,
+      categoryType,
+      materialId
+    }
+  });
+});
+
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error('Error:', err);

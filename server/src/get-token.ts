@@ -49,7 +49,7 @@ rl.question('Paste your Firebase token: ', (token) => {
   
   console.log('\nToken saved to .env file as TEST_TOKEN');
   console.log('You can now run the test script with:');
-  console.log('npx ts-node src/test-route.ts');
+  console.log('node src/simple-check.js');
   
   rl.close();
 }); 

@@ -34,8 +34,7 @@ router.post('/users/update-all-bios', updateAllUsersBio);
 // Material deletion route - this needs to match exactly what the client is sending
 // The client sends: /api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
 // Since this router is mounted at /api, we need to define the route as:
-router.delete(
-  'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
+router.delete('users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   (req, res, next) => {
     console.log('\n=== USER ROUTES DELETE MATERIAL HANDLER ===');
     console.log('Route path in userRoutes:', 'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId');

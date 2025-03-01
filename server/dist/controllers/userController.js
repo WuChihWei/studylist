@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTopic = exports.uncompleteMaterial = exports.completeMaterial = exports.updateAllUsersBio = exports.getUser = exports.updateTopicName = exports.addTopic = exports.updateUserProfile = exports.addMaterial = exports.createUser = exports.getUserMaterials = exports.deleteUser = exports.updateUser = exports.getUserByFirebaseUID = void 0;
+exports.deleteMaterial = exports.updateExistingMaterials = exports.updateMaterialProgress = exports.updateTopic = exports.uncompleteMaterial = exports.completeMaterial = exports.updateAllUsersBio = exports.getUser = exports.updateTopicName = exports.addTopic = exports.updateUserProfile = exports.addMaterial = exports.createUser = exports.getUserMaterials = exports.deleteUser = exports.updateUser = exports.getUserByFirebaseUID = void 0;
 const User_1 = require("../models/User");
 const mongoose_1 = __importDefault(require("mongoose"));
 const getUserByFirebaseUID = async (req, res) => {
@@ -126,13 +126,17 @@ const addMaterial = async (req, res) => {
                 error: 'Missing required params'
             });
         }
-        // Create new material
+        // Create new material with progress field
         const newMaterial = {
             type,
             title,
             url: url || null,
             rating: rating || 5,
-            dateAdded: new Date()
+            dateAdded: new Date(),
+            completedUnits: 0,
+            readingTime: 0,
+            progress: 0,
+            completed: false
         };
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
@@ -533,3 +537,180 @@ const updateTopic = async (req, res) => {
     }
 };
 exports.updateTopic = updateTopic;
+const updateMaterialProgress = async (req, res) => {
+    try {
+        console.log('4. Controller received request:', {
+            params: req.params,
+            body: req.body
+        });
+        const { firebaseUID, topicId, materialId } = req.params;
+        const { completedUnits, readingTime, totalUnits } = req.body;
+        console.log('5. Finding user:', firebaseUID);
+        const user = await User_1.User.findOne({ firebaseUID });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        console.log('6. Finding topic:', {
+            topicId,
+            foundUser: !!user,
+            topicsCount: user.topics.length
+        });
+        const topic = user.topics.find(t => { var _a; return ((_a = t._id) === null || _a === void 0 ? void 0 : _a.toString()) === topicId; });
+        if (!topic || !topic.categories) {
+            return res.status(404).json({ error: 'Topic not found' });
+        }
+        console.log('7. Finding material:', {
+            materialId,
+            foundTopic: !!topic,
+            categoriesExist: !!topic.categories
+        });
+        let materialFound = false;
+        for (const type of ['webpage', 'video', 'podcast', 'book']) {
+            const materials = topic.categories[type];
+            if (!Array.isArray(materials))
+                continue;
+            console.log(`8. Checking ${type} materials:`, {
+                materialsCount: materials.length,
+                materialIds: materials.map(m => { var _a; return (_a = m._id) === null || _a === void 0 ? void 0 : _a.toString(); })
+            });
+            const materialIndex = materials.findIndex(m => { var _a; return ((_a = m._id) === null || _a === void 0 ? void 0 : _a.toString()) === materialId; });
+            if (materialIndex !== -1) {
+                materialFound = true;
+                console.log('9. Material found:', {
+                    type,
+                    index: materialIndex,
+                    currentMaterial: materials[materialIndex]
+                });
+                const progress = Math.min(Math.round((completedUnits / totalUnits) * 100), 100);
+                const updatePath = `topics.$[topic].categories.${type}.$[material]`;
+                const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, {
+                    $set: {
+                        [`${updatePath}.completedUnits`]: completedUnits,
+                        [`${updatePath}.readingTime`]: readingTime,
+                        [`${updatePath}.progress`]: progress
+                    }
+                }, {
+                    arrayFilters: [
+                        { 'topic._id': topicId },
+                        { 'material._id': materialId }
+                    ],
+                    new: true
+                });
+                if (!updatedUser) {
+                    return res.status(404).json({ error: 'Failed to update material' });
+                }
+                return res.json(updatedUser);
+            }
+        }
+        if (!materialFound) {
+            return res.status(404).json({ error: 'Material not found' });
+        }
+    }
+    catch (error) {
+        console.error('Error in updateMaterialProgress:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.updateMaterialProgress = updateMaterialProgress;
+const updateExistingMaterials = async (req, res) => {
+    try {
+        const { firebaseUID } = req.params;
+        const user = await User_1.User.findOne({ firebaseUID });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // 遍歷所有主題和材料
+        const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, {
+            $set: {
+                'topics.$[].categories.webpage.$[].progress': 0,
+                'topics.$[].categories.video.$[].progress': 0,
+                'topics.$[].categories.podcast.$[].progress': 0,
+                'topics.$[].categories.book.$[].progress': 0,
+                'topics.$[].categories.webpage.$[].completedUnits': 0,
+                'topics.$[].categories.video.$[].completedUnits': 0,
+                'topics.$[].categories.podcast.$[].completedUnits': 0,
+                'topics.$[].categories.book.$[].completedUnits': 0,
+                'topics.$[].categories.webpage.$[].readingTime': 0,
+                'topics.$[].categories.video.$[].readingTime': 0,
+                'topics.$[].categories.podcast.$[].readingTime': 0,
+                'topics.$[].categories.book.$[].readingTime': 0
+            }
+        }, { new: true });
+        return res.json(updatedUser);
+    }
+    catch (error) {
+        console.error('Error updating existing materials:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.updateExistingMaterials = updateExistingMaterials;
+const deleteMaterial = async (req, res) => {
+    var _a, _b;
+    try {
+        console.log('\n=== DELETE MATERIAL CONTROLLER ===');
+        const { userId, topicId, categoryType, materialId } = req.params;
+        const firebaseUID = (_a = req.user) === null || _a === void 0 ? void 0 : _a.uid;
+        console.log('Controller params:', { userId, topicId, categoryType, materialId });
+        console.log('Firebase UID from auth:', firebaseUID);
+        if (!firebaseUID || firebaseUID !== userId) {
+            console.log('Auth error: Firebase UID mismatch or missing');
+            return res.status(403).json({ error: 'Unauthorized access' });
+        }
+        const user = await User_1.User.findOne({ firebaseUID });
+        if (!user) {
+            console.log('User not found with firebaseUID:', firebaseUID);
+            return res.status(404).json({ error: 'User not found' });
+        }
+        console.log('User found:', {
+            id: user._id,
+            firebaseUID: user.firebaseUID,
+            topicsCount: ((_b = user.topics) === null || _b === void 0 ? void 0 : _b.length) || 0
+        });
+        const topic = user.topics.id(topicId);
+        if (!topic || !topic.categories) {
+            console.log('Topic not found or invalid structure:', { topicId, foundTopic: !!topic });
+            return res.status(404).json({ error: 'Topic not found or invalid topic structure' });
+        }
+        console.log('Topic found:', {
+            id: topic._id,
+            name: topic.name,
+            categoriesKeys: Object.keys(topic.categories)
+        });
+        const validCategories = ['webpage', 'video', 'book', 'podcast'];
+        if (!validCategories.includes(categoryType)) {
+            console.log('Invalid category type:', categoryType);
+            return res.status(400).json({ error: 'Invalid category type' });
+        }
+        const materials = topic.categories[categoryType];
+        if (!Array.isArray(materials)) {
+            console.log('Category not found or not an array:', { categoryType, isArray: Array.isArray(materials) });
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        console.log('Materials in category:', {
+            categoryType,
+            count: materials.length,
+            materialIds: materials.map((m) => { var _a; return (_a = m._id) === null || _a === void 0 ? void 0 : _a.toString(); })
+        });
+        const materialIndex = materials.findIndex((m) => m._id && m._id.toString() === materialId);
+        if (materialIndex === -1) {
+            console.log('Material not found in category:', { materialId, categoryType });
+            return res.status(404).json({ error: 'Material not found' });
+        }
+        console.log('Material found at index:', materialIndex);
+        // Log the material being deleted
+        console.log('Deleting material:', materials[materialIndex]);
+        materials.splice(materialIndex, 1);
+        await user.save();
+        console.log('Material deleted successfully');
+        console.log('======================\n');
+        res.json(user);
+    }
+    catch (error) {
+        console.error('Error deleting material:', error);
+        res.status(500).json({
+            error: 'Server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+exports.deleteMaterial = deleteMaterial;

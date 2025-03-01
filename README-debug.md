@@ -1,100 +1,68 @@
 # Debugging the Delete Material Functionality
 
-This README provides instructions for debugging the delete material functionality in your application.
-
 ## The Issue
 
-The delete material functionality is returning a 404 error when trying to delete a material. The request is being sent to:
+When attempting to delete a material, the client sends a DELETE request to the following URL:
 
 ```
-https://studylistserver-production.up.railway.app/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
+https://studylistserver-production.up.railway.app/api/users/aot39WjGKBW3ZhnnwPtZZmfXBfi2/topics/67a4c31ded27b56fc01cb08e/categories/webpage/materials/67bb5fbab51519857a1d15a0
 ```
 
-But the server is not handling the request correctly.
+However, the server responds with a 404 error, indicating that the route is not found.
 
 ## Debugging Tools
 
-We've created several debugging tools to help diagnose and fix the issue:
+We've created several tools to help diagnose and fix the issue:
 
 ### Server-Side Tools
 
-1. **Get Token Helper** (`server/src/get-token.ts`)
-
-   - Helps you get a Firebase token for testing
-   - Run: `npx ts-node src/get-token.ts`
-
-2. **Test Route Script** (`server/src/test-route.ts`)
-
-   - Tests various routes on the server
-   - Run: `npx ts-node src/test-route.ts`
-
-3. **Test Delete Script** (`server/src/test-delete.ts`)
-
-   - Focused test for the delete material functionality
-   - Run: `npx ts-node src/test-delete.ts`
-
-4. **Check Routes Script** (`server/src/check-routes.ts`)
-
-   - Checks all registered routes on the server
-   - Run: `npx ts-node src/check-routes.ts`
-
-5. **Debug Railway Script** (`server/src/debug-railway.ts`)
-
-   - Comprehensive debug script for the Railway server
-   - Run: `npx ts-node src/debug-railway.ts`
-
-6. **Deploy Fix Script** (`server/src/deploy-fix.ts`)
-   - Helps deploy fixes to the Railway server
-   - Run: `npx ts-node src/deploy-fix.ts`
+1. **`server/src/get-token.ts`**: A script to obtain a Firebase token for testing.
+2. **`server/src/test-route.ts`**: A script to test various routes on the server.
+3. **`server/src/test-delete.ts`**: A script specifically for testing the delete functionality.
+4. **`server/src/check-routes.ts`**: A script to check all registered routes on the server.
+5. **`server/src/debug-railway.ts`**: A comprehensive script for debugging the Railway server.
+6. **`server/src/deploy-fix.ts`**: A script to deploy fixes to the Railway server.
 
 ### Client-Side Tools
 
-1. **Test Delete Script** (`client/src/test-delete.ts`)
-   - Tests the delete material functionality from the client
-   - Use in browser console:
-     ```javascript
-     import { testDeleteMaterial } from "./test-delete";
-     testDeleteMaterial("materialId", "topicId", "categoryType");
-     ```
+1. **`client/src/test-delete.ts`**: A script to test the delete functionality from the client side.
 
 ## Debugging Steps
 
-Follow these steps to debug the issue:
-
-1. **Get a Firebase Token**
+1. **Get a Firebase Token**:
 
    ```bash
    cd server
    npx ts-node src/get-token.ts
    ```
 
-   Follow the instructions to get a token from your browser.
+   Follow the instructions to obtain a Firebase token and save it to the `.env` file.
 
-2. **Check Server Health and Routes**
+2. **Check Server Health and Routes**:
 
    ```bash
-   npx ts-node src/check-routes.ts
+   node src/simple-check.js
    ```
 
-   This will check if the server is running and what routes are available.
+   This will check the server's health endpoint and attempt to get and delete a material.
 
-3. **Test the Delete Functionality**
+3. **Test Delete Functionality**:
 
    ```bash
    npx ts-node src/test-delete.ts
    ```
 
-   This will test the delete material functionality directly.
+   This will test the delete functionality with the token from the `.env` file.
 
-4. **Debug the Railway Server**
+4. **Debug Railway Server**:
 
    ```bash
    npx ts-node src/debug-railway.ts
    ```
 
-   This will run a comprehensive debug on the Railway server.
+   This will perform a comprehensive debug of the Railway server, checking routes and attempting to delete a material.
 
-5. **Deploy Fixes to Railway**
+5. **Deploy Fixes to Railway**:
    ```bash
    npx ts-node src/deploy-fix.ts
    railway up
@@ -103,39 +71,62 @@ Follow these steps to debug the issue:
 
 ## Potential Fixes
 
-Based on our analysis, here are the potential fixes:
+Based on our analysis, the issue could be one of the following:
 
-1. **Fix the Route Definition in userRoutes.ts**
+1. **Route Definition**: The route for deleting materials is defined in `userRoutes.ts` as `'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId'` (without a leading slash), and the router is mounted at `/api`. This should result in the full path being `/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId`, which matches the client's request.
 
-   - The route is defined as `'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId'` (without a leading slash)
-   - This is correct since the router is mounted at `/api`
+2. **Direct Route**: We've added a direct route in `index.ts` as a backup solution:
 
-2. **Add a Direct Route in index.ts**
+   ```javascript
+   app.delete(
+     "/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId",
+     authMiddleware,
+     deleteMaterial
+   );
+   ```
 
-   - Add a direct route for deleting materials as a backup solution
-   - This is already implemented in the deploy-fix script
+   This should handle the delete request directly, bypassing the router.
 
-3. **Add Debug Routes**
-   - Add debug routes to help diagnose the issue
-   - This is already implemented in the deploy-fix script
+3. **Debug Routes**: We've added a debug route to list all registered routes:
+   ```javascript
+   app.get("/debug/routes", (req, res) => {
+     // List all routes
+   });
+   ```
+   This can help identify if the delete route is properly registered.
 
 ## Testing in the Browser
 
-You can also test the delete functionality directly in your browser:
+You can also test the delete functionality directly in the browser console:
 
-1. Open your application in the browser
-2. Open the developer console (F12)
-3. Run the following code:
+1. Open your browser's developer tools (F12)
+2. Go to your application (https://studylist-coral.vercel.app)
+3. Make sure you're logged in
+4. In the developer console, run this command:
+
    ```javascript
-   import { testDeleteMaterial } from "./test-delete";
-   testDeleteMaterial(
-     "67bb5fbab51519857a1d15a0",
-     "67a4c31ded27b56fc01cb08e",
-     "webpage"
-   );
+   // Get a token
+   const token = await firebase.auth().currentUser.getIdToken();
+
+   // Test the delete functionality
+   fetch(
+     "https://studylistserver-production.up.railway.app/api/users/aot39WjGKBW3ZhnnwPtZZmfXBfi2/topics/67a4c31ded27b56fc01cb08e/categories/webpage/materials/67bb5fbab51519857a1d15a0",
+     {
+       method: "DELETE",
+       headers: {
+         Authorization: `Bearer ${token}`,
+         "Content-Type": "application/json",
+       },
+     }
+   )
+     .then((response) => {
+       console.log("Status:", response.status);
+       return response.json();
+     })
+     .then((data) => console.log("Response:", data))
+     .catch((error) => console.error("Error:", error));
    ```
-   (Replace the IDs with your actual material, topic, and category)
 
 ## Conclusion
 
-By following these steps and using the provided tools, you should be able to diagnose and fix the delete material functionality issue. If you need further assistance, please provide the output from the debug scripts.
+Follow the steps above to diagnose and fix the issue with the delete material functionality. If you need further assistance, please provide the output from the debug scripts.

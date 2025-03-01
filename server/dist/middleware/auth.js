@@ -22,20 +22,44 @@ console.log('Environment variables:', {
 });
 console.log('Firebase admin initialization status:', firebase_admin_1.default.apps.length ? 'Initialized' : 'Not initialized');
 const authMiddleware = async (req, res, next) => {
-    var _a;
-    console.log('Auth middleware triggered');
-    console.log('Authorization header:', req.headers.authorization ? 'Present' : 'Missing');
+    console.log('\n=== Auth Middleware Extended Logging ===');
+    console.log('Full URL:', req.originalUrl);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
     try {
-        const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split('Bearer ')[1];
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
+        const authHeader = req.headers.authorization;
+        if (!(authHeader === null || authHeader === void 0 ? void 0 : authHeader.startsWith('Bearer '))) {
+            return res.status(401).json({
+                error: 'Invalid token format',
+                expected: 'Bearer <token>',
+                received: authHeader ? authHeader.substring(0, 20) + '...' : 'none'
+            });
         }
-        const decodedToken = await firebase_admin_1.default.auth().verifyIdToken(token);
-        req.user = decodedToken;
-        next();
+        const token = authHeader.split('Bearer ')[1];
+        console.log('Token first 20 chars:', token.substring(0, 20) + '...');
+        try {
+            const decodedToken = await firebase_admin_1.default.auth().verifyIdToken(token);
+            console.log('Token verification success:', {
+                uid: decodedToken.uid,
+                email: decodedToken.email,
+                timestamp: new Date().toISOString()
+            });
+            req.user = decodedToken;
+            next();
+        }
+        catch (verifyError) {
+            console.error('Token verification failed:', verifyError);
+            return res.status(401).json({
+                error: 'Invalid token',
+                details: verifyError instanceof Error ? verifyError.message : 'Unknown error'
+            });
+        }
     }
     catch (error) {
-        res.status(401).json({ error: 'Invalid token' });
+        console.error('Auth middleware error:', error);
+        return res.status(401).json({
+            error: 'Authentication failed',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 };
 exports.authMiddleware = authMiddleware;
