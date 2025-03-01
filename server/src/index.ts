@@ -201,15 +201,84 @@ app.delete('/test/delete-material', authMiddleware, (req: Request, res: Response
 console.log('=== Route Setup ===');
 console.log('Registering routes...');
 
-// CRITICAL: 首先注册直接材料删除路由，确保它最先被匹配
-app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  console.log('⭐ Direct material delete route triggered');
+// 关键：注册专门的路由测试端点
+app.get('/api/test-routes', (req, res) => {
+  console.log('Routes test endpoint accessed');
+  try {
+    const routes: {path: string; methods: string[]}[] = [];
+    
+    // Helper to get route path
+    const getRoutePath = (layer: any): string => {
+      if (!layer.route) return '';
+      return layer.route.path;
+    };
+    
+    // Routes registered directly on app
+    app._router.stack.forEach((middleware: any) => {
+      if (middleware.route) {
+        routes.push({
+          path: middleware.route.path,
+          methods: Object.keys(middleware.route.methods)
+        });
+      } else if (middleware.name === 'router') {
+        // Get the base path
+        const basePath = middleware.regexp.toString()
+          .replace('\\/?(?=\\/|$)/i', '')
+          .replace(/^\/\^/, '')
+          .replace(/\/\?$/, '')
+          .replace(/\\\//g, '/');
+          
+        // Routes on sub-routers
+        middleware.handle.stack.forEach((handler: any) => {
+          if (handler.route) {
+            const routePath = getRoutePath(handler);
+            routes.push({
+              path: basePath + routePath,
+              methods: Object.keys(handler.route.methods)
+            });
+          }
+        });
+      }
+    });
+    
+    res.json({ 
+      routes,
+      routesCount: routes.length,
+      message: '路由测试端点 - 这是查看所有已注册路由的地方' 
+    });
+  } catch (error) {
+    console.error('Error generating routes list:', error);
+    res.status(500).json({ error: 'Failed to generate routes list' });
+  }
+});
+
+// *****关键：先注册一个万能材料删除路由（尝试包含材料类型）*****
+app.delete('/api/users/:userId/topics/:topicId/materials/:materialType/:materialId', authMiddleware, (req, res, next) => {
+  console.log('⭐ Delete material with TYPE route triggered');
   console.log('Params:', req.params);
-  console.log('Forwarding to materialController.deleteMaterial');
+  
+  try {
+    // 将类型和ID提取出来
+    const { userId, topicId, materialId, materialType } = req.params;
+    console.log(`删除材料：用户=${userId}, 主题=${topicId}, 材料ID=${materialId}, 类型=${materialType}`);
+    
+    // 将所有参数传递给控制器
+    deleteMaterial(req, res, next);
+  } catch (error) {
+    console.error('Error in material delete route with type:', error);
+    next(error);
+  }
+});
+
+// 注册标准材料删除路由
+app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
+  console.log('⭐ Standard delete material route triggered');
+  console.log('Params:', req.params);
+  
   try {
     deleteMaterial(req, res, next);
   } catch (error) {
-    console.error('Error in direct delete route:', error);
+    console.error('Error in standard delete route:', error);
     next(error);
   }
 });
@@ -223,7 +292,9 @@ app.use('/api/stripe', authMiddleware, stripeRoutes);
 
 // 路由注册后添加确认日志
 console.log('Routes registered successfully');
-console.log('Material delete route registered at: /api/users/:userId/topics/:topicId/materials/:materialId');
+console.log('Material delete routes registered at:');
+console.log('1. /api/users/:userId/topics/:topicId/materials/:materialType/:materialId');
+console.log('2. /api/users/:userId/topics/:topicId/materials/:materialId');
 
 // 添加直接路由以便于调试
 app.get('/api/routes', (req, res) => {

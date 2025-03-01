@@ -375,7 +375,7 @@ export const useUserData = () => {
       
       console.log('Current user UID:', user.uid);
 
-      // Get the material type for debugging purposes
+      // 获取材料类型 - 这很关键
       const topicToDelete = userData?.topics.find(t => t._id === topicId);
       const materialToDelete = topicToDelete?.categories ? 
         Object.values(topicToDelete.categories)
@@ -386,40 +386,92 @@ export const useUserData = () => {
       console.log('Found topic to delete from:', topicToDelete?.name);
       console.log('Found material to delete:', materialToDelete);
       
-      if (!materialToDelete) {
-        console.error('Material not found in client data');
-        // Continue anyway, in case it exists on the server
+      // 确定材料类型（关键修改）
+      let materialType: string | null = null;
+      if (materialToDelete) {
+        materialType = materialToDelete.type;
+        console.log('Material type determined:', materialType);
+      } else {
+        console.warn('Material not found in client data, type cannot be determined');
+        // 尝试查找材料类型
+        for (const type of ['webpage', 'book', 'video', 'podcast'] as const) {
+          if (topicToDelete?.categories[type]?.some(m => m._id === materialId)) {
+            materialType = type;
+            console.log('Material type found by searching categories:', materialType);
+            break;
+          }
+        }
       }
 
       const token = await user.getIdToken();
-      
-      // 简化为只使用直接端点，确保与服务器上的路由匹配
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      
-      console.log('Attempting DELETE request to:', endpoint);
-      console.log('With headers:', {
-        'Authorization': 'Bearer [token]',
-        'Content-Type': 'application/json'
-      });
+      let response;
+      let success = false;
 
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // 首先尝试带类型的端点（如果类型可用）
+      if (materialType) {
+        const typeEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`;
+        console.log('First attempt - DELETE request with material type to:', typeEndpoint);
+        
+        try {
+          response = await fetch(typeEndpoint, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          console.log('Response status (with type):', response.status);
+          console.log('Response headers (with type):', Object.fromEntries(response.headers.entries()));
+          
+          if (response.ok) {
+            console.log('DELETE with material type succeeded!');
+            success = true;
+          } else {
+            console.log('DELETE with material type failed, will try standard endpoint');
+          }
+        } catch (e) {
+          console.error('Error in DELETE with type request:', e);
         }
-      });
+      }
 
-      console.log('Response status:', response.status);
-      
-      // 无论成功与否，记录响应头和状态
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
+      // 如果带类型请求失败或没有类型，尝试标准端点
+      if (!success) {
+        const standardEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+        console.log('Second attempt - DELETE request to standard endpoint:', standardEndpoint);
+        
+        response = await fetch(standardEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('Response status (standard):', response.status);
+        console.log('Response headers (standard):', Object.fromEntries(response.headers.entries()));
+      }
+
+      // 处理最终响应
+      if (response && response.ok) {
+        console.log('Material deleted successfully on server');
+        
+        // 尝试解析响应更新用户数据
+        try {
+          const userData = await response.json();
+          setUserData(userData);
+          console.log('User data updated from server response');
+        } catch (e) {
+          console.log('Could not parse response, updating local state manually');
+          updateLocalState();
+        }
+        return true;
+      } else {
+        // 处理错误
         let errorMessage = '';
         
         try {
-          const errorData = await response.json();
+          const errorData = response ? await response.json() : { error: 'No response' };
           console.error('Delete material failed:', errorData);
           errorMessage = JSON.stringify(errorData);
         } catch (e) {
@@ -427,29 +479,13 @@ export const useUserData = () => {
           errorMessage = 'Unknown error - could not parse response';
         }
         
-        // 记录到控制台作为调试提示
-        console.warn(`Delete request failed with status ${response.status}: ${errorMessage}`);
+        console.warn(`Delete request failed: ${errorMessage}`);
         
         // 失败时更新客户端UI，提供良好用户体验
-        console.log('Server deletion failed, performing client-side deletion');
+        console.log('All server deletion attempts failed, performing client-side deletion');
         updateLocalState();
         return true;
       }
-
-      console.log('Material deleted successfully on server');
-      
-      // Try to parse the response as JSON to update userData
-      try {
-        const userData = await response.json();
-        setUserData(userData);
-        console.log('User data updated from server response');
-      } catch (e) {
-        // If can't parse the response, update local state manually
-        console.log('Could not parse response, updating local state manually');
-        updateLocalState();
-      }
-
-      return true;
       
       // Helper function to update local state
       function updateLocalState() {

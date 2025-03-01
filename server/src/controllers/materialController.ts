@@ -173,7 +173,7 @@ export const deleteMaterial = catchAsync(async (req: Request, res: Response) => 
   console.log('Route parameters:', req.params);
   console.log('Query parameters:', req.query);
   
-  const { userId, topicId, materialId } = req.params;
+  const { userId, topicId, materialId, materialType } = req.params;
   
   if (!userId || !topicId || !materialId) {
     console.error('Missing required parameters:', { userId, topicId, materialId });
@@ -183,7 +183,8 @@ export const deleteMaterial = catchAsync(async (req: Request, res: Response) => 
   console.log('Deleting material:', {
     userId: userId,
     topicId: topicId,
-    materialId: materialId
+    materialId: materialId,
+    materialType: materialType || '未指定' // 记录材料类型，如果提供
   });
 
   // Validate MongoDB ObjectId format (24 hex characters)
@@ -217,23 +218,47 @@ export const deleteMaterial = catchAsync(async (req: Request, res: Response) => 
   console.log('Found topic:', topic.name);
 
   let materialDeleted = false;
-  for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
-    const materials = topic.categories[type];
-    if (!Array.isArray(materials)) {
-      console.log(`No materials in category: ${type}`);
-      continue;
+  
+  // 如果提供了特定材料类型，则优先尝试
+  if (materialType && ['webpage', 'video', 'podcast', 'book'].includes(materialType)) {
+    console.log(`尝试在指定的类型 ${materialType} 中删除材料`);
+    const materials = topic.categories[materialType as MaterialType];
+    if (Array.isArray(materials)) {
+      console.log(`检查 ${materials.length} 个材料`);
+      const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+      if (materialIndex !== -1) {
+        console.log(`在类型 ${materialType} 中找到材料，索引为 ${materialIndex}`);
+        materials.splice(materialIndex, 1);
+        materialDeleted = true;
+      } else {
+        console.log(`在类型 ${materialType} 中未找到ID为 ${materialId} 的材料`);
+      }
+    } else {
+      console.log(`类型 ${materialType} 中没有材料`);
     }
-    
-    console.log(`Checking ${materials.length} materials in category: ${type}`);
-    // Log all material IDs in this category for debugging
-    console.log(`Material IDs in ${type}:`, materials.map(m => m._id?.toString()));
-    
-    const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
-    if (materialIndex !== -1) {
-      console.log(`Found material at index ${materialIndex} in category ${type}`);
-      materials.splice(materialIndex, 1);
-      materialDeleted = true;
-      break;
+  }
+  
+  // 如果按指定类型未删除成功，则遍历所有类型
+  if (!materialDeleted) {
+    console.log('尝试在所有类型中查找材料');
+    for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) {
+        console.log(`No materials in category: ${type}`);
+        continue;
+      }
+      
+      console.log(`Checking ${materials.length} materials in category: ${type}`);
+      // Log all material IDs in this category for debugging
+      console.log(`Material IDs in ${type}:`, materials.map(m => m._id?.toString()));
+      
+      const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+      if (materialIndex !== -1) {
+        console.log(`Found material at index ${materialIndex} in category ${type}`);
+        materials.splice(materialIndex, 1);
+        materialDeleted = true;
+        break;
+      }
     }
   }
 
