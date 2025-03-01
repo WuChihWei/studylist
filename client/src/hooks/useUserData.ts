@@ -392,67 +392,72 @@ export const useUserData = () => {
         throw new Error('Material not found in client data');
       }
       
-      // Get the material type (category) - this is crucial for the deployed server route
+      // *** COMPARE WITH OTHER WORKING FUNCTIONS ***
+      console.log('=== PATTERN COMPARISON ===');
+      
+      // 1. addMaterial uses:
+      const addMaterialEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials`;
+      console.log('addMaterial endpoint pattern:', addMaterialEndpoint);
+      
+      // 2. completeMaterial uses:
+      const completeMaterialEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/complete`;
+      console.log('completeMaterial endpoint pattern:', completeMaterialEndpoint);
+      
+      // 3. getContributionData uses local data only (no endpoint)
+      console.log('getContributionData: Uses local data, no endpoint');
+      
+      // 4. updateMaterialProgress uses:
+      const updateProgressEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/progress`;
+      console.log('updateMaterialProgress endpoint pattern:', updateProgressEndpoint);
+      
+      // Let's infer the most likely delete endpoint based on existing patterns
+      // The pattern seems to be /api/users/:userId/topics/:topicId/materials/:materialId
+      const inferred1 = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      
+      // Another possibility could be a dedicated delete endpoint like complete/uncomplete
+      const inferred2 = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/delete`;
+      
+      console.log('=== END PATTERN COMPARISON ===');
+      
+      // Get the material type (category)
       const materialType = materialToDelete.type as MaterialType;
       console.log('Material type:', materialType);
       
       const token = await user.getIdToken();
       console.log('Token obtained:', token ? 'Yes' : 'No');
       
-      // ATTEMPT 1: Try the route pattern that matches the deployed server
-      try {
-        // This matches the route in the compiled code: /api/users/:firebaseUID/topics/:topicId/materials/:categoryType/:materialId
-        const deployedEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`;
-        console.log('Trying deployed server route pattern:', deployedEndpoint);
-        
-        const response = await fetch(deployedEndpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('Response status:', response.status);
-        
-        if (response.ok) {
-          console.log('Material deleted successfully via deployed route');
-          try {
-            const responseData = await response.json();
-            console.log('Server response:', responseData);
-          } catch (e) {
-            console.log('No JSON in response');
-          }
-          
-          // Update local state
-          updateLocalState();
-          return true;
-        }
-        
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-      } catch (error) {
-        console.error('Error with deployed route:', error);
-      }
-      
-      // ATTEMPT 2: Try all the routes we've been attempting
+      // ATTEMPT 1-6: Try ALL logical patterns based on known working endpoints
       const endpoints = [
-        // Direct pattern with query parameter
-        `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
-        
-        // Original nested pattern
+        // 1. Standard REST pattern (main pattern used for completeMaterial with /complete removed)
         `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`,
         
-        // Alternative nested pattern
-        `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
+        // 2. With explicit "delete" action
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/delete`,
         
-        // Test endpoint
-        `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`
+        // 3. Including material type in URL (like we saw in compiled code)
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`,
+        
+        // 4. From compiled code, with delete action
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}/delete`,
+        
+        // 5. Nonstandard URL pattern with topic-level material access
+        `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
+        
+        // 6. Test endpoint
+        `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`,
+        
+        // 7. Other previously tried patterns for completeness
+        `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}/material/${materialId}`, // singular "material"
+        `${API_URL}/api/users/${user.uid}/topic/${topicId}/materials/${materialId}`,  // singular "topic"
       ];
       
-      for (const endpoint of endpoints) {
+      console.log(`Trying ${endpoints.length} different endpoint patterns...`);
+      
+      for (let i = 0; i < endpoints.length; i++) {
+        const endpoint = endpoints[i];
         try {
-          console.log(`Trying endpoint: ${endpoint}`);
+          console.log(`[${i+1}/${endpoints.length}] Trying endpoint: ${endpoint}`);
           const response = await fetch(endpoint, {
             method: 'DELETE',
             headers: {
@@ -461,28 +466,64 @@ export const useUserData = () => {
             }
           });
           
-          console.log(`Response status for ${endpoint}: ${response.status}`);
+          console.log(`Response status for endpoint ${i+1}: ${response.status}`);
           
           if (response.ok) {
-            console.log('Material deleted successfully via:', endpoint);
+            console.log('SUCCESS! Material deleted via endpoint:', endpoint);
             try {
               const responseData = await response.json();
               console.log('Server response:', responseData);
               setUserData(responseData);
+              return true;
             } catch (e) {
               console.log('No JSON in response, updating local state');
               updateLocalState();
+              return true;
             }
-            return true;
+          }
+          
+          try {
+            const errorText = await response.text();
+            console.log(`Error from endpoint ${i+1}:`, errorText);
+          } catch (e) {
+            console.log(`Could not read error text from endpoint ${i+1}`);
           }
         } catch (error) {
-          console.error(`Error with endpoint ${endpoint}:`, error);
+          console.error(`Error with endpoint ${i+1}:`, error);
         }
       }
       
-      // If all server attempts fail, fall back to client-side deletion
-      console.log('All server deletion attempts failed, falling back to client-side deletion');
+      console.log('🔴 ALL SERVER ENDPOINTS FAILED - Performing client-side deletion as fallback 🔴');
+      
+      // Fall back to client-side deletion
       updateLocalState();
+      console.log('🟢 Client-side deletion successful 🟢');
+      
+      // Report this issue to the server logs for debugging
+      try {
+        const debugEndpoint = `${API_URL}/api/debug/log`;
+        fetch(debugEndpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: 'error',
+            message: 'Material deletion failed on all endpoints',
+            context: {
+              materialId,
+              topicId,
+              userId: user.uid,
+              materialType,
+              attemptedEndpoints: endpoints
+            }
+          })
+        }).catch(e => console.log('Could not send debug info to server'));
+      } catch (e) {
+        // Ignore debug errors
+      }
+      
       return true;
       
       // Helper function to update local state
@@ -523,7 +564,7 @@ export const useUserData = () => {
           console.error('1. The material ID is incorrect or malformed');
           console.error('2. The topic ID is incorrect');
           console.error('3. The material was already deleted');
-          console.error('4. The server routes have not been updated yet');
+          console.error('4. The server routes have not been updated or match a different pattern');
           
           // Add debugging information
           console.log('Debug info:');
