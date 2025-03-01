@@ -169,17 +169,39 @@ export const updateMaterialProgress = catchAsync(async (req: Request, res: Respo
 
 // 删除材料
 export const deleteMaterial = catchAsync(async (req: Request, res: Response) => {
+  console.log('=== deleteMaterial controller called ===');
+  console.log('Route parameters:', req.params);
+  console.log('Query parameters:', req.query);
+  
   const { userId, topicId, materialId } = req.params;
   
-  console.log('=== Delete Material Request ===');
-  console.log('Params:', { userId, topicId, materialId });
+  if (!userId || !topicId || !materialId) {
+    console.error('Missing required parameters:', { userId, topicId, materialId });
+    throw new AppError('Missing required parameters', 400);
+  }
   
+  console.log('Deleting material:', {
+    userId: userId,
+    topicId: topicId,
+    materialId: materialId
+  });
+
+  // Validate MongoDB ObjectId format (24 hex characters)
+  const validObjectId = /^[0-9a-fA-F]{24}$/;
+  if (!validObjectId.test(topicId) || !validObjectId.test(materialId)) {
+    console.error('Invalid ID format:', { 
+      topicId: { value: topicId, valid: validObjectId.test(topicId) },
+      materialId: { value: materialId, valid: validObjectId.test(materialId) }
+    });
+    throw new AppError('Invalid ID format', 400);
+  }
+
   const user = await User.findOne({ firebaseUID: userId });
   if (!user) {
     console.error('User not found with firebaseUID:', userId);
     throw new AppError('User not found', 404);
   }
-  console.log('Found user:', user.name);
+  console.log('Found user:', user.name || user.email);
 
   const topic = user.topics.find(t => t._id?.toString() === topicId);
   if (!topic) {

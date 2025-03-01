@@ -9,6 +9,13 @@ import stripeRoutes from './routes/stripeRoutes';
 import topicRoutes from './routes/topicRoutes';
 import { authMiddleware } from './middleware/auth';
 import { errorHandler } from './middleware/appError';
+import { 
+  addMaterial, 
+  completeMaterial, 
+  uncompleteMaterial, 
+  updateMaterialProgress, 
+  deleteMaterial 
+} from './controllers/materialController';
 
 // 在任何其他代碼之前加載環境變數
 dotenv.config();
@@ -154,14 +161,33 @@ app.use('/api/users/:userId/topics', topicRoutes);
 
 // Direct material routes to avoid nesting issues
 app.delete('/api/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  // Extract userId from query parameters and add it to req.params
   const { userId } = req.query;
   if (!userId) {
+    console.log('Direct material delete route: Missing userId in query parameters');
     return res.status(400).json({ error: 'Missing userId in query parameters' });
   }
+  
+  console.log('Direct material delete route triggered:', {
+    topicId: req.params.topicId,
+    materialId: req.params.materialId,
+    userId: userId
+  });
+  
+  // Add userId to params for controller
   req.params.userId = userId as string;
-  // Forward to the deleteMaterial controller
-  require('./controllers/materialController').deleteMaterial(req, res, next);
+  
+  // Call the controller directly instead of using require
+  deleteMaterial(req, res, next);
+});
+
+// Explicitly add the nested route as well for redundancy
+app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
+  console.log('Nested material delete route triggered:', {
+    userId: req.params.userId,
+    topicId: req.params.topicId,
+    materialId: req.params.materialId
+  });
+  deleteMaterial(req, res, next);
 });
 
 // Error handling middleware
