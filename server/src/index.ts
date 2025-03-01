@@ -194,23 +194,36 @@ app.delete('/test/delete-material', authMiddleware, (req: Request, res: Response
   });
 });
 
-// Protected routes
-app.use('/api/users', authMiddleware);
+// Protected routes - 将此行移到合适的位置
+// app.use('/api/users', authMiddleware); - 注释掉这行，避免重复认证
 
 // 路由挂载前添加调试日志
 console.log('=== Route Setup ===');
 console.log('Registering routes...');
 
-// API 路由
-app.use('/api/users/:userId/topics', topicRoutes);
-
-// 添加直接路由以防止嵌套路由问题
+// CRITICAL: 首先注册直接材料删除路由，确保它最先被匹配
 app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
   console.log('⭐ Direct material delete route triggered');
   console.log('Params:', req.params);
   console.log('Forwarding to materialController.deleteMaterial');
-  require('./controllers/materialController').deleteMaterial(req, res, next);
+  try {
+    deleteMaterial(req, res, next);
+  } catch (error) {
+    console.error('Error in direct delete route:', error);
+    next(error);
+  }
 });
+
+// API 路由 - 在直接路由之后注册
+app.use('/api/users/:userId/topics', authMiddleware, topicRoutes);
+
+// API routes - 最后注册其他API路由
+app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/stripe', authMiddleware, stripeRoutes);
+
+// 路由注册后添加确认日志
+console.log('Routes registered successfully');
+console.log('Material delete route registered at: /api/users/:userId/topics/:topicId/materials/:materialId');
 
 // 添加直接路由以便于调试
 app.get('/api/routes', (req, res) => {
@@ -246,14 +259,6 @@ app.get('/api/routes', (req, res) => {
     res.status(500).json({ error: 'Failed to generate routes list' });
   }
 });
-
-// 路由注册后添加确认日志
-console.log('Routes registered successfully');
-console.log('Material delete route registered at: /api/users/:userId/topics/:topicId/materials/:materialId');
-
-// API routes
-app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/stripe', authMiddleware, stripeRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

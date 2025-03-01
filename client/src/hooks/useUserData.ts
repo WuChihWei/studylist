@@ -391,16 +391,17 @@ export const useUserData = () => {
         // Continue anyway, in case it exists on the server
       }
 
-      // Using the endpoint format that worked before
+      const token = await user.getIdToken();
+      
+      // 简化为只使用直接端点，确保与服务器上的路由匹配
       const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      console.log('Delete material request:', {
-        endpoint,
-        materialId,
-        topicId,
-        userUid: user.uid
+      
+      console.log('Attempting DELETE request to:', endpoint);
+      console.log('With headers:', {
+        'Authorization': 'Bearer [token]',
+        'Content-Type': 'application/json'
       });
 
-      const token = await user.getIdToken();
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
@@ -411,15 +412,25 @@ export const useUserData = () => {
 
       console.log('Response status:', response.status);
       
+      // 无论成功与否，记录响应头和状态
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
+        let errorMessage = '';
+        
         try {
           const errorData = await response.json();
           console.error('Delete material failed:', errorData);
+          errorMessage = JSON.stringify(errorData);
         } catch (e) {
           console.error('Could not parse error response');
+          errorMessage = 'Unknown error - could not parse response';
         }
         
-        // Fall back to client-side deletion for better UX
+        // 记录到控制台作为调试提示
+        console.warn(`Delete request failed with status ${response.status}: ${errorMessage}`);
+        
+        // 失败时更新客户端UI，提供良好用户体验
         console.log('Server deletion failed, performing client-side deletion');
         updateLocalState();
         return true;
