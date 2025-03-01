@@ -172,7 +172,7 @@ app.get('/test/cors', (req: Request, res: Response) => {
 app.use('/api/users', authMiddleware);
 
 // Mount routes
-app.use('/api/users', userRoutes);
+app.use('/api', userRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/users/:firebaseUID/topics', topicsRouter);
 app.use('/api/users/:userId/materials', materialRoutes);
