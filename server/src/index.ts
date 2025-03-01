@@ -151,6 +151,25 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Simple test route for debugging
+app.get('/test/route/:param1/:param2', (req: Request, res: Response) => {
+  console.log('\n=== TEST ROUTE HIT ===');
+  console.log('Params:', req.params);
+  console.log('Query:', req.query);
+  console.log('Path:', req.path);
+  console.log('Original URL:', req.originalUrl);
+  console.log('======================\n');
+  
+  res.json({
+    success: true,
+    message: 'Test route working',
+    params: req.params,
+    query: req.query,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
 // 添加測試路由（放在所有路由之前）
 app.get('/test/auth', authMiddleware, (req: Request, res: Response) => {
   console.log('=== Test Auth Route ===');
@@ -185,35 +204,176 @@ app.use('/api/users/:userId/materials', materialRouter);
 app.delete('/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId', 
   authMiddleware,
   (req, res, next) => {
-    console.log('Direct route hit for delete material:', {
+    console.log('\n=== DIRECT DELETE ROUTE HIT ===');
+    console.log('Request params:', {
       userId: req.params.userId,
       topicId: req.params.topicId,
       categoryType: req.params.categoryType,
       materialId: req.params.materialId
     });
+    console.log('Request path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+    console.log('======================\n');
     next();
   }, 
   deleteMaterial
 );
 
-// Debug: Print all registered routes
-console.log('=== Registered Routes ===');
-app._router.stack.forEach((middleware: any) => {
-  if (middleware.route) {
-    // Routes registered directly on the app
-    console.log(`${Object.keys(middleware.route.methods).join(',')} ${middleware.route.path}`);
-  } else if (middleware.name === 'router') {
-    // Router middleware
-    middleware.handle.stack.forEach((handler: any) => {
-      if (handler.route) {
-        const path = handler.route.path;
-        const methods = Object.keys(handler.route.methods).join(',');
-        console.log(`${methods} ${middleware.regexp} -> ${path}`);
+// Test GET route to verify material access
+app.get('/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId', 
+  authMiddleware,
+  async (req, res) => {
+    try {
+      console.log('\n=== TEST GET MATERIAL ROUTE ===');
+      const { userId, topicId, categoryType, materialId } = req.params;
+      const firebaseUID = req.user?.uid;
+      
+      console.log('Test route params:', { userId, topicId, categoryType, materialId });
+      console.log('Firebase UID from auth:', firebaseUID);
+      
+      if (!firebaseUID || firebaseUID !== userId) {
+        console.log('Auth error: Firebase UID mismatch or missing');
+        return res.status(403).json({ error: 'Unauthorized access' });
       }
-    });
+      
+      const user = await User.findOne({ firebaseUID });
+      if (!user) {
+        console.log('User not found with firebaseUID:', firebaseUID);
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      console.log('User found:', { id: user._id, firebaseUID: user.firebaseUID });
+      
+      const topic = user.topics.id(topicId);
+      if (!topic || !topic.categories) {
+        console.log('Topic not found or invalid structure:', { topicId, foundTopic: !!topic });
+        return res.status(404).json({ error: 'Topic not found or invalid topic structure' });
+      }
+      
+      console.log('Topic found:', { id: topic._id, name: topic.name });
+      
+      const validCategories = ['webpage', 'video', 'book', 'podcast'];
+      if (!validCategories.includes(categoryType)) {
+        console.log('Invalid category type:', categoryType);
+        return res.status(400).json({ error: 'Invalid category type' });
+      }
+      
+      const materials = topic.categories[categoryType as 'webpage' | 'video' | 'book' | 'podcast'];
+      if (!Array.isArray(materials)) {
+        console.log('Category not found or not an array:', { categoryType, isArray: Array.isArray(materials) });
+        return res.status(404).json({ error: 'Category not found' });
+      }
+      
+      console.log('Materials in category:', { 
+        categoryType, 
+        count: materials.length,
+        materialIds: materials.map((m: any) => m._id?.toString())
+      });
+      
+      const material = materials.find((m: any) => m._id && m._id.toString() === materialId);
+      
+      if (!material) {
+        console.log('Material not found in category:', { materialId, categoryType });
+        return res.status(404).json({ error: 'Material not found' });
+      }
+      
+      console.log('Material found:', material);
+      console.log('======================\n');
+      
+      res.json({ success: true, material });
+    } catch (error) {
+      console.error('Error in test GET route:', error);
+      res.status(500).json({
+        error: 'Server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+);
+
+// Debug: Print all registered routes
+console.log('\n=== REGISTERED ROUTES ===');
+// Print direct routes
+app._router.stack.forEach((middleware: any, i: number) => {
+  if (middleware.route) {
+    const methods = Object.keys(middleware.route.methods).join(',');
+    console.log(`[${i}] ${methods.toUpperCase()} ${middleware.route.path}`);
+  } else if (middleware.name === 'router') {
+    console.log(`[${i}] Router middleware: ${middleware.regexp}`);
+    
+    // Try to print router paths
+    if (middleware.handle && middleware.handle.stack) {
+      middleware.handle.stack.forEach((handler: any, j: number) => {
+        if (handler.route) {
+          const methods = Object.keys(handler.route.methods).join(',');
+          console.log(`  [${i}.${j}] ${methods.toUpperCase()} ${handler.route.path}`);
+        }
+      });
+    }
+  } else {
+    console.log(`[${i}] Middleware: ${middleware.name || 'anonymous'}`);
   }
 });
-console.log('========================');
+console.log('========================\n');
+
+// Print all routes in a more structured way
+console.log('\n=== ALL ROUTES (DETAILED) ===');
+function printRoutes(app: any) {
+  const routes: {method: string; path: string; regexp?: string}[] = [];
+  
+  // Get routes from the main app
+  app._router.stack.forEach((middleware: any) => {
+    if (middleware.route) {
+      // Routes registered directly on the app
+      const methods = Object.keys(middleware.route.methods);
+      routes.push({
+        method: methods.join(',').toUpperCase(),
+        path: middleware.route.path
+      });
+    } else if (middleware.name === 'router') {
+      // Router middleware
+      const regexp = middleware.regexp.toString();
+      
+      // Get the base path from the regexp
+      let basePath = '';
+      const match = regexp.match(/^\/\^\\\/([^\\]+)/);
+      if (match) {
+        basePath = '/' + match[1];
+      }
+      
+      // Get routes from the router
+      if (middleware.handle && middleware.handle.stack) {
+        middleware.handle.stack.forEach((handler: any) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods);
+            const routePath = handler.route.path;
+            const fullPath = routePath.startsWith('/') 
+              ? basePath + routePath.substring(1) // Handle paths with leading slash
+              : basePath + '/' + routePath;       // Handle paths without leading slash
+            
+            routes.push({
+              method: methods.join(',').toUpperCase(),
+              path: fullPath,
+              regexp: handler.regexp?.toString()
+            });
+          }
+        });
+      }
+    }
+  });
+  
+  // Sort and print routes
+  routes.sort((a, b) => a.path.localeCompare(b.path));
+  routes.forEach((route, i) => {
+    console.log(`[${i}] ${route.method} ${route.path}`);
+    if (route.regexp) {
+      console.log(`    RegExp: ${route.regexp}`);
+    }
+  });
+}
+
+printRoutes(app);
+console.log('========================\n');
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {

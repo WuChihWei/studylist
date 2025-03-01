@@ -781,32 +781,59 @@ type CategoryType = 'webpage' | 'video' | 'book' | 'podcast';
 
 export const deleteMaterial = async (req: Request, res: Response) => {
   try {
+    console.log('\n=== DELETE MATERIAL CONTROLLER ===');
     const { userId, topicId, categoryType, materialId } = req.params;
     const firebaseUID = req.user?.uid;
 
+    console.log('Controller params:', { userId, topicId, categoryType, materialId });
+    console.log('Firebase UID from auth:', firebaseUID);
+
     if (!firebaseUID || firebaseUID !== userId) {
+      console.log('Auth error: Firebase UID mismatch or missing');
       return res.status(403).json({ error: 'Unauthorized access' });
     }
 
     const user = await User.findOne({ firebaseUID });
     if (!user) {
+      console.log('User not found with firebaseUID:', firebaseUID);
       return res.status(404).json({ error: 'User not found' });
     }
 
+    console.log('User found:', { 
+      id: user._id, 
+      firebaseUID: user.firebaseUID,
+      topicsCount: user.topics?.length || 0
+    });
+
     const topic = user.topics.id(topicId);
     if (!topic || !topic.categories) {
+      console.log('Topic not found or invalid structure:', { topicId, foundTopic: !!topic });
       return res.status(404).json({ error: 'Topic not found or invalid topic structure' });
     }
 
+    console.log('Topic found:', { 
+      id: topic._id, 
+      name: topic.name,
+      categoriesKeys: Object.keys(topic.categories)
+    });
+
     const validCategories = ['webpage', 'video', 'book', 'podcast'] as const;
     if (!validCategories.includes(categoryType as typeof validCategories[number])) {
+      console.log('Invalid category type:', categoryType);
       return res.status(400).json({ error: 'Invalid category type' });
     }
 
     const materials = topic.categories[categoryType as CategoryType];
     if (!Array.isArray(materials)) {
+      console.log('Category not found or not an array:', { categoryType, isArray: Array.isArray(materials) });
       return res.status(404).json({ error: 'Category not found' });
     }
+
+    console.log('Materials in category:', { 
+      categoryType, 
+      count: materials.length,
+      materialIds: materials.map((m: any) => m._id?.toString())
+    });
 
     const materialIndex = materials.findIndex(
       (m: { _id?: { toString(): string } }) => 
@@ -814,11 +841,21 @@ export const deleteMaterial = async (req: Request, res: Response) => {
     );
 
     if (materialIndex === -1) {
+      console.log('Material not found in category:', { materialId, categoryType });
       return res.status(404).json({ error: 'Material not found' });
     }
 
+    console.log('Material found at index:', materialIndex);
+    
+    // Log the material being deleted
+    console.log('Deleting material:', materials[materialIndex]);
+
     materials.splice(materialIndex, 1);
     await user.save();
+    
+    console.log('Material deleted successfully');
+    console.log('======================\n');
+    
     res.json(user);
   } catch (error) {
     console.error('Error deleting material:', error);

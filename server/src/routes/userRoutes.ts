@@ -37,14 +37,18 @@ router.post('/users/update-all-bios', updateAllUsersBio);
 router.delete(
   'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   (req, res, next) => {
-    console.log('Delete material request received with params:', {
+    console.log('\n=== USER ROUTES DELETE MATERIAL HANDLER ===');
+    console.log('Route path in userRoutes:', 'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId');
+    console.log('Request params:', {
       userId: req.params.userId,
       topicId: req.params.topicId,
       categoryType: req.params.categoryType,
-      materialId: req.params.materialId,
-      path: req.path,
-      originalUrl: req.originalUrl
+      materialId: req.params.materialId
     });
+    console.log('Request path:', req.path);
+    console.log('Original URL:', req.originalUrl);
+    console.log('Router base path:', req.baseUrl);
+    console.log('======================\n');
     next();
   },
   deleteMaterial

@@ -363,6 +363,31 @@ export const useUserData = () => {
       
       console.log('Delete material endpoint:', endpoint);
 
+      // First test if we can GET the material
+      try {
+        console.log('Testing GET request to verify material exists...');
+        const testResponse = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('GET test successful, material exists:', testData);
+        } else {
+          const errorText = await testResponse.text();
+          console.error('GET test failed:', errorText);
+          console.error('Status:', testResponse.status);
+          console.error('Status Text:', testResponse.statusText);
+        }
+      } catch (testError) {
+        console.error('Error during GET test:', testError);
+      }
+
+      // Now proceed with the DELETE request
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
@@ -374,6 +399,8 @@ export const useUserData = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Delete material failed:', errorText);
+        console.error('Status:', response.status);
+        console.error('Status Text:', response.statusText);
         throw new Error(`Failed to delete material: ${response.status}`);
       }
 
