@@ -122,6 +122,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+// Basic health check endpoint (put at the very beginning)
+app.get('/deployment-check', (req: Request, res: Response) => {
+  console.log('⚠️ DEPLOYMENT CHECK ENDPOINT ACCESSED ⚠️');
+  res.json({
+    message: 'Deployment check successful - new code is active',
+    timestamp: new Date().toISOString(),
+    deploymentId: 'March-1-2025-fix'
+  });
+});
+
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({
