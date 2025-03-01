@@ -132,6 +132,21 @@ app.get('/deployment-check', (req: Request, res: Response) => {
   });
 });
 
+// Add a fully independent DELETE route for debugging
+app.delete('/api/delete-material-debug/:userId/:topicId/:materialId', authMiddleware, (req, res) => {
+  console.log('⭐⭐⭐ INDEPENDENT DELETE ROUTE HIT ⭐⭐⭐');
+  console.log('Params:', req.params);
+  
+  const { userId, topicId, materialId } = req.params;
+  
+  // Respond with success to test client integration
+  res.status(200).json({
+    success: true,
+    message: 'Debug delete route processed successfully',
+    params: { userId, topicId, materialId }
+  });
+});
+
 // Public routes
 app.get('/health', (req: Request, res: Response) => {
   res.json({

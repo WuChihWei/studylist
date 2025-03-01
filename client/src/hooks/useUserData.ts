@@ -407,6 +407,37 @@ export const useUserData = () => {
       let response;
       let success = false;
 
+      // 添加: 尝试我们的独立调试端点
+      try {
+        const debugEndpoint = `${API_URL}/api/delete-material-debug/${user.uid}/${topicId}/${materialId}`;
+        console.log('🧪 TRYING DEBUG ENDPOINT:', debugEndpoint);
+        
+        response = await fetch(debugEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Debug endpoint response status:', response.status);
+        console.log('Debug endpoint headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (response.ok) {
+          console.log('DEBUG endpoint succeeded!');
+          const data = await response.json();
+          console.log('Debug endpoint response:', data);
+          
+          // 如果测试端点成功，手动更新本地数据
+          updateLocalState();
+          return true;
+        } else {
+          console.log('Debug endpoint failed, continuing with regular endpoints');
+        }
+      } catch (e) {
+        console.error('Error with debug endpoint:', e);
+      }
+
       // 首先尝试带类型的端点（如果类型可用）
       if (materialType) {
         const typeEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`;

@@ -36,6 +36,18 @@ router.post('/:topicId/materials', validateMaterialType, validateRating, addMate
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
+
+// Debug DELETE route - MUST be before the main DELETE route
+router.delete('/:topicId/materials/:materialId/debug', (req, res) => {
+  console.log('DEBUG DELETE ROUTE HIT');
+  console.log('Params:', req.params);
+  return res.status(200).json({
+    message: 'Debug delete route accessed',
+    params: req.params
+  });
+});
+
+// Main delete route
 router.delete('/:topicId/materials/:materialId', deleteMaterial);
 
 console.log('Topic routes initialized with mergeParams:', true);
