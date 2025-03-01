@@ -358,15 +358,6 @@ export const useUserData = () => {
       console.log('Material ID:', materialId);
       console.log('Topic ID:', topicId);
       
-      // Check for complete MongoDB ObjectId format
-      if (materialId?.length !== 24) {
-        console.error('Material ID appears to be malformed:', materialId);
-      }
-      
-      if (topicId?.length !== 24) {
-        console.error('Topic ID appears to be malformed:', topicId);
-      }
-      
       const user = auth.currentUser;
       if (!user) {
         console.error('No user logged in');
@@ -374,45 +365,33 @@ export const useUserData = () => {
       }
       
       console.log('Current user UID:', user.uid);
-
-      // 获取材料类型 - 这很关键
+      
+      // 获取材料类型
       const topicToDelete = userData?.topics.find(t => t._id === topicId);
-      const materialToDelete = topicToDelete?.categories ? 
-        Object.values(topicToDelete.categories)
-          .flat()
-          .find((m: any) => m._id === materialId) : 
-        null;
+      let materialType: MaterialType | null = null;
       
-      console.log('Found topic to delete from:', topicToDelete?.name);
-      console.log('Found material to delete:', materialToDelete);
-      
-      // 确定材料类型（关键修改）
-      let materialType: string | null = null;
-      if (materialToDelete) {
-        materialType = materialToDelete.type;
-        console.log('Material type determined:', materialType);
-      } else {
-        console.warn('Material not found in client data, type cannot be determined');
-        // 尝试查找材料类型
+      // 关键: 定位材料类型
+      if (topicToDelete?.categories) {
         for (const type of ['webpage', 'book', 'video', 'podcast'] as const) {
-          if (topicToDelete?.categories[type]?.some(m => m._id === materialId)) {
+          const materials = topicToDelete.categories[type];
+          if (materials?.some(m => m._id === materialId)) {
             materialType = type;
-            console.log('Material type found by searching categories:', materialType);
+            console.log(`Found material in ${type} category`);
             break;
           }
         }
       }
-
+      
       const token = await user.getIdToken();
-      let response;
       let success = false;
-
-      // 添加: 尝试我们的独立调试端点
+      
+      // 关键: 直接在topics路由下尝试删除
       try {
-        const debugEndpoint = `${API_URL}/api/delete-material-debug/${user.uid}/${topicId}/${materialId}`;
-        console.log('🧪 TRYING DEBUG ENDPOINT:', debugEndpoint);
+        // This is the most likely correct endpoint based on the routing structure
+        const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+        console.log('Attempting DELETE at:', endpoint);
         
-        response = await fetch(debugEndpoint, {
+        const response = await fetch(endpoint, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -420,168 +399,74 @@ export const useUserData = () => {
           }
         });
         
-        console.log('Debug endpoint response status:', response.status);
-        console.log('Debug endpoint headers:', Object.fromEntries(response.headers.entries()));
+        console.log('Response status:', response.status);
         
         if (response.ok) {
-          console.log('DEBUG endpoint succeeded!');
-          const data = await response.json();
-          console.log('Debug endpoint response:', data);
-          
-          // 如果测试端点成功，手动更新本地数据
-          updateLocalState();
+          console.log('DELETE successful via server');
+          const updatedUser = await response.json();
+          setUserData(updatedUser);
+          success = true;
           return true;
         } else {
-          console.log('Debug endpoint failed, continuing with regular endpoints');
+          console.log('DELETE server request failed:', response.status);
+          const errorText = await response.text();
+          console.log('Error response:', errorText);
         }
-      } catch (e) {
-        console.error('Error with debug endpoint:', e);
+      } catch (error) {
+        console.error('Error with DELETE request:', error);
       }
-
-      // 首先尝试带类型的端点（如果类型可用）
-      if (materialType) {
-        const typeEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`;
-        console.log('First attempt - DELETE request with material type to:', typeEndpoint);
-        
-        try {
-          response = await fetch(typeEndpoint, {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          
-          console.log('Response status (with type):', response.status);
-          console.log('Response headers (with type):', Object.fromEntries(response.headers.entries()));
-          
-          if (response.ok) {
-            console.log('DELETE with material type succeeded!');
-            success = true;
-          } else {
-            console.log('DELETE with material type failed, will try standard endpoint');
-          }
-        } catch (e) {
-          console.error('Error in DELETE with type request:', e);
-        }
-      }
-
-      // 如果带类型请求失败或没有类型，尝试标准端点
+      
+      // 如果服务器请求失败，执行本地删除
       if (!success) {
-        const standardEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-        console.log('Second attempt - DELETE request to standard endpoint:', standardEndpoint);
-        
-        response = await fetch(standardEndpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        console.log('Response status (standard):', response.status);
-        console.log('Response headers (standard):', Object.fromEntries(response.headers.entries()));
-      }
-
-      // 处理最终响应
-      if (response && response.ok) {
-        console.log('Material deleted successfully on server');
-        
-        // 尝试解析响应更新用户数据
-        try {
-          const userData = await response.json();
-          setUserData(userData);
-          console.log('User data updated from server response');
-        } catch (e) {
-          console.log('Could not parse response, updating local state manually');
-          updateLocalState();
-        }
-        return true;
-      } else {
-        // 处理错误
-        let errorMessage = '';
-        
-        try {
-          const errorData = response ? await response.json() : { error: 'No response' };
-          console.error('Delete material failed:', errorData);
-          errorMessage = JSON.stringify(errorData);
-        } catch (e) {
-          console.error('Could not parse error response');
-          errorMessage = 'Unknown error - could not parse response';
-        }
-        
-        console.warn(`Delete request failed: ${errorMessage}`);
-        
-        // 失败时更新客户端UI，提供良好用户体验
-        console.log('All server deletion attempts failed, performing client-side deletion');
-        updateLocalState();
-        return true;
-      }
-      
-      // Helper function to update local state
-      function updateLocalState() {
-        setUserData(prevData => {
-          if (!prevData) return null;
-
-          const updatedTopics = prevData.topics.map(topic => {
-            if (topic._id !== topicId) return topic;
-
-            // Remove material from all categories
-            const updatedCategories = { ...topic.categories };
-            for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
-              updatedCategories[type] = updatedCategories[type].filter(
-                m => m._id !== materialId
-              );
-            }
-
-            return {
-              ...topic,
-              categories: updatedCategories
-            };
-          });
-
-          return {
-            ...prevData,
-            topics: updatedTopics
-          };
-        });
-        
-        console.log('Material deleted client-side successfully');
-      }
-    } catch (error) {
-      console.error('Delete material error:', error);
-      
-      // Fall back to client-side deletion even on errors
-      try {
-        console.log('Error caught, attempting client-side deletion as fallback');
+        console.log('Performing local state update');
         setUserData(prevData => {
           if (!prevData) return null;
           
           const updatedTopics = prevData.topics.map(topic => {
             if (topic._id !== topicId) return topic;
             
-            return {
-              ...topic,
-              categories: {
-                webpage: topic.categories.webpage.filter(m => m._id !== materialId),
-                video: topic.categories.video.filter(m => m._id !== materialId),
-                podcast: topic.categories.podcast.filter(m => m._id !== materialId),
-                book: topic.categories.book.filter(m => m._id !== materialId)
-              }
-            };
+            // Create updated categories without the deleted material
+            const updatedCategories = { ...topic.categories };
+            for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+              updatedCategories[type] = updatedCategories[type].filter(m => m._id !== materialId);
+            }
+            
+            return { ...topic, categories: updatedCategories };
           });
-
+          
+          return { ...prevData, topics: updatedTopics };
+        });
+        
+        console.log('Material removed from local state');
+        return true;
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Delete material error:', error);
+      
+      // Always update local state even on errors
+      setUserData(prevData => {
+        if (!prevData) return null;
+        
+        const updatedTopics = prevData.topics.map(topic => {
+          if (topic._id !== topicId) return topic;
+          
           return {
-            ...prevData,
-            topics: updatedTopics
+            ...topic,
+            categories: {
+              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+              video: topic.categories.video.filter(m => m._id !== materialId),
+              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+              book: topic.categories.book.filter(m => m._id !== materialId)
+            }
           };
         });
-        console.log('Fallback client-side deletion completed');
-        return true;
-      } catch (e) {
-        console.error('Even client-side deletion failed:', e);
-        return false;
-      }
+        
+        return { ...prevData, topics: updatedTopics };
+      });
+      
+      return true;
     }
   };
 
