@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { User, Categories } from '../types/User';
 import { useFirebase } from '../app/firebase/FirebaseProvider';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app').replace(/\/+$/, '');
 
 type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
 
@@ -49,22 +49,19 @@ export const useUserData = () => {
     
     console.log('=== fetchUserData started ===');
     console.log('Current user:', currentUser?.uid);
+    console.log('使用API URL:', API_URL);
     
     try {
       setIsLoading(true);
       const token = await currentUser.getIdToken(forceRefresh);
       console.log('Token obtained:', token ? 'Yes' : 'No');
       
-      const apiUrl = API_URL;
-      const response = await fetch(`${apiUrl}/api/users/${currentUser.uid}`, {
+      const response = await fetch(`${API_URL}/api/users/${currentUser.uid}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'include'
+          'Content-Type': 'application/json'
+        }
       });
 
       console.log('Response status:', response.status);
@@ -81,7 +78,6 @@ export const useUserData = () => {
       setUserData(data);
     } catch (error) {
       console.error('Error in fetchUserData:', error);
-      setUserData(null);
     } finally {
       setIsLoading(false);
       setLoading(false);
@@ -352,59 +348,6 @@ export const useUserData = () => {
     }
   };
 
-  const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
-    try {
-      console.log('⚠️ Delete Material Started');
-      console.log('Material ID:', materialId);
-      console.log('Topic ID:', topicId);
-      
-      const user = auth.currentUser;
-      if (!user) {
-        console.error('No user logged in');
-        throw new Error('No user logged in');
-      }
-      
-      const token = await user.getIdToken();
-      
-      // 使用简化的端点，将userId和topicId作为查询参数
-      const endpoint = `${API_URL}/api/materials/${materialId}?userId=${user.uid}&topicId=${topicId}`;
-      console.log('Attempting DELETE at:', endpoint);
-      
-      const response = await fetch(endpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (response.ok) {
-        console.log('DELETE successful via server');
-        const updatedUser = await response.json();
-        setUserData(updatedUser);
-        return true;
-      }
-      
-      // 服务器请求失败，执行本地删除
-      console.log('Performing local state update');
-      setUserData(prevData => {
-        if (!prevData) return null;
-        // 本地状态更新逻辑...
-        // 省略具体实现，保留现有代码
-        return prevData;
-      });
-      
-      return true;
-    } catch (error) {
-      console.error('Delete material error:', error);
-      // 总是更新本地状态，确保UI正常
-      // 省略具体实现，保留现有代码
-      return true;
-    }
-  };
-
   const deleteTopic = async (topicId: string): Promise<boolean> => {
     try {
       const user = auth.currentUser;
@@ -491,6 +434,93 @@ export const useUserData = () => {
     }
   };
 
+  const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
+    try {
+      console.log('🗑️ 开始删除材料');
+      console.log('材料ID:', materialId);
+      console.log('主题ID:', topicId);
+      
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('未登录用户');
+        throw new Error('未登录用户');
+      }
+      
+      console.log('用户ID:', user.uid);
+      
+      // 先执行本地状态更新，确保UI立即响应
+      updateLocalState();
+      
+      // 恢复服务器请求
+      const token = await user.getIdToken();
+      
+      // 使用新的简化端点
+      const endpoint = `${API_URL}/api/delete-material`;
+      console.log('发送删除请求到:', endpoint);
+      
+      // 使用POST请求体发送参数(虽然是DELETE方法)
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          topicId,
+          materialId
+        })
+      });
+      
+      console.log('响应状态:', response.status);
+      
+      if (response.ok) {
+        console.log('服务器删除成功');
+        const updatedUser = await response.json();
+        setUserData(updatedUser);
+        return true;
+      } else {
+        // 服务器删除失败，但UI已更新
+        console.error('服务器删除失败:', response.status);
+        const errorText = await response.text();
+        console.error('错误响应:', errorText);
+        
+        // 虽然本地已删除，但返回错误状态让调用方知道服务器操作失败
+        return false;
+      }
+    } catch (error) {
+      console.error('删除材料错误:', error);
+      
+      // 出错时仍更新本地状态以保持UI响应
+      updateLocalState();
+      
+      // 返回false表示操作未完全成功
+      return false;
+    }
+    
+    // 更新本地状态函数
+    function updateLocalState() {
+      console.log('执行本地状态更新');
+      setUserData(prevData => {
+        if (!prevData) return null;
+        
+        const updatedTopics = prevData.topics.map(topic => {
+          if (topic._id !== topicId) return topic;
+          
+          // 创建不包含被删除材料的更新分类
+          const updatedCategories = { ...topic.categories };
+          for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+            updatedCategories[type] = updatedCategories[type].filter(m => m._id !== materialId);
+          }
+          
+          return { ...topic, categories: updatedCategories };
+        });
+        
+        return { ...prevData, topics: updatedTopics };
+      });
+    }
+  };
+
   return { 
     userData, 
     loading, 
@@ -502,8 +532,8 @@ export const useUserData = () => {
     getContributionData,
     completeMaterial,
     uncompleteMaterial,
-    deleteMaterial,
     deleteTopic,
-    updateMaterialProgress
+    updateMaterialProgress,
+    deleteMaterial
   };
 };
