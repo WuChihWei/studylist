@@ -9,7 +9,8 @@ import {
   updateUserProfile,
   addTopic,
   updateTopicName,
-  updateAllUsersBio
+  updateAllUsersBio,
+  deleteMaterial
 } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -29,5 +30,9 @@ router.put('/:firebaseUID/profile', updateUserProfile);
 router.post('/:firebaseUID/topics', addTopic);
 router.put('/:firebaseUID/topics/:topicId', updateTopicName);
 router.post('/users/update-all-bios', updateAllUsersBio);
+router.delete(
+  '/users/:userId/topics/:topicId/materials/:materialId',
+  deleteMaterial
+);
 
 export default router;

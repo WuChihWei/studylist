@@ -776,3 +776,66 @@ export const updateExistingMaterials = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const deleteMaterial = async (req: Request, res: Response) => {
+  try {
+    const { userId, topicId, materialId } = req.params;
+    const firebaseUID = req.user?.uid;
+
+    if (!firebaseUID) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // 驗證用戶身份
+    if (firebaseUID !== userId) {
+      return res.status(403).json({ error: 'Unauthorized access' });
+    }
+
+    // 查找用戶
+    const user = await User.findOne({ firebaseUID });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // 找到對應的主題
+    const topic = user.topics.id(topicId);
+    if (!topic) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    // 定義材料類型
+    const materialTypes = ['webpage', 'video', 'book', 'podcast'] as const;
+    type MaterialType = typeof materialTypes[number];
+
+    // 在所有類別中查找並刪除材料
+    let materialFound = false;
+
+    for (const type of materialTypes) {
+      const materials = topic.categories?.[type];
+      if (!Array.isArray(materials)) continue;
+
+      const index = materials.findIndex(
+        (material) => material._id && material._id.toString() === materialId
+      );
+
+      if (index !== -1) {
+        materials.splice(index, 1);
+        materialFound = true;
+        break;
+      }
+    }
+
+    if (!materialFound) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    res.status(500).json({
+      error: 'Server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};

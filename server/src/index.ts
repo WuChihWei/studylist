@@ -50,9 +50,21 @@ console.log('Registering routes:');
 console.log('- /api/users/:firebaseUID/topics');
 console.log('- /api/users/:userId/materials');
 
-// Basic middleware
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// 添加請求日誌中間件
+app.use((req, res, next) => {
+  console.log('\n=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.originalUrl);
+  console.log('Params:', req.params);
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+  console.log('======================\n');
+  next();
+});
 
 // CORS configuration
 const corsOptions = {
@@ -159,11 +171,11 @@ app.get('/test/cors', (req: Request, res: Response) => {
 // Protected routes
 app.use('/api/users', authMiddleware);
 
-// API routes
-app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/stripe', authMiddleware, stripeRoutes);
+// Mount routes
+app.use('/api/users', userRoutes);
+app.use('/api/stripe', stripeRoutes);
 app.use('/api/users/:firebaseUID/topics', topicsRouter);
-app.use('/api/users/:userId/materials', authMiddleware, materialRoutes);
+app.use('/api/users/:userId/materials', materialRoutes);
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -173,13 +185,9 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler);
 
-// 在所有路由之後添加
+// 404 handler
 app.use('*', (req, res) => {
-  console.log('Route not found:', {
-    method: req.method,
-    path: req.path,
-    originalUrl: req.originalUrl
-  });
+  console.log('Route not found:', req.method, req.originalUrl);
   res.status(404).json({
     error: 'Route not found',
     path: req.originalUrl,

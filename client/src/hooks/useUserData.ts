@@ -47,40 +47,34 @@ export const useUserData = () => {
   const fetchUserData = async (currentUser: any, forceRefresh = false) => {
     if (isLoading) return;
     
-    console.log('=== fetchUserData started ===');
-    console.log('Current user:', currentUser?.uid);
-    
     try {
       setIsLoading(true);
       const token = await currentUser.getIdToken(forceRefresh);
-      console.log('Token obtained:', token ? 'Yes' : 'No');
       
       const apiUrl = 'https://studylistserver-production.up.railway.app';
-      const response = await fetch(`${apiUrl}/api/users/${currentUser.uid}`, {
+      const endpoint = `${apiUrl}/api/users/${currentUser.uid}`;
+      
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+
+      const response = await fetch(endpoint, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers,
         mode: 'cors',
         credentials: 'include'
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`API Error: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('Received user data:', data);
       setUserData(data);
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      console.error('Error fetching user data:', error);
       setUserData(null);
     } finally {
       setIsLoading(false);
@@ -354,40 +348,12 @@ export const useUserData = () => {
 
   const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
     try {
-      console.log('\n=== Delete Material Test Started ===');
-      
       const user = auth.currentUser;
-      if (!user) {
-        console.log('Test Failed: No user logged in');
-        throw new Error('No user logged in');
-      }
-
-      // Find material type
-      const topic = userData?.topics.find(t => t._id === topicId);
-      if (!topic) {
-        console.log('Test Failed: Topic not found');
-        throw new Error('Topic not found');
-      }
-
-      let materialType: keyof Categories | null = null;
-      for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
-        if (topic.categories[type].some(m => m._id === materialId)) {
-          materialType = type;
-          break;
-        }
-      }
-
-      if (!materialType) {
-        console.log('Test Failed: Material type not found');
-        throw new Error('Material type not found');
-      }
-
-      // Use the endpoint that matches your server's route structure
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      
-      console.log('Testing endpoint:', endpoint);
+      if (!user) throw new Error('No user logged in');
 
       const token = await user.getIdToken();
+      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+
       const response = await fetch(endpoint, {
         method: 'DELETE',
         headers: {
@@ -396,50 +362,17 @@ export const useUserData = () => {
         }
       });
 
-      console.log('Response:', {
-        status: response.status,
-        ok: response.ok,
-        statusText: response.statusText
-      });
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('Error response:', errorText);
+        console.error('Delete material failed:', errorText);
         throw new Error(`Failed to delete material: ${response.status}`);
       }
 
-      // Update local state
-      setUserData(prevData => {
-        if (!prevData) return null;
-        
-        const updatedTopics = prevData.topics.map(topic => {
-          if (topic._id !== topicId) return topic;
-          
-          // Only update the category containing the material
-          const updatedCategories = { ...topic.categories };
-          updatedCategories[materialType as keyof Categories] = 
-            updatedCategories[materialType as keyof Categories].filter(m => m._id !== materialId);
-          
-          return {
-            ...topic,
-            categories: updatedCategories
-          };
-        });
-
-        return {
-          ...prevData,
-          topics: updatedTopics
-        };
-      });
-
-      console.log('=== Delete Material Test Completed Successfully ===');
+      const updatedUser = await response.json();
+      setUserData(updatedUser);
       return true;
     } catch (error) {
-      console.error('=== Delete Material Test Failed ===');
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
-      });
+      console.error('Error deleting material:', error);
       return false;
     }
   };
