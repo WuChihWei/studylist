@@ -36,8 +36,9 @@ router.post('/:topicId/materials', validateMaterialType, validateRating, addMate
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
-router.delete('/:topicId/materials/:materialId', deleteMaterial);
+// DELETE route is now handled directly in index.ts to avoid routing issues
+// router.delete('/:topicId/materials/:materialId', deleteMaterial);
 
-console.log('Topic routes initialized');
+console.log('Topic routes initialized with mergeParams:', true);
 
 export default router;

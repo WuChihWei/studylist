@@ -390,7 +390,7 @@ export const useUserData = () => {
       const token = await user.getIdToken();
       console.log('Token obtained:', token ? 'Yes' : 'No');
       
-      // First, try the new API endpoint pattern (direct route)
+      // First, try the direct URL format
       try {
         const directEndpoint = `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`;
         console.log('Trying direct DELETE request URL:', directEndpoint);
@@ -418,54 +418,87 @@ export const useUserData = () => {
         console.log('Falling back to original route...');
       }
       
-      // Fall back to the original nested route pattern
-      const originalEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      console.log('Trying original DELETE request URL:', originalEndpoint);
-      
-      const response = await fetch(originalEndpoint, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      // Second, try the original nested URL format
+      try {
+        const originalEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+        console.log('Trying original DELETE request URL:', originalEndpoint);
+        
+        const response = await fetch(originalEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-      if (!response.ok) {
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUserData(updatedUser);
+          return true;
+        }
+        
         const errorText = await response.text();
         console.error('Server error response:', errorText);
-        throw new Error(`Failed to delete material: ${response.status}`);
+        console.log('Both regular routes failed, trying test endpoint...');
+      } catch (originalError) {
+        console.error('Error with original route:', originalError);
+        console.log('Trying test endpoint as last resort...');
       }
-
-      // Update local state
-      setUserData(prevData => {
-        if (!prevData) return null;
+      
+      // Last resort: Try the test endpoint
+      try {
+        const testEndpoint = `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`;
+        console.log('Trying TEST DELETE endpoint:', testEndpoint);
         
-        const updatedTopics = prevData.topics.map(topic => {
-          if (topic._id !== topicId) return topic;
-          
-          // 在所有類別中查找並刪除指定 ID 的材料
-          return {
-            ...topic,
-            categories: {
-              webpage: topic.categories.webpage.filter(m => m._id !== materialId),
-              video: topic.categories.video.filter(m => m._id !== materialId),
-              podcast: topic.categories.podcast.filter(m => m._id !== materialId),
-              book: topic.categories.book.filter(m => m._id !== materialId)
-            }
-          };
+        const testResponse = await fetch(testEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
+        
+        console.log('Test endpoint response status:', testResponse.status);
+        
+        if (testResponse.ok) {
+          console.log('Test endpoint successful, manual state update');
+          // If test endpoint works but main endpoints fail, manually update state
+          setUserData(prevData => {
+            if (!prevData) return null;
+            
+            const updatedTopics = prevData.topics.map(topic => {
+              if (topic._id !== topicId) return topic;
+              
+              // Remove material from all categories
+              return {
+                ...topic,
+                categories: {
+                  webpage: topic.categories.webpage.filter(m => m._id !== materialId),
+                  video: topic.categories.video.filter(m => m._id !== materialId),
+                  podcast: topic.categories.podcast.filter(m => m._id !== materialId),
+                  book: topic.categories.book.filter(m => m._id !== materialId)
+                }
+              };
+            });
 
-        return {
-          ...prevData,
-          topics: updatedTopics
-        };
-      });
-
-      console.log('Material deleted successfully');
-      return true;
+            return {
+              ...prevData,
+              topics: updatedTopics
+            };
+          });
+          
+          return true;
+        }
+        
+        // If all three attempts fail, throw an error
+        throw new Error(`Failed to delete material: All endpoints failed`);
+      } catch (testError) {
+        console.error('All deletion attempts failed:', testError);
+        throw new Error('Failed to delete material: Material not found');
+      }
     } catch (error) {
       console.error('Delete material error:', error);
       

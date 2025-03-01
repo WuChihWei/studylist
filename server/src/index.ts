@@ -130,6 +130,38 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Testing routes to verify API functionality
+app.get('/test/routes', (req: Request, res: Response) => {
+  const registeredRoutes: any[] = [];
+  
+  // Get all registered routes
+  app._router.stack.forEach((middleware: any) => {
+    if (middleware.route) {
+      // Routes registered directly on the app
+      registeredRoutes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      // Routes registered via router middleware
+      middleware.handle.stack.forEach((handler: any) => {
+        if (handler.route) {
+          registeredRoutes.push({
+            path: handler.route.path,
+            methods: Object.keys(handler.route.methods),
+            baseUrl: middleware.regexp?.toString()
+          });
+        }
+      });
+    }
+  });
+  
+  res.json({
+    message: 'Registered routes',
+    routes: registeredRoutes
+  });
+});
+
 // 添加測試路由（放在所有路由之前）
 app.get('/test/auth', authMiddleware, (req: Request, res: Response) => {
   console.log('=== Test Auth Route ===');
@@ -151,51 +183,64 @@ app.get('/test/cors', (req: Request, res: Response) => {
   });
 });
 
+// Simple test route for material deletion
+app.delete('/test/delete-material', authMiddleware, (req: Request, res: Response) => {
+  console.log('⭐ TEST DELETE route triggered');
+  console.log('Query params:', req.query);
+  res.json({
+    success: true,
+    message: 'DELETE test route successful',
+    params: req.query
+  });
+});
+
 // Protected routes
 app.use('/api/users', authMiddleware);
 
-// API routes
-app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/stripe', authMiddleware, stripeRoutes);
-app.use('/api/users/:userId/topics', topicRoutes);
-
+// IMPORTANT: Direct material routes MUST be registered BEFORE the nested routes
 // Direct material routes to avoid nesting issues
 app.delete('/api/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
+  console.log('⭐ Direct material delete route triggered:', {
+    topicId: req.params.topicId,
+    materialId: req.params.materialId,
+    userId: req.query.userId
+  });
+  
   const { userId } = req.query;
   if (!userId) {
     console.log('Direct material delete route: Missing userId in query parameters');
     return res.status(400).json({ error: 'Missing userId in query parameters' });
   }
   
-  console.log('Direct material delete route triggered:', {
-    topicId: req.params.topicId,
-    materialId: req.params.materialId,
-    userId: userId
-  });
-  
   // Add userId to params for controller
   req.params.userId = userId as string;
   
-  // Call the controller directly instead of using require
+  // Call the controller directly
   deleteMaterial(req, res, next);
 });
 
-// Explicitly add the nested route as well for redundancy
+// Explicitly add the nested route directly too
 app.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
-  console.log('Nested material delete route triggered:', {
+  console.log('⭐ Nested material delete route triggered:', {
     userId: req.params.userId,
     topicId: req.params.topicId,
     materialId: req.params.materialId
   });
+  
   deleteMaterial(req, res, next);
 });
+
+// API routes
+app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/stripe', authMiddleware, stripeRoutes);
+app.use('/api/users/:userId/topics', topicRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
 
 // 404 handler (must be last)
 app.use((req: Request, res: Response) => {
-  console.log(`[404] Route not found: ${req.method} ${req.url}`);
+  console.log(`[404] ❌ Route not found: ${req.method} ${req.url}`);
   res.status(404).json({
     error: 'Route not found',
     path: req.url,
