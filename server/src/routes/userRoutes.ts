@@ -32,6 +32,8 @@ router.put('/:firebaseUID/topics/:topicId', updateTopicName);
 router.post('/users/update-all-bios', updateAllUsersBio);
 
 // Fix the delete material route to match the client's request pattern
+// The client is sending to /api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
+// But the router is mounted at /api, so we need to use users/:userId/... (without the leading slash)
 router.delete(
   '/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   (req, res, next) => {
