@@ -386,85 +386,107 @@ export const useUserData = () => {
       
       console.log('Found topic to delete from:', topicToDelete?.name);
       console.log('Found material to delete:', materialToDelete);
-
-      // STRATEGY 1: Try server-side deletion if online
-      if (isOnline()) {
-        try {
-          const token = await user.getIdToken();
-          console.log('Token obtained:', token ? 'Yes' : 'No');
-          
-          // Try multiple server endpoints with different patterns
-          const endpoints = [
-            // Original nested pattern
-            `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`,
-            
-            // Direct pattern with query parameter
-            `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
-            
-            // Alternative nested pattern
-            `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
-            
-            // Test endpoint
-            `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`
-          ];
-          
-          for (const endpoint of endpoints) {
-            try {
-              console.log(`Trying DELETE endpoint: ${endpoint}`);
-              const response = await fetch(endpoint, {
-                method: 'DELETE',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-              
-              console.log(`Response status for ${endpoint}: ${response.status}`);
-              
-              if (response.ok) {
-                console.log('Server deletion successful via:', endpoint);
-                try {
-                  const updatedUser = await response.json();
-                  setUserData(updatedUser);
-                } catch (jsonError) {
-                  console.error('Error parsing JSON from successful response:', jsonError);
-                  // Proceed with client-side deletion as fallback
-                  performClientSideDeletion();
-                }
-                return true;
-              }
-              
-              // Log the error if this endpoint failed
-              try {
-                const errorText = await response.text();
-                console.error(`Server error for ${endpoint}:`, errorText);
-              } catch (e) {
-                console.error(`Error reading error response from ${endpoint}:`, e);
-              }
-            } catch (endpointError) {
-              console.error(`Error with endpoint ${endpoint}:`, endpointError);
-            }
+      
+      if (!materialToDelete) {
+        console.error('Material not found in client data');
+        throw new Error('Material not found in client data');
+      }
+      
+      // Get the material type (category) - this is crucial for the deployed server route
+      const materialType = materialToDelete.type as MaterialType;
+      console.log('Material type:', materialType);
+      
+      const token = await user.getIdToken();
+      console.log('Token obtained:', token ? 'Yes' : 'No');
+      
+      // ATTEMPT 1: Try the route pattern that matches the deployed server
+      try {
+        // This matches the route in the compiled code: /api/users/:firebaseUID/topics/:topicId/materials/:categoryType/:materialId
+        const deployedEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialType}/${materialId}`;
+        console.log('Trying deployed server route pattern:', deployedEndpoint);
+        
+        const response = await fetch(deployedEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (response.ok) {
+          console.log('Material deleted successfully via deployed route');
+          try {
+            const responseData = await response.json();
+            console.log('Server response:', responseData);
+          } catch (e) {
+            console.log('No JSON in response');
           }
           
-          console.log('All server endpoint attempts failed, falling back to client-side deletion');
-        } catch (serverError) {
-          console.error('Error during server deletion attempts:', serverError);
-        }
-      } else {
-        console.log('Device appears to be offline, using client-side deletion');
-      }
-
-      // STRATEGY 2: Client-side deletion as fallback
-      return performClientSideDeletion();
-      
-      // Helper function for client-side deletion
-      function performClientSideDeletion() {
-        console.log('Performing client-side deletion');
-        if (!materialToDelete) {
-          console.error('Material not found for client-side deletion');
-          return false;
+          // Update local state
+          updateLocalState();
+          return true;
         }
         
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+      } catch (error) {
+        console.error('Error with deployed route:', error);
+      }
+      
+      // ATTEMPT 2: Try all the routes we've been attempting
+      const endpoints = [
+        // Direct pattern with query parameter
+        `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`,
+        
+        // Original nested pattern
+        `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`,
+        
+        // Alternative nested pattern
+        `${API_URL}/api/topics/${topicId}/materials/${materialId}/${user.uid}`,
+        
+        // Test endpoint
+        `${API_URL}/test/delete-material?materialId=${materialId}&topicId=${topicId}&userId=${user.uid}`
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`);
+          const response = await fetch(endpoint, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          console.log(`Response status for ${endpoint}: ${response.status}`);
+          
+          if (response.ok) {
+            console.log('Material deleted successfully via:', endpoint);
+            try {
+              const responseData = await response.json();
+              console.log('Server response:', responseData);
+              setUserData(responseData);
+            } catch (e) {
+              console.log('No JSON in response, updating local state');
+              updateLocalState();
+            }
+            return true;
+          }
+        } catch (error) {
+          console.error(`Error with endpoint ${endpoint}:`, error);
+        }
+      }
+      
+      // If all server attempts fail, fall back to client-side deletion
+      console.log('All server deletion attempts failed, falling back to client-side deletion');
+      updateLocalState();
+      return true;
+      
+      // Helper function to update local state
+      function updateLocalState() {
         setUserData(prevData => {
           if (!prevData) return null;
           
@@ -489,33 +511,7 @@ export const useUserData = () => {
           };
         });
         
-        // Schedule a background sync if supported
-        if ('serviceWorker' in navigator && 'SyncManager' in window && user) {
-          try {
-            navigator.serviceWorker.ready.then(registration => {
-              // Store the delete operation for later sync
-              localStorage.setItem(`pending-delete-${materialId}`, JSON.stringify({
-                materialId,
-                topicId,
-                userId: user.uid,
-                timestamp: new Date().toISOString()
-              }));
-              
-              // Request a background sync when online
-              // @ts-ignore - SyncManager might not be recognized in older TypeScript versions
-              registration.sync?.register('sync-deletes').catch((err: Error) => {
-                console.error('Error registering background sync:', err);
-              });
-            }).catch(err => {
-              console.error('Error accessing service worker:', err);
-            });
-          } catch (syncError) {
-            console.error('Error setting up background sync:', syncError);
-          }
-        }
-        
         console.log('Material deleted client-side successfully');
-        return true;
       }
     } catch (error) {
       console.error('Delete material error:', error);
