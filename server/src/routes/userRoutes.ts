@@ -31,17 +31,19 @@ router.post('/:firebaseUID/topics', addTopic);
 router.put('/:firebaseUID/topics/:topicId', updateTopicName);
 router.post('/users/update-all-bios', updateAllUsersBio);
 
-// Fix the delete material route to match the client's request pattern
-// The client is sending to /api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
-// But the router is mounted at /api, so we need to use users/:userId/... (without the leading slash)
+// Material deletion route - this needs to match exactly what the client is sending
+// The client sends: /api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId
+// Since this router is mounted at /api, we need to define the route as:
 router.delete(
   'users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
   (req, res, next) => {
-    console.log('Delete material request received:', {
+    console.log('Delete material request received with params:', {
       userId: req.params.userId,
       topicId: req.params.topicId,
       categoryType: req.params.categoryType,
-      materialId: req.params.materialId
+      materialId: req.params.materialId,
+      path: req.path,
+      originalUrl: req.originalUrl
     });
     next();
   },

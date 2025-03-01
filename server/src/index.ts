@@ -9,6 +9,7 @@ import stripeRoutes from './routes/stripeRoutes';
 import topicsRouter from './routes/topics';
 import materialRouter from './routes/materialRoutes';
 import { authMiddleware } from './middleware/auth';
+import { deleteMaterial } from './controllers/userController';
 
 // 在任何其他代碼之前加載環境變數
 dotenv.config();
@@ -179,6 +180,40 @@ app.use('/api', userRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/users/:userId/topics', topicsRouter);
 app.use('/api/users/:userId/materials', materialRouter);
+
+// Direct route for deleting materials (backup solution)
+app.delete('/api/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId', 
+  authMiddleware,
+  (req, res, next) => {
+    console.log('Direct route hit for delete material:', {
+      userId: req.params.userId,
+      topicId: req.params.topicId,
+      categoryType: req.params.categoryType,
+      materialId: req.params.materialId
+    });
+    next();
+  }, 
+  deleteMaterial
+);
+
+// Debug: Print all registered routes
+console.log('=== Registered Routes ===');
+app._router.stack.forEach((middleware: any) => {
+  if (middleware.route) {
+    // Routes registered directly on the app
+    console.log(`${Object.keys(middleware.route.methods).join(',')} ${middleware.route.path}`);
+  } else if (middleware.name === 'router') {
+    // Router middleware
+    middleware.handle.stack.forEach((handler: any) => {
+      if (handler.route) {
+        const path = handler.route.path;
+        const methods = Object.keys(handler.route.methods).join(',');
+        console.log(`${methods} ${middleware.regexp} -> ${path}`);
+      }
+    });
+  }
+});
+console.log('========================');
 
 // Error handling middleware
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
