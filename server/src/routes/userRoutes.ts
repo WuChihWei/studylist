@@ -30,8 +30,19 @@ router.put('/:firebaseUID/profile', updateUserProfile);
 router.post('/:firebaseUID/topics', addTopic);
 router.put('/:firebaseUID/topics/:topicId', updateTopicName);
 router.post('/users/update-all-bios', updateAllUsersBio);
+
+// Fix the delete material route to match the client's request pattern
 router.delete(
   '/users/:userId/topics/:topicId/categories/:categoryType/materials/:materialId',
+  (req, res, next) => {
+    console.log('Delete material request received:', {
+      userId: req.params.userId,
+      topicId: req.params.topicId,
+      categoryType: req.params.categoryType,
+      materialId: req.params.materialId
+    });
+    next();
+  },
   deleteMaterial
 );
 

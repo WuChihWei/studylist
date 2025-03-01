@@ -351,8 +351,17 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
+      // Validate parameters
+      if (!materialId) throw new Error('Material ID is required');
+      if (!topicId) throw new Error('Topic ID is required');
+      if (!categoryType) throw new Error('Category type is required');
+
+      console.log('Deleting material with params:', { materialId, topicId, categoryType });
+
       const token = await user.getIdToken();
       const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/categories/${categoryType}/materials/${materialId}`;
+      
+      console.log('Delete material endpoint:', endpoint);
 
       const response = await fetch(endpoint, {
         method: 'DELETE',

@@ -358,12 +358,11 @@ export default function ProfilePage() {
   const onDeleteMaterial = async (materialId: string, topicId: string, categoryType: string) => {
     try {
       const success = await deleteMaterial(materialId, topicId, categoryType);
-      if (!success) {
-        throw new Error('Failed to delete material');
-      }
+      if (!success) throw new Error('Failed to delete material');
+      return true;
     } catch (error) {
       console.error('Error deleting material:', error);
-      throw error;
+      return false;
     }
   };
   
@@ -507,9 +506,9 @@ export default function ProfilePage() {
                 book: []
               }}
               onAddMaterial={(material) => addMaterial(material, activeTab)}
-              onDeleteMaterial={async (materialId, categoryType) => {
+              onDeleteMaterial={async (materialId, topicId, categoryType) => {
                 try {
-                  const success = await deleteMaterial(materialId, activeTab, categoryType);
+                  const success = await deleteMaterial(materialId, topicId, categoryType);
                   if (!success) throw new Error('Failed to delete material');
                   return true;
                 } catch (error) {

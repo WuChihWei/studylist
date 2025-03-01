@@ -13,7 +13,7 @@ type TableMaterial = Material & {
 export const createColumns = (
   setOpenMoreMenu: (id: string | null) => void,
   openMoreMenu: string | null,
-  onDeleteMaterial: (id: string) => Promise<boolean>,
+  onDeleteMaterial: (id: string, topicId: string, categoryType: string) => Promise<boolean>,
   MoreMenu: React.ComponentType<any>,
   onUpdateMaterial: (id: string, updates: Partial<Material>) => Promise<boolean>,
   notePopup: {
@@ -102,7 +102,7 @@ export const createColumns = (
               onDelete={async () => {
                 if (material._id) {
                   console.log('Delete triggered for:', material._id);
-                  await onDeleteMaterial(material._id);
+                  await onDeleteMaterial(material._id, '', material.type);
                 }
               }}
             />
