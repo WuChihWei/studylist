@@ -777,6 +777,8 @@ export const updateExistingMaterials = async (req: Request, res: Response) => {
   }
 };
 
+type CategoryType = 'webpage' | 'video' | 'book' | 'podcast';
+
 export const deleteMaterial = async (req: Request, res: Response) => {
   try {
     const { userId, topicId, categoryType, materialId } = req.params;
@@ -792,17 +794,23 @@ export const deleteMaterial = async (req: Request, res: Response) => {
     }
 
     const topic = user.topics.id(topicId);
-    if (!topic) {
-      return res.status(404).json({ error: 'Topic not found' });
+    if (!topic || !topic.categories) {
+      return res.status(404).json({ error: 'Topic not found or invalid topic structure' });
     }
 
-    if (!topic.categories || !topic.categories[categoryType]) {
+    const validCategories = ['webpage', 'video', 'book', 'podcast'] as const;
+    if (!validCategories.includes(categoryType as typeof validCategories[number])) {
+      return res.status(400).json({ error: 'Invalid category type' });
+    }
+
+    const materials = topic.categories[categoryType as CategoryType];
+    if (!Array.isArray(materials)) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    const materials = topic.categories[categoryType];
     const materialIndex = materials.findIndex(
-      m => m._id && m._id.toString() === materialId
+      (m: { _id?: { toString(): string } }) => 
+        m._id && m._id.toString() === materialId
     );
 
     if (materialIndex === -1) {

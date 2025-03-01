@@ -204,9 +204,21 @@ export default function ProfilePage() {
       }, activeTab);
 
       if (success) {
-        form.reset(); // 清空表單
+        form.reset();
       } else {
         alert('Failed to add material. Please try again.');
+      }
+    };
+
+    const onDelete = async (materialId: string) => {
+      try {
+        const success = await deleteMaterial(materialId, activeTab, type);
+        if (!success) {
+          throw new Error('Failed to delete material');
+        }
+      } catch (error) {
+        console.error('Error deleting material:', error);
+        throw error;
       }
     };
 
@@ -342,6 +354,19 @@ export default function ProfilePage() {
       </div>
     );
   };
+
+  const onDeleteMaterial = async (materialId: string, topicId: string, categoryType: string) => {
+    try {
+      const success = await deleteMaterial(materialId, topicId, categoryType);
+      if (!success) {
+        throw new Error('Failed to delete material');
+      }
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      throw error;
+    }
+  };
+  
 
   return (
     <div className="flex min-h-screen">
@@ -482,9 +507,9 @@ export default function ProfilePage() {
                 book: []
               }}
               onAddMaterial={(material) => addMaterial(material, activeTab)}
-              onDeleteMaterial={async (materialId) => {
+              onDeleteMaterial={async (materialId, categoryType) => {
                 try {
-                  const success = await deleteMaterial(materialId, activeTab);
+                  const success = await deleteMaterial(materialId, activeTab, categoryType);
                   if (!success) throw new Error('Failed to delete material');
                   return true;
                 } catch (error) {
@@ -492,6 +517,7 @@ export default function ProfilePage() {
                   return false;
                 }
               }}
+              
               onUpdateMaterial={async (materialId, updates) => {
                 try {
                   const user = auth.currentUser;
