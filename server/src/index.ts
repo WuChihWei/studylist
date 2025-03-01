@@ -7,6 +7,7 @@ import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
 import topicRoutes from './routes/topicRoutes';
+import materialRoutes from './routes/materialRoutes';
 import { authMiddleware } from './middleware/auth';
 import { errorHandler } from './middleware/appError';
 import { 
@@ -286,6 +287,9 @@ app.delete('/api/materials/:materialId', authMiddleware, async (req, res, next) 
 
 // API 路由 - 在直接路由之后注册
 app.use('/api/users/:userId/topics', authMiddleware, topicRoutes);
+
+// Mount the materials route for simplified deletion
+app.use('/api/materials', authMiddleware, materialRoutes);
 
 // API routes - 最后注册其他API路由
 app.use('/api/users', authMiddleware, userRoutes);

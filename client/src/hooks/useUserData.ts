@@ -400,7 +400,8 @@ export const useUserData = () => {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
 
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}/progress`;
+      // Use the simplified API route
+      const endpoint = `${API_URL}/api/materials/${materialId}/progress?userId=${user.uid}&topicId=${topicId}`;
       const token = await user.getIdToken();
       
       console.log('Updating material progress:', {
@@ -454,8 +455,8 @@ export const useUserData = () => {
       // 恢复服务器请求
       const token = await user.getIdToken();
       
-      // 使用正确的端点 - 改用服务器上实际存在的路由
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      // 使用新的简化端点进行删除
+      const endpoint = `${API_URL}/api/materials/${materialId}?userId=${user.uid}&topicId=${topicId}`;
       console.log('发送删除请求到:', endpoint);
       
       // 使用DELETE请求
