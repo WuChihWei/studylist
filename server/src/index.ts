@@ -6,9 +6,9 @@ import path from 'path';
 import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
 import stripeRoutes from './routes/stripeRoutes';
-import topicsRouter from './routes/topics';
-import materialRoutes from './routes/materialRoutes';
+import topicRoutes from './routes/topicRoutes';
 import { authMiddleware } from './middleware/auth';
+import { errorHandler } from './middleware/appError';
 
 // 在任何其他代碼之前加載環境變數
 dotenv.config();
@@ -109,6 +109,9 @@ app.use((req, res, next) => {
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Query params:', req.query);
+  console.log('Route params:', req.params);
+  console.log('Body:', req.body);
   next();
 });
 
@@ -147,15 +150,21 @@ app.use('/api/users', authMiddleware);
 // API routes
 app.use('/api/users', authMiddleware, userRoutes);
 app.use('/api/stripe', authMiddleware, stripeRoutes);
-app.use('/api/users/:firebaseUID/topics', topicsRouter);
-app.use('/api/users/:userId/materials', authMiddleware, materialRoutes);
+app.use('/api/users/:userId/topics', topicRoutes);
+
+// Direct material routes to avoid nesting issues
+app.delete('/api/topics/:topicId/materials/:materialId', authMiddleware, (req, res, next) => {
+  // Extract userId from query parameters and add it to req.params
+  const { userId } = req.query;
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId in query parameters' });
+  }
+  req.params.userId = userId as string;
+  // Forward to the deleteMaterial controller
+  require('./controllers/materialController').deleteMaterial(req, res, next);
+});
 
 // Error handling middleware
-const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-};
-
 app.use(errorHandler);
 
 // 404 handler (must be last)

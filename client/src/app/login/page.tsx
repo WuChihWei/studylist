@@ -35,8 +35,8 @@ const LoginPage = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       console.log('2. Getting Firebase token...');
-      const token = await userCredential.user.getIdToken();
-      console.log('Token obtained, length:', token.length);
+      const token = await userCredential.user.getIdToken(true);
+      console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
       
       const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
@@ -106,8 +106,8 @@ const LoginPage = () => {
       const userCredential = await signInWithPopup(auth, provider);
       console.log('Google auth successful');
       
-      const token = await userCredential.user.getIdToken();
-      console.log('Token obtained successfully');
+      const token = await userCredential.user.getIdToken(true);
+      console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
       
       const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
@@ -171,8 +171,8 @@ const LoginPage = () => {
       const userCredential = await signInWithPopup(auth, provider);
       console.log('Facebook auth successful');
       
-      const token = await userCredential.user.getIdToken();
-      console.log('Token obtained successfully');
+      const token = await userCredential.user.getIdToken(true);
+      console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
       
       const apiUrl = 'https://studylistserver-production.up.railway.app';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;

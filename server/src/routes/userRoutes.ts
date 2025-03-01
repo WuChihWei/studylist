@@ -5,10 +5,7 @@ import {
   deleteUser,
   getUserMaterials,
   createUser,
-  addMaterial,
   updateUserProfile,
-  addTopic,
-  updateTopicName,
   updateAllUsersBio
 } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
@@ -20,14 +17,11 @@ router.post('/', createUser);
 
 // Protected routes
 router.use(authMiddleware);
-router.get('/:firebaseUID', getUserByFirebaseUID);
-router.put('/:firebaseUID', updateUser);
-router.delete('/:firebaseUID', deleteUser);
-router.get('/:firebaseUID/materials', getUserMaterials);
-router.post('/:firebaseUID/materials', addMaterial);
-router.put('/:firebaseUID/profile', updateUserProfile);
-router.post('/:firebaseUID/topics', addTopic);
-router.put('/:firebaseUID/topics/:topicId', updateTopicName);
-router.post('/users/update-all-bios', updateAllUsersBio);
+router.get('/:userId', getUserByFirebaseUID);
+router.put('/:userId', updateUser);
+router.delete('/:userId', deleteUser);
+router.get('/:userId/materials', getUserMaterials);
+router.put('/:userId/profile', updateUserProfile);
+router.post('/update-all-bios', updateAllUsersBio);
 
 export default router;

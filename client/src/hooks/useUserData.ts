@@ -55,7 +55,7 @@ export const useUserData = () => {
       const token = await currentUser.getIdToken(forceRefresh);
       console.log('Token obtained:', token ? 'Yes' : 'No');
       
-      const apiUrl = 'https://studylistserver-production.up.railway.app';
+      const apiUrl = API_URL;
       const response = await fetch(`${apiUrl}/api/users/${currentUser.uid}`, {
         method: 'GET',
         headers: {
@@ -354,21 +354,88 @@ export const useUserData = () => {
 
   const deleteMaterial = async (materialId: string, topicId: string): Promise<boolean> => {
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
-
-      const endpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
-      const token = await user.getIdToken();
+      console.log('=== Delete Material Started ===');
+      console.log('Material ID:', materialId);
+      console.log('Topic ID:', topicId);
       
-      const response = await fetch(endpoint, {
+      // Check for complete MongoDB ObjectId format (24 characters)
+      if (materialId?.length !== 24) {
+        console.error('Material ID appears to be malformed:', materialId);
+        console.error('Expected a 24-character MongoDB ObjectId');
+      }
+      
+      if (topicId?.length !== 24) {
+        console.error('Topic ID appears to be malformed:', topicId);
+        console.error('Expected a 24-character MongoDB ObjectId');
+      }
+      
+      const user = auth.currentUser;
+      if (!user) {
+        console.error('No user logged in');
+        throw new Error('No user logged in');
+      }
+      console.log('Current user UID:', user.uid);
+
+      // Print the full material object from userData for debugging
+      const topicToDelete = userData?.topics.find(t => t._id === topicId);
+      const materialToDelete = topicToDelete?.categories ? 
+        Object.values(topicToDelete.categories)
+          .flat()
+          .find((m: any) => m._id === materialId) : 
+        null;
+      
+      console.log('Found topic to delete from:', topicToDelete?.name);
+      console.log('Found material to delete:', materialToDelete);
+      
+      const token = await user.getIdToken();
+      console.log('Token obtained:', token ? 'Yes' : 'No');
+      
+      // First, try the new API endpoint pattern (direct route)
+      try {
+        const directEndpoint = `${API_URL}/api/topics/${topicId}/materials/${materialId}?userId=${user.uid}`;
+        console.log('Trying direct DELETE request URL:', directEndpoint);
+        
+        const directResponse = await fetch(directEndpoint, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        console.log('Direct response status:', directResponse.status);
+        
+        if (directResponse.ok) {
+          console.log('Direct route DELETE successful');
+          const updatedUser = await directResponse.json();
+          setUserData(updatedUser);
+          return true;
+        }
+        
+        console.log('Direct route failed, trying original route...');
+      } catch (directError) {
+        console.error('Error with direct route:', directError);
+        console.log('Falling back to original route...');
+      }
+      
+      // Fall back to the original nested route pattern
+      const originalEndpoint = `${API_URL}/api/users/${user.uid}/topics/${topicId}/materials/${materialId}`;
+      console.log('Trying original DELETE request URL:', originalEndpoint);
+      
+      const response = await fetch(originalEndpoint, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
         throw new Error(`Failed to delete material: ${response.status}`);
       }
 
@@ -397,10 +464,35 @@ export const useUserData = () => {
         };
       });
 
+      console.log('Material deleted successfully');
       return true;
     } catch (error) {
       console.error('Delete material error:', error);
-      return false;
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          console.error('Material not found on server. This could be due to:');
+          console.error('1. The material ID is incorrect or malformed');
+          console.error('2. The topic ID is incorrect');
+          console.error('3. The material was already deleted');
+          
+          // Add debugging information
+          console.log('Debug info:');
+          console.log('- Material ID format appears to be:', 
+            materialId?.length === 24 ? 'Valid MongoDB ID (24 chars)' : 'Invalid format');
+          console.log('- Topic ID format appears to be:', 
+            topicId?.length === 24 ? 'Valid MongoDB ID (24 chars)' : 'Invalid format');
+          
+          throw new Error('Failed to delete material: Material not found');
+        } else if (error.message.includes('401')) {
+          throw new Error('Failed to delete material: Authentication error');
+        } else {
+          throw new Error('Failed to delete material');
+        }
+      } else {
+        throw new Error('Unknown error deleting material');
+      }
     }
   };
 

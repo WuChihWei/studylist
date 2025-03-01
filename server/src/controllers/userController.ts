@@ -4,13 +4,13 @@ import mongoose from 'mongoose';
 
 export const getUserByFirebaseUID = async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
-    const user = await User.findOne({ firebaseUID });
+    const { userId } = req.params;
+    const user = await User.findOne({ firebaseUID: userId });
     
     if (!user) {
       // Create new user if not found
       const newUser = await User.create({
-        firebaseUID,
+        firebaseUID: userId,
         name: 'New User',
         email: req.body.email,
         materials: [
@@ -31,9 +31,9 @@ export const getUserByFirebaseUID = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
+    const { userId } = req.params;
     const updatedUser = await User.findOneAndUpdate(
-      { firebaseUID },
+      { firebaseUID: userId },
       req.body,
       { new: true }
     );
@@ -50,8 +50,8 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const deleteUser = async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
-    const deletedUser = await User.findOneAndDelete({ firebaseUID });
+    const { userId } = req.params;
+    const deletedUser = await User.findOneAndDelete({ firebaseUID: userId });
     
     if (!deletedUser) {
       return res.status(404).json({ error: 'User not found' });
@@ -65,8 +65,8 @@ export const deleteUser = async (req: Request, res: Response) => {
 
 export const getUserMaterials = async (req: Request, res: Response) => {
   try {
-    const { firebaseUID, topicId } = req.params;
-    const user = await User.findOne({ firebaseUID });
+    const { userId, topicId } = req.params;
+    const user = await User.findOne({ firebaseUID: userId });
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -227,33 +227,34 @@ export const addMaterial = async (req: Request, res: Response) => {
   }
 };
 
-// 更新用户资料
 export const updateUserProfile = async (req: Request, res: Response) => {
   try {
-    const { firebaseUID } = req.params;
+    const { userId } = req.params;
     const { name, bio, photoURL } = req.body;
-        
-    const updatedUser = await User.findOneAndUpdate(
-      { firebaseUID },
-      { $set: { name, bio, photoURL } },
-      { new: true }
-    );
-    
-    if (!updatedUser) {
+
+    console.log(`Updating profile for user ${userId}:`, req.body);
+
+    // 找到用户
+    const user = await User.findOne({ firebaseUID: userId });
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // 更新資料
+    if (name) user.name = name;
+    if (bio !== undefined) user.bio = bio;
+    if (photoURL !== undefined) user.photoURL = photoURL;
+
+    await user.save();
+    console.log('Profile updated successfully');
     
-    res.status(200).json(updatedUser);
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Error updating user profile:', error);
-    res.status(500).json({ 
-      error: 'Server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
-// 添加新主题
 export const addTopic = async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;
@@ -302,7 +303,6 @@ export const addTopic = async (req: Request, res: Response) => {
   }
 };
 
-// 更新主题名称
 export const updateTopicName = async (req: Request, res: Response) => {
   try {
     const { firebaseUID, topicId } = req.params;
@@ -773,6 +773,69 @@ export const updateExistingMaterials = async (req: Request, res: Response) => {
     return res.json(updatedUser);
   } catch (error) {
     console.error('Error updating existing materials:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const deleteTopic = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { topicId } = req.params;
+    
+    const user = await User.findOneAndUpdate(
+      { firebaseUID: userId },
+      { $pull: { topics: { _id: topicId } } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User or topic not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error deleting topic:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const deleteMaterial = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { topicId, materialId } = req.params;
+    
+    const user = await User.findOne({ firebaseUID: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    if (!topic || !topic.categories) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    let materialDeleted = false;
+    // 遍歷所有類別查找並刪除指定 ObjectId 的材料
+    for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
+      const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+      if (materialIndex !== -1) {
+        materials.splice(materialIndex, 1);
+        materialDeleted = true;
+        break;
+      }
+    }
+
+    if (!materialDeleted) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    await user.save();
+    return res.json(user);
+  } catch (error) {
+    console.error('Error deleting material:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

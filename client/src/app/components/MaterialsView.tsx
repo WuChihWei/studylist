@@ -279,7 +279,12 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 });
               }}
               onDelete={async (materialId) => {
-                return await onDeleteMaterial(materialId, '');
+                console.log('Delete material called with ID:', materialId, 'and topicId:', activeTab);
+                if (!activeTab) {
+                  console.error('No active tab/topicId available for delete operation');
+                  return false;
+                }
+                return await onDeleteMaterial(materialId, activeTab);
               }}
             />
           ))}
