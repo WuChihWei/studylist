@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import express from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { 
   getUserByFirebaseUID, 
   updateUser, 
@@ -9,8 +10,10 @@ import {
   updateAllUsersBio
 } from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
+import { catchAsync } from '../utils/catchAsync';
+import * as materialController from '../controllers/materialController';
 
-const router = Router();
+const router = express.Router();
 
 // Public routes (no auth required)
 router.post('/', createUser);
@@ -23,5 +26,9 @@ router.delete('/:userId', deleteUser);
 router.get('/:userId/materials', getUserMaterials);
 router.put('/:userId/profile', updateUserProfile);
 router.post('/update-all-bios', updateAllUsersBio);
+router.delete('/:userId/topics/:topicId/materials/:materialId', catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  console.log('⭐ DELETE MATERIAL - Route Handler');
+  await materialController.deleteMaterial(req, res, next);
+}));
 
 export default router;

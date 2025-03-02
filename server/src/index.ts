@@ -336,6 +336,69 @@ app.get('/api/routes', (req, res) => {
   }
 });
 
+// 添加一个简化的删除端点用于测试
+app.delete('/api/simple-delete-material', authMiddleware, async (req, res) => {
+  try {
+    const { userId, topicId, materialId } = req.query;
+    
+    console.log('🔴 SIMPLE DELETE TEST');
+    console.log('UserID:', userId);
+    console.log('TopicID:', topicId);
+    console.log('MaterialID:', materialId);
+    
+    const user = await User.findOne({ firebaseUID: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    if (!topic || !topic.categories) {
+      return res.status(404).json({ error: 'Topic not found' });
+    }
+
+    let materialDeleted = false;
+    for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+      const materials = topic.categories[type];
+      if (!Array.isArray(materials)) continue;
+
+      const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+      if (materialIndex !== -1) {
+        materials.splice(materialIndex, 1);
+        materialDeleted = true;
+        break;
+      }
+    }
+
+    if (!materialDeleted) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    await user.save();
+    return res.json(user);
+  } catch (error) {
+    console.error('Error in simple delete:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/test-mongo-delete', async (req, res) => {
+  try {
+    const { userId, topicId, materialId } = req.query;
+    
+    // 直接使用MongoDB操作
+    const result = await User.updateOne(
+      { firebaseUID: userId, "topics._id": topicId },
+      { $pull: { "topics.$.categories.webpage": { _id: materialId } } }
+    );
+    
+    console.log('MongoDB result:', result);
+    res.json(result);
+  } catch (error) {
+    console.error('MongoDB test error:', error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
 // Error handling middleware
 app.use(errorHandler);
 

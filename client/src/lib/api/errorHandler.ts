@@ -1,6 +1,6 @@
 // 错误处理器
 import { ApiError } from './apiService';
-import { toast } from 'react-hot-toast'; // 假设使用toast库做通知
+import toast from 'react-hot-toast'; // 使用已安装的 react-hot-toast
 
 // 错误类型
 export type ErrorType = 'auth' | 'network' | 'server' | 'validation' | 'notFound' | 'unknown';
@@ -17,6 +17,41 @@ const defaultOptions: ErrorHandlerOptions = {
   showToast: true,
   redirectOnAuthError: true,
   logToConsole: true,
+};
+
+// 简单的通知函数，可以替换为您现有的通知系统
+const showNotification = (message: string, type: 'error' | 'success' | 'info' = 'error') => {
+  // 控制台输出
+  console.log(`[${type.toUpperCase()}] ${message}`);
+  
+  // 这里可以添加您自己的通知机制
+  // 例如使用浏览器原生API
+  if (typeof window !== 'undefined') {
+    // 使用原生alert (不推荐用于生产环境)
+    // alert(`${type.toUpperCase()}: ${message}`);
+    
+    // 或者创建一个临时DOM元素显示通知
+    const notification = document.createElement('div');
+    notification.style.position = 'fixed';
+    notification.style.top = '16px';
+    notification.style.right = '16px';
+    notification.style.padding = '12px 24px';
+    notification.style.borderRadius = '4px';
+    notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4caf50';
+    notification.style.color = 'white';
+    notification.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '9999';
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 3000);
+  }
 };
 
 // 处理API错误
@@ -77,7 +112,7 @@ export const handleApiError = (
     }
   }
   
-  // 使用toast通知
+  // 使用 react-hot-toast 显示错误
   if (opts.showToast) {
     toast.error(message);
   }

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { catchAsync, AppError } from '../middleware/appError';
+import mongoose from 'mongoose';
 
 // 定义材料类型
 type MaterialType = 'webpage' | 'video' | 'podcast' | 'book';
@@ -171,41 +172,38 @@ export const updateMaterialProgress = catchAsync(async (req: Request, res: Respo
 export const deleteMaterial = catchAsync(async (req: Request, res: Response) => {
   const { userId, topicId, materialId } = req.params;
   
-  // 1. 查找用户
-  const user = await User.findOne({ firebaseUID: userId });
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-  
-  // 2. 查找主题
-  const topic = user.topics.find(t => t._id?.toString() === topicId);
-  if (!topic || !topic.categories) {
-    throw new AppError('Topic not found', 404);
-  }
-  
-  // 3. 在所有材料类别中寻找并删除指定材料
+  // 遍历所有可能的材料类型
   const materialTypes = ['webpage', 'book', 'video', 'podcast'] as const;
-  let materialFound = false;
+  let materialDeleted = false;
   
   for (const type of materialTypes) {
-    if (!Array.isArray(topic.categories[type])) continue;
+    // 构建更新路径
+    const updatePath = `topics.$.categories.${type}`;
     
-    const index = topic.categories[type].findIndex(m => m._id?.toString() === materialId);
-    if (index !== -1) {
-      // 找到材料，从数组中删除
-      topic.categories[type].splice(index, 1);
-      materialFound = true;
+    // 使用MongoDB的$pull操作符从数组中删除匹配的项
+    const result = await User.updateOne(
+      { 
+        firebaseUID: userId, 
+        "topics._id": topicId 
+      },
+      { 
+        $pull: { 
+          [updatePath]: { _id: new mongoose.Types.ObjectId(materialId) } 
+        } 
+      }
+    );
+    
+    if (result.modifiedCount > 0) {
+      materialDeleted = true;
       break;
     }
   }
   
-  if (!materialFound) {
+  if (!materialDeleted) {
     throw new AppError('Material not found', 404);
   }
   
-  // 4. 保存用户文档
-  await user.save();
-  
-  // 5. 返回更新后的用户数据
-  res.status(200).json(user);
+  // 获取更新后的用户数据
+  const updatedUser = await User.findOne({ firebaseUID: userId });
+  res.status(200).json(updatedUser);
 }); 
