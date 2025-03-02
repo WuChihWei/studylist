@@ -45,7 +45,7 @@ const userApi = {
   
   // 删除材料
   deleteMaterial: (userId: string, topicId: string, materialId: string) => 
-    api.get<User>(`/api/simple-delete-material?userId=${userId}&topicId=${topicId}&materialId=${materialId}`),
+    api.delete<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}/materials/${materialId}`),
 };
 
 export default userApi;

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
@@ -54,15 +55,33 @@ const corsOptions = {
         const allowedOrigins = [
             process.env.CLIENT_URL,
             'http://localhost:3000',
+            'http://localhost:5173',
             'https://studylist-coral.vercel.app',
             'https://studylist-du1fecbz3-wuchihweis-projects.vercel.app',
-            'https://studylist-wuchihweis-projects.vercel.app'
+            'https://studylist-wuchihweis-projects.vercel.app',
+            'https://studylist-c86ulswwg-wuchihweis-projects.vercel.app'
         ].filter(Boolean);
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        console.log('CORS Origin Check:', {
+            requestOrigin: origin,
+            allowedOrigins,
+            isAllowed: !origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))
+        });
+        // Always allow localhost:3000 for development
+        if (origin === 'http://localhost:3000') {
+            callback(null, true);
+            return;
+        }
+        // For development, allow all origins
+        if (process.env.NODE_ENV === 'development') {
+            callback(null, true);
+            return;
+        }
+        if (!origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
             callback(null, true);
         }
         else {
-            callback(new Error('Not allowed by CORS'));
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(null, false);
         }
     },
     credentials: true,
@@ -71,7 +90,8 @@ const corsOptions = {
         'Content-Type',
         'Authorization',
         'Accept',
-        'Origin'
+        'Origin',
+        'X-Requested-With'
     ],
     exposedHeaders: ['Authorization'],
     maxAge: 86400
@@ -79,6 +99,18 @@ const corsOptions = {
 // Add Private Network Access header
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    next();
+});
+// Add CORS headers directly for preflight requests
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
     next();
 });
 // CORS logging middleware
@@ -89,7 +121,7 @@ app.use((req, res, next) => {
     console.log('Access-Control-Request-Headers:', req.headers['access-control-request-headers']);
     next();
 });
-// CORS configuration
+// Apply CORS configuration
 app.use((0, cors_1.default)(corsOptions));
 // CORS verification middleware
 app.use((req, res, next) => {
@@ -114,6 +146,32 @@ app.get('/deployment-check', (req, res) => {
         timestamp: new Date().toISOString(),
         deploymentId: 'March-1-2025-fix'
     });
+});
+// Add a CORS test endpoint
+app.get('/cors-test', (req, res) => {
+    console.log('CORS Test endpoint accessed');
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+    try {
+        // Set CORS headers manually for this endpoint
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        console.log('Response headers set:', JSON.stringify(res.getHeaders(), null, 2));
+        // Send response
+        res.status(200).json({
+            message: 'CORS test successful',
+            origin: req.headers.origin || 'No origin',
+            host: req.headers.host || 'No host',
+            timestamp: new Date().toISOString(),
+            server: 'Main Express Server on port 4001'
+        });
+        console.log('Response sent successfully');
+    }
+    catch (error) {
+        console.error('Error in CORS test endpoint:', error);
+        res.status(500).json({ error: 'Internal server error', details: error.message });
+    }
 });
 // Public routes
 app.get('/health', (req, res) => {
@@ -350,6 +408,17 @@ app.get('/api/test-mongo-delete', async (req, res) => {
         res.status(500).json({ error: String(error) });
     }
 });
+// Add a simple API test endpoint that doesn't require authentication
+app.get('/api/test', (req, res) => {
+    console.log('API Test endpoint accessed');
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+    res.json({
+        message: 'API test successful',
+        origin: req.headers.origin || 'No origin',
+        timestamp: new Date().toISOString(),
+        server: 'Main Express Server on port 4001'
+    });
+});
 // Error handling middleware
 app.use(appError_1.errorHandler);
 // 404 handler (must be last)
@@ -363,3 +432,44 @@ app.use((req, res) => {
 });
 // Export for testing
 exports.default = app;
+// Connect to MongoDB and start the server
+if (process.env.MONGODB_URI) {
+    mongoose_1.default.connect(process.env.MONGODB_URI)
+        .then(() => {
+        console.log('Connected to MongoDB');
+        // Explicitly use port 4001 for local development
+        const serverPort = 4001;
+        try {
+            const server = app.listen(serverPort, () => {
+                console.log(`Server is running on port ${serverPort}`);
+                console.log(`Access the server at http://localhost:${serverPort}/`);
+                console.log('CORS is configured to allow requests from http://localhost:3000');
+            });
+            server.on('error', (error) => {
+                console.error('Server error:', error);
+                if (error.code === 'EADDRINUSE') {
+                    console.error(`Port ${serverPort} is already in use. Try another port.`);
+                }
+            });
+            // Keep the process alive
+            process.stdin.resume();
+            // Handle graceful shutdown
+            process.on('SIGINT', () => {
+                console.log('Shutting down server gracefully');
+                server.close(() => {
+                    console.log('Server closed');
+                    process.exit(0);
+                });
+            });
+        }
+        catch (error) {
+            console.error('Error starting server:', error);
+        }
+    })
+        .catch(err => {
+        console.error('MongoDB connection error:', err);
+    });
+}
+else {
+    console.error('MONGODB_URI is not defined');
+}

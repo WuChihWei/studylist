@@ -276,7 +276,7 @@ export default function ProfilePage() {
   const TopicTab = ({ topic, isActive, onClick }: TopicTabProps) => {
     return (
       <div 
-        className={`${styles.topicTab} ${isActive ? styles.active : ''}`}
+        className={`${styles.topicTab} ${isActive ? styles.active : ''} whitespace-nowrap text-sm`}
         onClick={onClick}
       >
         <div className={styles.tabContent}>
@@ -344,14 +344,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar 
         activeView={activeView} 
         onViewChange={setActiveView} 
         className="border-r"
       />
       
-      <div className="flex-1 p-14 flex flex-col gap-2">
+      <div className="flex-1 p-4 md:p-8 lg:p-14 flex flex-col gap-2">
         {/* Profile Header Section */}
         <div className="">
           <div className={styles.profileInfo}>
@@ -374,8 +374,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <div className={styles.rightSection}>
-                  <h4 className="">{userData?.name}</h4>
-                  <p className={styles.bio}>{userData?.bio || 'Introduce yourself'}</p>
+                  <h4 className="text-xl font-semibold">{userData?.name}</h4>
+                  <p className={`${styles.bio} max-w-md`}>{userData?.bio || 'Introduce yourself'}</p>
                 </div>
               </div>
             </div>
@@ -390,9 +390,9 @@ export default function ProfilePage() {
         </div>
 
         {/* Topic Header Section */}
-        <div className=" border-b border-t pt-2 pb-2">
-          <div className="flex justify-between">
-            <div className="flex items-center">
+        <div className="border-b border-t pt-2 pb-2">
+          <div className="flex flex-col sm:flex-row justify-between">
+            <div className="flex items-center mb-2 sm:mb-0">
               {editingTopicId === activeTab ? (
                 <div className={styles.topicEditContainer}>
                   <Button size="sm" onClick={() => handleSaveTopicName(activeTab)}>
@@ -409,7 +409,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h1 className="">
+                  <h1 className="text-xl font-bold">
                     {userData?.topics.find(t => t._id === activeTab)?.name}
                   </h1>
                   <Button 
@@ -423,10 +423,10 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Left Column - Topic Tabs & Contributors */}
+            {/* Topic Tabs & Contributors */}
             <div className="flex flex-col">
               {/* Topic Tabs */}
-              <div className="flex items-center gap-0">
+              <div className="flex items-center gap-0 overflow-x-auto pb-2 sm:pb-0">
                 {userData?.topics?.map((topic) => (
                   <TopicTab
                     key={topic._id}
@@ -436,13 +436,12 @@ export default function ProfilePage() {
                   />
                 ))}
                 <button onClick={handleAddTopic} className={styles.addTopicButton}>
-                  {/* <FaPlus /> */}
                   +
                 </button>
               </div>
 
               {/* Contributors Section */}
-              <div className="flex justify-end">
+              <div className="flex justify-start sm:justify-end mt-2 sm:mt-0">
                 <div className="flex">
                   {userData?.topics.find(t => t._id === activeTab)?.contributors?.map((contributor, index) => (
                     <Image
@@ -465,14 +464,11 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-
-            {/* Right Column - Active Topic Title */}
-            
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="">
+        <div className="mt-4">
           {activeView === 'materials' ? (
             <MaterialsView 
               categories={userData?.topics.find(t => t._id?.toString() === activeTab)?.categories || {

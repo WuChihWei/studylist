@@ -192,3 +192,84 @@
 .studyScale .collectDot:nth-child(3) { background: var(--study-l2); }
 .studyScale .collectDot:nth-child(4) { background: var(--study-l3); }
 .studyScale .collectDot:nth-child(5) { background: var(--study-l4); }
+
+@media (max-width: 1024px) {
+  .graphContainer {
+    --square-size: 9px;
+    --square-gap: 2px;
+    padding-left: 1.5rem;
+  }
+  
+  .months li {
+    font-size: 11px;
+  }
+  
+  .days li {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 768px) {
+  .graphContainer {
+    --square-size: 8px;
+    --square-gap: 2px;
+    padding-left: 1.2rem;
+  }
+  
+  .months li {
+    font-size: 10px;
+  }
+  
+  .days li {
+    font-size: 10px;
+  }
+  
+  .collectLegend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .graphContainer {
+    --square-size: 7px;
+    --square-gap: 1px;
+    padding-left: 1rem;
+  }
+  
+  .months li {
+    font-size: 9px;
+  }
+  
+  .days li {
+    font-size: 9px;
+    width: 20px;
+  }
+  
+  .yearLabel {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .graphContainer {
+    --square-size: 6px;
+    --square-gap: 1px;
+    padding-left: 0.8rem;
+  }
+  
+  .months li {
+    font-size: 8px;
+  }
+  
+  .days li {
+    font-size: 8px;
+    width: 18px;
+  }
+  
+  .collectDot {
+    width: 8px;
+    height: 8px;
+  }
+}

@@ -75,7 +75,7 @@ const LoginPage = () => {
       const token = await userCredential.user.getIdToken(true);
       console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
       
-      const apiUrl = 'https://studylistserver-production.up.railway.app';
+      const apiUrl = 'http://localhost:4001';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
       console.log('Making request to:', requestUrl);
       
@@ -140,7 +140,7 @@ const LoginPage = () => {
       const token = await userCredential.user.getIdToken(true);
       console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
       
-      const apiUrl = 'https://studylistserver-production.up.railway.app';
+      const apiUrl = 'http://localhost:4001';
       const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
       console.log('Making request to:', requestUrl);
       

@@ -678,6 +678,20 @@
 }
 
 /* 平板和手機版面配置 */
+@media (max-width: 1024px) {
+  .profileInfo {
+    flex-direction: column;
+  }
+  
+  .profileUser, .contributionSection {
+    width: 100%;
+  }
+  
+  .contributionSection {
+    margin-top: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .profileInfo {
     padding: 1rem;
@@ -700,6 +714,63 @@
   
   .editButton {
     align-self: center;
+  }
+  
+  .topicTabs {
+    flex-wrap: wrap;
+  }
+  
+  .topicTab {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .profileInfo {
+    padding: 0.5rem;
+  }
+  
+  .topicHeaderContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .topicTabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .members {
+    justify-content: flex-start;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatarSection {
+    width: 100%;
+  }
+  
+  .rightSection {
+    width: 100%;
+    margin-top: 1rem;
+    text-align: center;
+  }
+  
+  .bio {
+    margin: 0 auto;
+  }
+  
+  .topicTab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .addTopicButton {
+    padding: 6px;
+    font-size: 12px;
   }
 }
 

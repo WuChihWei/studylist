@@ -4,7 +4,7 @@ import { useFirebase } from '../app/firebase/FirebaseProvider';
 import userApi from '../lib/api/userApi';
 import { handleApiError } from '../lib/api/errorHandler';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app').replace(/\/+$/, '');
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001').replace(/\/+$/, '');
 
 type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
 

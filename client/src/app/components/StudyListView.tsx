@@ -4,8 +4,9 @@ import styles from './StudyListView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
-import { FaCheck, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTimes, FaPlay } from "react-icons/fa";
 import CircleProgress from './ui/circleProgress';
+import VideoPopup from './VideoPopup';
 
 interface StudyListViewProps {
   categories: Categories;
@@ -57,6 +58,17 @@ export default function StudyListView({
     }
     
     return completed;
+  });
+  
+  // Add state for content popup
+  const [contentPopup, setContentPopup] = useState<{
+    isOpen: boolean;
+    url: string;
+    title: string;
+  }>({
+    isOpen: false,
+    url: '',
+    title: ''
   });
 
   useEffect(() => {
@@ -203,6 +215,17 @@ export default function StudyListView({
       console.error('6. Error updating units:', error);
     }
   };
+  
+  // Add function to open video popup
+  const handleOpenContent = (material: Material & { type: keyof Categories }) => {
+    if (!material.url) return;
+    
+    setContentPopup({
+      isOpen: true,
+      url: material.url,
+      title: material.title || 'Untitled Content'
+    });
+  };
 
   return (
     <div className={styles.materialsContainer}>
@@ -247,6 +270,7 @@ export default function StudyListView({
           <span>Name</span>
           <span>Units</span>
           <span>Progress</span>
+          <span>Action</span>
         </div>
         <div className={styles.materialsListContent}>
           {getAllMaterials().map((material, index) => {
@@ -305,11 +329,31 @@ export default function StudyListView({
                 <div className={styles.progressText}>
                   {Math.round(progress * 100)}% Complete
                 </div>
+                <div className={styles.actionButtons}>
+                  {material.url && (
+                    <button 
+                      className={styles.playButton}
+                      onClick={() => handleOpenContent(material)}
+                      title="Open Content"
+                    >
+                      <FaPlay size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
+      
+      {/* Content Popup */}
+      <VideoPopup 
+        isOpen={contentPopup.isOpen}
+        onClose={() => setContentPopup(prev => ({ ...prev, isOpen: false }))}
+        url={contentPopup.url}
+        title={contentPopup.title}
+        unitMinutes={unitMinutes}
+      />
     </div>
   );
 }

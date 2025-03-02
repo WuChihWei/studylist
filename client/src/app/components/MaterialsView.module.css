@@ -370,16 +370,11 @@
 
 .dropdownButton svg {
   transition: transform 0.2s ease;
-}
-
-.dropdownButton svg {
-  /* transform: rotate(-90deg); */
+  transform: rotate(0);
 }
 
 .typeIconContainer:has(.typeDropdown) .dropdownButton svg {
-  /* transform: rotate(0deg); */
   transform: rotate(-90deg);
-
 }
 
 .moreButtonContainer {
@@ -469,22 +464,68 @@
 /* 在小螢幕上調整最大寬度 */
 @media (max-width: 768px) {
   .materialName {
-    max-width: 200px;
+    font-size: 0.9rem;
   }
   
   .categoriesContainer {
     flex-direction: column;
-    gap: 12px;
+    align-items: flex-start;
+    gap: 1rem;
   }
   
   .viewToggle {
     margin-left: 0;
   }
+  
+  .categoryTabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    gap: 15px;
+  }
+  
+  .gridView {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .addFormContainer {
+    width: 100%;
+  }
+  
+  .materialItem {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  
+  .materialLeft {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .listHeader {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
   .materialName {
-    max-width: 150px;
+    font-size: 0.85rem;
+  }
+  
+  .categoryTab {
+    font-size: 0.9rem;
+    padding: 0.4rem 0;
+  }
+  
+  .addInput, .urlInput {
+    font-size: 0.9rem;
+  }
+  
+  .typeButton {
+    padding: 0.4rem 0.6rem;
   }
 }
 
@@ -586,14 +627,7 @@
 }
 
 .materialCard:hover {
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.1); */
-}
-
-@media (max-width: 640px) {
-  .addFormContainer {
-    width: 95%;
-    bottom: 16px;
-  }
+  transform: translateY(-1px);
 }
 
 .centerIcon {

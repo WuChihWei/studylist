@@ -1,58 +1,52 @@
 .materialsContainer {
-  padding-top: 1rem;
+  width: 100%;
+  padding: 1rem;
   background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .materialsList {
-  display: flex;
-  flex-direction: column;
-  background: white;
+  width: 100%;
   border: 1px solid #eee;
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .materialsListContent {
-  position: relative;
   max-height: 600px;
   overflow-y: auto;
 }
 
 .materialItem {
   display: grid;
-  grid-template-columns: 50px 100px 50px 1fr 100px 120px;
-  align-items: center;
+  grid-template-columns: 50px 100px 50px 1fr 100px 120px 60px;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
-}
-
-.materialItem.completed {
-  background-color: #f8f9fa;
+  align-items: center;
 }
 
 .materialItem:last-child {
   border-bottom: none;
 }
 
-.materialLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.materialItem:hover {
+  background: #f9f9f9;
 }
 
 .materialNumber {
-  color: #666;
+  color: #999;
   font-size: 14px;
-  min-width: 20px;
 }
 
 .materialPreview {
-  width: 32px;
-  height: 32px;
-  background: #f5f5f5;
-  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f5f5f5;
+  border-radius: 4px;
   color: #666;
 }
 
@@ -64,55 +58,40 @@
 
 .materialName {
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 600px;
+  color: #333;
 }
 
-.materialRight {
+.materialActions {
   display: flex;
-  align-items: center;
   gap: 8px;
-}
-
-.units {
-  color: #666;
-  font-size: 14px;
-  /* min-width: 60px; */
-  text-align: right;
-  display: flex;
-  align-items: center;
-  /* gap: 4px; */
-}
-
-.units.unknown {
-  color: #999;
-  font-style: italic;
+  justify-content: flex-end;
 }
 
 .completeButton {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: none;
+  background: #f5f5f5;
+  color: #666;
   cursor: pointer;
-  color: transparent;
   transition: all 0.2s ease;
 }
 
 .completeButton:hover {
-  border-color: #999;
+  background: #eee;
 }
 
 .completeButton.completed {
-  border-color: #4CAF50;
-  color: #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1);
+  background: #4169E1;
+  color: white;
+}
+
+.completeButton.completed:hover {
+  background: #3158D0;
 }
 
 .materialsListContent::-webkit-scrollbar {
@@ -195,7 +174,7 @@
 
 .materialsHeader {
   display: grid;
-  grid-template-columns: 50px 100px 50px 1fr 100px 120px;
+  grid-template-columns: 50px 100px 50px 1fr 100px 120px 60px;
   padding: 12px 16px;
   border-bottom: 1px solid #eee;
   font-weight: 500;
@@ -260,4 +239,121 @@
   color: #666;
   font-size: 14px;
   text-align: right;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.playButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #4169E1;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playButton:hover {
+  background: #3158D0;
+  transform: scale(1.05);
+}
+
+@media (max-width: 1024px) {
+  .materialItem {
+    grid-template-columns: 40px 80px 40px 1fr 80px 100px 50px;
+    padding: 10px 12px;
+  }
+  
+  .materialPreview {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .materialName {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .materialItem {
+    grid-template-columns: 30px 60px 30px 1fr 70px 80px 40px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .headerLeft, .headerRight {
+    width: 100%;
+  }
+  
+  .unitMinutesInput {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .materialItem {
+    grid-template-columns: 30px 50px 1fr 60px;
+    padding: 10px;
+  }
+  
+  .materialProgress, .unitsProgress {
+    display: none;
+  }
+  
+  .materialsHeader {
+    display: none;
+  }
+  
+  .materialPreview {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .materialName {
+    font-size: 0.85rem;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .materialItem {
+    grid-template-columns: 25px 40px 1fr 50px;
+    padding: 8px;
+  }
+  
+  .materialNumber {
+    font-size: 12px;
+  }
+  
+  .materialPreview {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .materialName {
+    font-size: 0.8rem;
+  }
+  
+  .completeButton {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
 }

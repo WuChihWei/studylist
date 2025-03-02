@@ -2,7 +2,7 @@
 import { getAuth } from 'firebase/auth';
 
 // 统一API URL配置
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
 
 // API错误类，用于统一错误处理
 export class ApiError extends Error {

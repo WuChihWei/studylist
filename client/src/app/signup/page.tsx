@@ -44,7 +44,7 @@ const SignupPage = () => {
       console.log('Firebase signup successful, token:', token);
       
       try {
-        const response = await fetch(`https://studylistserver-production.up.railway.app/api/users`, {
+        const response = await fetch(`http://localhost:4001/api/users`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
