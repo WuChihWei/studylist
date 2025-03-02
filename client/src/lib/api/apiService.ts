@@ -1,0 +1,141 @@
+// API服务 - 集中管理所有API调用
+import { getAuth } from 'firebase/auth';
+
+// 统一API URL配置
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://studylistserver-production.up.railway.app';
+
+// API错误类，用于统一错误处理
+export class ApiError extends Error {
+  status: number;
+  data: any;
+  
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+// 请求配置接口
+interface RequestConfig extends RequestInit {
+  requiresAuth?: boolean;
+  params?: Record<string, string>;
+}
+
+// 构建URL，支持查询参数
+const buildUrl = (endpoint: string, params?: Record<string, string>): string => {
+  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+  }
+  
+  return url.toString();
+};
+
+// 核心请求方法
+const request = async <T>(
+  endpoint: string, 
+  config: RequestConfig = {}
+): Promise<T> => {
+  try {
+    const { requiresAuth = true, params, ...fetchConfig } = config;
+    
+    // 默认请求配置
+    const defaultConfig: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+      credentials: 'include',
+    };
+    
+    // 合并请求配置
+    const mergedConfig: RequestInit = {
+      ...defaultConfig,
+      ...fetchConfig,
+      headers: {
+        ...defaultConfig.headers,
+        ...(fetchConfig.headers || {}),
+      },
+    };
+    
+    // 添加认证头
+    if (requiresAuth) {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        throw new ApiError('Authentication required', 401);
+      }
+      
+      const token = await user.getIdToken(true);
+      (mergedConfig.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // 执行请求
+    console.log(`API Request: ${endpoint}`, { config: mergedConfig });
+    const response = await fetch(buildUrl(endpoint, params), mergedConfig);
+    
+    // 处理响应
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = await response.text();
+      }
+      
+      throw new ApiError(
+        errorData?.message || `API error: ${response.status}`,
+        response.status,
+        errorData
+      );
+    }
+    
+    // 检查是否有响应内容
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+    
+    return {} as T;
+  } catch (error) {
+    // 统一处理错误
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    
+    console.error('API Request failed:', error);
+    throw new ApiError(`API request failed: ${error.message}`, 500);
+  }
+};
+
+// 导出API方法
+const api = {
+  get: <T>(endpoint: string, config?: RequestConfig) => 
+    request<T>(endpoint, { method: 'GET', ...config }),
+    
+  post: <T>(endpoint: string, data?: any, config?: RequestConfig) => 
+    request<T>(endpoint, { 
+      method: 'POST', 
+      body: data ? JSON.stringify(data) : undefined,
+      ...config 
+    }),
+    
+  put: <T>(endpoint: string, data?: any, config?: RequestConfig) => 
+    request<T>(endpoint, { 
+      method: 'PUT', 
+      body: data ? JSON.stringify(data) : undefined,
+      ...config 
+    }),
+    
+  delete: <T>(endpoint: string, config?: RequestConfig) => 
+    request<T>(endpoint, { method: 'DELETE', ...config }),
+};
+
+export default api;

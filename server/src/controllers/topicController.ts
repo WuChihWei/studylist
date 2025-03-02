@@ -70,16 +70,60 @@ export const updateTopicName = catchAsync(async (req: Request, res: Response) =>
 // 删除主题
 export const deleteTopic = catchAsync(async (req: Request, res: Response) => {
   const { userId, topicId } = req.params;
-  
-  const user = await User.findOneAndUpdate(
-    { firebaseUID: userId },
-    { $pull: { topics: { _id: topicId } } },
-    { new: true }
-  );
 
+  const user = await User.findOne({ firebaseUID: userId });
   if (!user) {
-    throw new AppError('User or topic not found', 404);
+    throw new AppError('User not found', 404);
   }
 
+  // 查找主题索引
+  const topicIndex = user.topics.findIndex(t => t._id?.toString() === topicId);
+  if (topicIndex === -1) {
+    throw new AppError('Topic not found', 404);
+  }
+
+  // 删除主题
+  user.topics.splice(topicIndex, 1);
+  await user.save();
+
+  res.status(200).json(user);
+});
+
+// 删除材料
+export const deleteMaterial = catchAsync(async (req: Request, res: Response) => {
+  const { userId, topicId, materialId } = req.params;
+
+  const user = await User.findOne({ firebaseUID: userId });
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  const topic = user.topics.find(t => t._id?.toString() === topicId);
+  if (!topic || !topic.categories) {
+    throw new AppError('Topic not found', 404);
+  }
+
+  // 遍历所有分类查找并删除材料
+  const categoryTypes = ['webpage', 'video', 'podcast', 'book'] as const;
+  let materialFound = false;
+  
+  for (const type of categoryTypes) {
+    const materials = topic.categories[type];
+    if (!Array.isArray(materials)) continue;
+    
+    const materialIndex = materials.findIndex(m => m._id?.toString() === materialId);
+    if (materialIndex !== -1) {
+      // 找到材料，删除它
+      materials.splice(materialIndex, 1);
+      materialFound = true;
+      break;
+    }
+  }
+
+  if (!materialFound) {
+    throw new AppError('Material not found', 404);
+  }
+
+  await user.save();
   res.status(200).json(user);
 }); 

@@ -8,6 +8,8 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/app/components/ui/card";
 import { Alert, AlertDescription } from "@/app/components/ui/alert";
+import userApi from '@/lib/api/userApi';
+import { handleApiError } from '@/lib/api/errorHandler';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -29,63 +31,27 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     
-    console.log('\n=== Login Request Started ===');
     try {
-      console.log('1. Starting Firebase authentication...');
+      // Firebase登录
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      console.log('2. Getting Firebase token...');
-      const token = await userCredential.user.getIdToken(true);
-      console.log('Token obtained (first few chars):', token ? token.substring(0, 10) + '...' : 'No token');
-      
-      const apiUrl = 'https://studylistserver-production.up.railway.app';
-      const requestUrl = `${apiUrl}/api/users/${userCredential.user.uid}`;
-      console.log('3. Preparing API request to:', requestUrl);
-      
-      const requestHeaders = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-      console.log('4. Request headers:', requestHeaders);
-      
-      console.log('5. Sending fetch request...');
-      const response = await fetch(requestUrl, {
-        method: 'GET',
-        headers: requestHeaders,
-        mode: 'cors',
-        credentials: 'include'
-      });
-      
-      console.log('6. Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        ok: response.ok
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Server error response:', errorData);
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const userData = await response.json();
+      // 使用API服务获取用户数据
+      const userData = await userApi.getUserData(userCredential.user.uid);
       localStorage.setItem('userData', JSON.stringify(userData));
       
-      // 設置登入狀態
+      // 设置登录状态
       setIsLoggedIn(true);
       localStorage.setItem('isLoggedIn', 'true');
       
-      // 顯示成功訊息並跳轉
+      // 显示成功消息并跳转
       setShowPopup(true);
       setTimeout(() => {
         router.push('/profile');
-      }, 1000); // 給使用者一個視覺反饋的時間
+      }, 1000);
 
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setError(error.message || 'An error occurred during login');
+    } catch (error) {
+      const { message } = handleApiError(error, 'Login failed');
+      setError(message);
     }
   };
 
