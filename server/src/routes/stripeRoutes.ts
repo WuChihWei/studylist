@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import express from 'express';
-import Stripe from 'stripe';
+// import Stripe from 'stripe';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -8,6 +8,9 @@ dotenv.config();
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
 }
+
+// 代替使用类型声明（如果需要类型但不实际使用 Stripe）
+type Stripe = any;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2025-01-27.acacia'

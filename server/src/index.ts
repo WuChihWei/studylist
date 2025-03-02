@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { User } from './models/User';
 import userRoutes from './routes/userRoutes';
-import stripeRoutes from './routes/stripeRoutes';
+// import stripeRoutes from './routes/stripeRoutes';
 import topicRoutes from './routes/topicRoutes';
 import materialRoutes from './routes/materialRoutes';
 import { authMiddleware } from './middleware/auth';
@@ -293,7 +293,7 @@ app.use('/api/materials', authMiddleware, materialRoutes);
 
 // API routes - 最后注册其他API路由
 app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/stripe', authMiddleware, stripeRoutes);
+// app.use('/api/stripe', stripeRoutes);
 
 // 路由注册后添加确认日志
 console.log('Routes registered successfully');
