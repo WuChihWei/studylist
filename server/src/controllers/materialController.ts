@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/User';
 import { catchAsync, AppError } from '../middleware/appError';
 import mongoose from 'mongoose';
@@ -130,7 +130,7 @@ export const uncompleteMaterial = catchAsync(async (req: Request, res: Response)
 });
 
 // 更新材料进度
-export const updateMaterialProgress = catchAsync(async (req: Request, res: Response) => {
+export const updateMaterialProgress = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { userId, topicId, materialId } = req.params;
   const { completedUnits, readingTime, progress } = req.body;
 
@@ -168,42 +168,87 @@ export const updateMaterialProgress = catchAsync(async (req: Request, res: Respo
   res.status(200).json(user);
 });
 
-// 删除材料
-export const deleteMaterial = catchAsync(async (req: Request, res: Response) => {
-  const { userId, topicId, materialId } = req.params;
-  
-  // 遍历所有可能的材料类型
-  const materialTypes = ['webpage', 'book', 'video', 'podcast'] as const;
-  let materialDeleted = false;
-  
-  for (const type of materialTypes) {
-    // 构建更新路径
-    const updatePath = `topics.$.categories.${type}`;
+// 添加这个方法来处理通过查询参数删除材料
+export const deleteMaterialSimple = async (req: Request, res: Response) => {
+  try {
+    const { userId, topicId, materialId } = req.query;
     
-    // 使用MongoDB的$pull操作符从数组中删除匹配的项
-    const result = await User.updateOne(
+    console.log(`Attempting to delete material: ${materialId} from topic ${topicId} for user ${userId}`);
+    
+    if (!userId || !topicId || !materialId) {
+      return res.status(400).json({ message: 'Missing required parameters' });
+    }
+    
+    // 查找用户并使用$pull从数组中移除材料
+    const result = await User.findOneAndUpdate(
       { 
-        firebaseUID: userId, 
+        _id: userId, 
         "topics._id": topicId 
       },
       { 
         $pull: { 
-          [updatePath]: { _id: new mongoose.Types.ObjectId(materialId) } 
+          "topics.$.materials": { 
+            _id: new mongoose.Types.ObjectId(materialId as string) 
+          } 
         } 
-      }
+      },
+      { new: true }
     );
     
-    if (result.modifiedCount > 0) {
-      materialDeleted = true;
-      break;
+    if (!result) {
+      console.log(`Material not found or already deleted. UserId: ${userId}, TopicId: ${topicId}, MaterialId: ${materialId}`);
+      return res.status(404).json({ message: 'Material not found' });
     }
+    
+    console.log(`Material successfully deleted. MaterialId: ${materialId}`);
+    return res.status(200).json({ message: 'Material deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    return res.status(500).json({ message: 'Error deleting material', error: (error as Error).message });
   }
-  
-  if (!materialDeleted) {
-    throw new AppError('Material not found', 404);
+};
+
+// RESTful风格的删除方法（可选，用于未来改进）
+export const deleteMaterial = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId, topicId, materialId } = req.params;
+    
+    // 遍历所有可能的材料类型
+    const materialTypes = ['webpage', 'book', 'video', 'podcast'] as const;
+    let materialDeleted = false;
+    
+    for (const type of materialTypes) {
+      // 构建更新路径
+      const updatePath = `topics.$.categories.${type}`;
+      
+      // 使用MongoDB的$pull操作符从数组中删除匹配的项
+      const result = await User.updateOne(
+        { 
+          firebaseUID: userId, 
+          "topics._id": topicId 
+        },
+        { 
+          $pull: { 
+            [updatePath]: { _id: new mongoose.Types.ObjectId(materialId) } 
+          } 
+        }
+      );
+      
+      if (result.modifiedCount > 0) {
+        materialDeleted = true;
+        break;
+      }
+    }
+    
+    if (!materialDeleted) {
+      throw new AppError('Material not found', 404);
+    }
+    
+    // 获取更新后的用户数据
+    const updatedUser = await User.findOne({ firebaseUID: userId });
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error('Error deleting material:', error);
+    return res.status(500).json({ message: 'Error deleting material', error: (error as Error).message });
   }
-  
-  // 获取更新后的用户数据
-  const updatedUser = await User.findOne({ firebaseUID: userId });
-  res.status(200).json(updatedUser);
-}); 
+}; 

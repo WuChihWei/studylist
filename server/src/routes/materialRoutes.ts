@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { deleteMaterial, updateMaterialProgress } from '../controllers/materialController';
 import { authMiddleware } from '../middleware/auth';
+import { catchAsync } from '../utils/catchAsync';
 
 const router = Router();
 
@@ -49,6 +50,16 @@ router.put('/:materialId/progress', (req: Request, res: Response, next: NextFunc
   });
   
   return updateMaterialProgress(reqWithParams, res, next);
+});
+
+// Example route - replace with actual implementation when needed
+// router.get('/path', authMiddleware, (req: Request, res: Response) => {
+//   res.json({ message: 'Path endpoint' });
+// });
+
+// RESTful route as future improvement
+router.delete('/api/users/:userId/topics/:topicId/materials/:materialId', authMiddleware, (req: Request, res: Response, next: NextFunction) => {
+  return deleteMaterial(req, res, next);
 });
 
 console.log('Material routes initialized');

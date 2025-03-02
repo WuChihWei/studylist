@@ -1,39 +1,55 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const User_1 = require("../models/User");
+const materialController_1 = require("../controllers/materialController");
 const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)({ mergeParams: true });
+const router = (0, express_1.Router)();
+// Add authentication middleware
 router.use(auth_1.authMiddleware);
-router.delete('/:topicId/:categoryType/:materialId', auth_1.authMiddleware, async (req, res) => {
-    var _a;
-    try {
-        const { topicId, categoryType, materialId } = req.params;
-        const user = await User_1.User.findOne({ firebaseUID: (_a = req.user) === null || _a === void 0 ? void 0 : _a.uid });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        const topic = user.topics.find(t => { var _a; return ((_a = t._id) === null || _a === void 0 ? void 0 : _a.toString()) === topicId; });
-        if (!topic) {
-            return res.status(404).json({ error: 'Topic not found' });
-        }
-        if (!topic.categories) {
-            return res.status(404).json({ error: 'Categories not found' });
-        }
-        const materials = topic.categories[categoryType];
-        if (!materials) {
-            return res.status(404).json({ error: 'Category type not found' });
-        }
-        const materialIndex = materials.findIndex(m => { var _a; return ((_a = m._id) === null || _a === void 0 ? void 0 : _a.toString()) === materialId; });
-        if (materialIndex === -1) {
-            return res.status(404).json({ error: 'Material not found' });
-        }
-        materials.splice(materialIndex, 1);
-        await user.save();
-        res.json({ message: 'Material deleted successfully' });
-    }
-    catch (error) {
-        res.status(500).json({ error: 'Error deleting material' });
-    }
+// Log middleware for debugging
+router.use((req, res, next) => {
+    console.log('Material route accessed:', {
+        method: req.method,
+        path: req.originalUrl,
+        params: req.params,
+        body: req.body
+    });
+    next();
 });
+// Material deletion route - simplified standalone route
+router.delete('/:materialId', (req, res, next) => {
+    // Cast to any temporarily to set params without TypeScript errors
+    const reqWithParams = req;
+    reqWithParams.params.userId = req.query.userId;
+    reqWithParams.params.topicId = req.query.topicId;
+    console.log('Material delete route hit with:', {
+        materialId: req.params.materialId,
+        userId: reqWithParams.params.userId,
+        topicId: reqWithParams.params.topicId
+    });
+    return (0, materialController_1.deleteMaterial)(reqWithParams, res, next);
+});
+// Material progress update route
+router.put('/:materialId/progress', (req, res, next) => {
+    // Cast to any temporarily to set params without TypeScript errors
+    const reqWithParams = req;
+    reqWithParams.params.userId = req.query.userId;
+    reqWithParams.params.topicId = req.query.topicId;
+    console.log('Material progress update route hit with:', {
+        materialId: req.params.materialId,
+        userId: reqWithParams.params.userId,
+        topicId: reqWithParams.params.topicId,
+        body: req.body
+    });
+    return (0, materialController_1.updateMaterialProgress)(reqWithParams, res, next);
+});
+// Example route - replace with actual implementation when needed
+// router.get('/path', authMiddleware, (req: Request, res: Response) => {
+//   res.json({ message: 'Path endpoint' });
+// });
+// RESTful route as future improvement
+router.delete('/api/users/:userId/topics/:topicId/materials/:materialId', auth_1.authMiddleware, (req, res, next) => {
+    return (0, materialController_1.deleteMaterial)(req, res, next);
+});
+console.log('Material routes initialized');
 exports.default = router;

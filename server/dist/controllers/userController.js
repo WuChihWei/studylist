@@ -3,17 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTopic = exports.uncompleteMaterial = exports.completeMaterial = exports.updateAllUsersBio = exports.getUser = exports.updateTopicName = exports.addTopic = exports.updateUserProfile = exports.addMaterial = exports.createUser = exports.getUserMaterials = exports.deleteUser = exports.updateUser = exports.getUserByFirebaseUID = void 0;
+exports.deleteMaterial = exports.deleteTopic = exports.updateExistingMaterials = exports.updateMaterialProgress = exports.updateTopic = exports.uncompleteMaterial = exports.completeMaterial = exports.updateAllUsersBio = exports.getUser = exports.updateTopicName = exports.addTopic = exports.updateUserProfile = exports.addMaterial = exports.createUser = exports.getUserMaterials = exports.deleteUser = exports.updateUser = exports.getUserByFirebaseUID = void 0;
 const User_1 = require("../models/User");
 const mongoose_1 = __importDefault(require("mongoose"));
 const getUserByFirebaseUID = async (req, res) => {
     try {
-        const { firebaseUID } = req.params;
-        const user = await User_1.User.findOne({ firebaseUID });
+        const { userId } = req.params;
+        const user = await User_1.User.findOne({ firebaseUID: userId });
         if (!user) {
             // Create new user if not found
             const newUser = await User_1.User.create({
-                firebaseUID,
+                firebaseUID: userId,
                 name: 'New User',
                 email: req.body.email,
                 materials: [
@@ -34,8 +34,8 @@ const getUserByFirebaseUID = async (req, res) => {
 exports.getUserByFirebaseUID = getUserByFirebaseUID;
 const updateUser = async (req, res) => {
     try {
-        const { firebaseUID } = req.params;
-        const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, req.body, { new: true });
+        const { userId } = req.params;
+        const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID: userId }, req.body, { new: true });
         if (!updatedUser) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -48,8 +48,8 @@ const updateUser = async (req, res) => {
 exports.updateUser = updateUser;
 const deleteUser = async (req, res) => {
     try {
-        const { firebaseUID } = req.params;
-        const deletedUser = await User_1.User.findOneAndDelete({ firebaseUID });
+        const { userId } = req.params;
+        const deletedUser = await User_1.User.findOneAndDelete({ firebaseUID: userId });
         if (!deletedUser) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -62,8 +62,8 @@ const deleteUser = async (req, res) => {
 exports.deleteUser = deleteUser;
 const getUserMaterials = async (req, res) => {
     try {
-        const { firebaseUID, topicId } = req.params;
-        const user = await User_1.User.findOne({ firebaseUID });
+        const { userId, topicId } = req.params;
+        const user = await User_1.User.findOne({ firebaseUID: userId });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
@@ -126,13 +126,17 @@ const addMaterial = async (req, res) => {
                 error: 'Missing required params'
             });
         }
-        // Create new material
+        // Create new material with progress field
         const newMaterial = {
             type,
             title,
             url: url || null,
             rating: rating || 5,
-            dateAdded: new Date()
+            dateAdded: new Date(),
+            completedUnits: 0,
+            readingTime: 0,
+            progress: 0,
+            completed: false
         };
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
@@ -190,27 +194,33 @@ const addMaterial = async (req, res) => {
     }
 };
 exports.addMaterial = addMaterial;
-// 更新用户资料
 const updateUserProfile = async (req, res) => {
     try {
-        const { firebaseUID } = req.params;
+        const { userId } = req.params;
         const { name, bio, photoURL } = req.body;
-        const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, { $set: { name, bio, photoURL } }, { new: true });
-        if (!updatedUser) {
+        console.log(`Updating profile for user ${userId}:`, req.body);
+        // 找到用户
+        const user = await User_1.User.findOne({ firebaseUID: userId });
+        if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        res.status(200).json(updatedUser);
+        // 更新資料
+        if (name)
+            user.name = name;
+        if (bio !== undefined)
+            user.bio = bio;
+        if (photoURL !== undefined)
+            user.photoURL = photoURL;
+        await user.save();
+        console.log('Profile updated successfully');
+        res.status(200).json(user);
     }
     catch (error) {
-        console.error('Error updating user profile:', error);
-        res.status(500).json({
-            error: 'Server error',
-            details: error instanceof Error ? error.message : 'Unknown error'
-        });
+        console.error('Error updating profile:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 exports.updateUserProfile = updateUserProfile;
-// 添加新主题
 const addTopic = async (req, res) => {
     try {
         const { firebaseUID } = req.params;
@@ -251,7 +261,6 @@ const addTopic = async (req, res) => {
     }
 };
 exports.addTopic = addTopic;
-// 更新主题名称
 const updateTopicName = async (req, res) => {
     try {
         const { firebaseUID, topicId } = req.params;
@@ -533,3 +542,163 @@ const updateTopic = async (req, res) => {
     }
 };
 exports.updateTopic = updateTopic;
+const updateMaterialProgress = async (req, res) => {
+    try {
+        console.log('4. Controller received request:', {
+            params: req.params,
+            body: req.body
+        });
+        const { firebaseUID, topicId, materialId } = req.params;
+        const { completedUnits, readingTime, totalUnits } = req.body;
+        console.log('5. Finding user:', firebaseUID);
+        const user = await User_1.User.findOne({ firebaseUID });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        console.log('6. Finding topic:', {
+            topicId,
+            foundUser: !!user,
+            topicsCount: user.topics.length
+        });
+        const topic = user.topics.find(t => { var _a; return ((_a = t._id) === null || _a === void 0 ? void 0 : _a.toString()) === topicId; });
+        if (!topic || !topic.categories) {
+            return res.status(404).json({ error: 'Topic not found' });
+        }
+        console.log('7. Finding material:', {
+            materialId,
+            foundTopic: !!topic,
+            categoriesExist: !!topic.categories
+        });
+        let materialFound = false;
+        for (const type of ['webpage', 'video', 'podcast', 'book']) {
+            const materials = topic.categories[type];
+            if (!Array.isArray(materials))
+                continue;
+            console.log(`8. Checking ${type} materials:`, {
+                materialsCount: materials.length,
+                materialIds: materials.map(m => { var _a; return (_a = m._id) === null || _a === void 0 ? void 0 : _a.toString(); })
+            });
+            const materialIndex = materials.findIndex(m => { var _a; return ((_a = m._id) === null || _a === void 0 ? void 0 : _a.toString()) === materialId; });
+            if (materialIndex !== -1) {
+                materialFound = true;
+                console.log('9. Material found:', {
+                    type,
+                    index: materialIndex,
+                    currentMaterial: materials[materialIndex]
+                });
+                const progress = Math.min(Math.round((completedUnits / totalUnits) * 100), 100);
+                const updatePath = `topics.$[topic].categories.${type}.$[material]`;
+                const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, {
+                    $set: {
+                        [`${updatePath}.completedUnits`]: completedUnits,
+                        [`${updatePath}.readingTime`]: readingTime,
+                        [`${updatePath}.progress`]: progress
+                    }
+                }, {
+                    arrayFilters: [
+                        { 'topic._id': topicId },
+                        { 'material._id': materialId }
+                    ],
+                    new: true
+                });
+                if (!updatedUser) {
+                    return res.status(404).json({ error: 'Failed to update material' });
+                }
+                return res.json(updatedUser);
+            }
+        }
+        if (!materialFound) {
+            return res.status(404).json({ error: 'Material not found' });
+        }
+    }
+    catch (error) {
+        console.error('Error in updateMaterialProgress:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.updateMaterialProgress = updateMaterialProgress;
+const updateExistingMaterials = async (req, res) => {
+    try {
+        const { firebaseUID } = req.params;
+        const user = await User_1.User.findOne({ firebaseUID });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        // 遍歷所有主題和材料
+        const updatedUser = await User_1.User.findOneAndUpdate({ firebaseUID }, {
+            $set: {
+                'topics.$[].categories.webpage.$[].progress': 0,
+                'topics.$[].categories.video.$[].progress': 0,
+                'topics.$[].categories.podcast.$[].progress': 0,
+                'topics.$[].categories.book.$[].progress': 0,
+                'topics.$[].categories.webpage.$[].completedUnits': 0,
+                'topics.$[].categories.video.$[].completedUnits': 0,
+                'topics.$[].categories.podcast.$[].completedUnits': 0,
+                'topics.$[].categories.book.$[].completedUnits': 0,
+                'topics.$[].categories.webpage.$[].readingTime': 0,
+                'topics.$[].categories.video.$[].readingTime': 0,
+                'topics.$[].categories.podcast.$[].readingTime': 0,
+                'topics.$[].categories.book.$[].readingTime': 0
+            }
+        }, { new: true });
+        return res.json(updatedUser);
+    }
+    catch (error) {
+        console.error('Error updating existing materials:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.updateExistingMaterials = updateExistingMaterials;
+const deleteTopic = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { topicId } = req.params;
+        const user = await User_1.User.findOneAndUpdate({ firebaseUID: userId }, { $pull: { topics: { _id: topicId } } }, { new: true });
+        if (!user) {
+            return res.status(404).json({ error: 'User or topic not found' });
+        }
+        res.status(200).json(user);
+    }
+    catch (error) {
+        console.error('Error deleting topic:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+exports.deleteTopic = deleteTopic;
+const deleteMaterial = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { topicId, materialId } = req.params;
+        const user = await User_1.User.findOne({ firebaseUID: userId });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        const topic = user.topics.find(t => { var _a; return ((_a = t._id) === null || _a === void 0 ? void 0 : _a.toString()) === topicId; });
+        if (!topic || !topic.categories) {
+            return res.status(404).json({ error: 'Topic not found' });
+        }
+        let materialDeleted = false;
+        // 遍歷所有類別查找並刪除指定 ObjectId 的材料
+        for (const type of ['webpage', 'video', 'podcast', 'book']) {
+            const materials = topic.categories[type];
+            if (!Array.isArray(materials))
+                continue;
+            const materialIndex = materials.findIndex(m => { var _a; return ((_a = m._id) === null || _a === void 0 ? void 0 : _a.toString()) === materialId; });
+            if (materialIndex !== -1) {
+                materials.splice(materialIndex, 1);
+                materialDeleted = true;
+                break;
+            }
+        }
+        if (!materialDeleted) {
+            return res.status(404).json({ error: 'Material not found' });
+        }
+        await user.save();
+        return res.json(user);
+    }
+    catch (error) {
+        console.error('Error deleting material:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+exports.deleteMaterial = deleteMaterial;

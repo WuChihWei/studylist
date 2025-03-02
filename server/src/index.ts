@@ -19,7 +19,8 @@ import {
 } from './controllers/materialController';
 
 // 在任何其他代碼之前加載環境變數
-dotenv.config();
+// Explicitly specify the path to the .env file
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // 添加調試信息
 console.log('Environment variables loaded:', {

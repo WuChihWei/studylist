@@ -1,9 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
+import path from 'path';
+import fs from 'fs';
+import dotenv from 'dotenv';
 
+// Try to load environment variables from .env file if they're not already set
+if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  try {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      console.log('Loading environment variables from:', envPath);
+      dotenv.config({ path: envPath });
+    } else {
+      console.error('No .env file found at:', envPath);
+    }
+  } catch (error) {
+    console.error('Error loading .env file:', error);
+  }
+}
+
+// Check again after trying to load from .env
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
   console.error('Missing environment variable: FIREBASE_SERVICE_ACCOUNT_BASE64');
   console.error('Current environment variables:', Object.keys(process.env));
+  console.error('Please make sure your .env file contains the FIREBASE_SERVICE_ACCOUNT_BASE64 variable');
+  console.error('You can run the server with: npm run start:env');
   throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is not set');
 }
 

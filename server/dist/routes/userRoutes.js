@@ -1,20 +1,59 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
+const express_1 = __importDefault(require("express"));
 const userController_1 = require("../controllers/userController");
 const auth_1 = require("../middleware/auth");
-const router = (0, express_1.Router)();
+const catchAsync_1 = require("../utils/catchAsync");
+const materialController = __importStar(require("../controllers/materialController"));
+const router = express_1.default.Router();
 // Public routes (no auth required)
 router.post('/', userController_1.createUser);
 // Protected routes
 router.use(auth_1.authMiddleware);
-router.get('/:firebaseUID', userController_1.getUserByFirebaseUID);
-router.put('/:firebaseUID', userController_1.updateUser);
-router.delete('/:firebaseUID', userController_1.deleteUser);
-router.get('/:firebaseUID/materials', userController_1.getUserMaterials);
-router.post('/:firebaseUID/materials', userController_1.addMaterial);
-router.put('/:firebaseUID/profile', userController_1.updateUserProfile);
-router.post('/:firebaseUID/topics', userController_1.addTopic);
-router.put('/:firebaseUID/topics/:topicId', userController_1.updateTopicName);
-router.post('/users/update-all-bios', userController_1.updateAllUsersBio);
+router.get('/:userId', userController_1.getUserByFirebaseUID);
+router.put('/:userId', userController_1.updateUser);
+router.delete('/:userId', userController_1.deleteUser);
+router.get('/:userId/materials', userController_1.getUserMaterials);
+router.put('/:userId/profile', userController_1.updateUserProfile);
+router.post('/update-all-bios', userController_1.updateAllUsersBio);
+router.delete('/:userId/topics/:topicId/materials/:materialId', (0, catchAsync_1.catchAsync)(async (req, res, next) => {
+    console.log('⭐ DELETE MATERIAL - Route Handler');
+    await materialController.deleteMaterial(req, res, next);
+}));
 exports.default = router;

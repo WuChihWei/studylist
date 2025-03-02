@@ -11,8 +11,10 @@ dotenv_1.default.config();
 if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
 }
-const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-01-27.acacia'
+// 确保您的密钥使用环境变量
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
+const stripe = new stripe_1.default(stripeSecretKey, {
+    apiVersion: '2025-02-24.acacia' // 使用 TypeScript 类型定义要求的版本
 });
 const router = (0, express_1.Router)();
 // Stripe webhook handling
