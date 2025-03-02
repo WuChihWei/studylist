@@ -25,11 +25,15 @@ interface RequestConfig extends RequestInit {
 
 // 构建URL，支持查询参数
 const buildUrl = (endpoint: string, params?: Record<string, string>): string => {
-  const url = new URL(`${API_BASE_URL}${endpoint}`);
+  // 确保endpoint以/开头，但不以//开头
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = new URL(`${API_BASE_URL}${normalizedEndpoint}`);
   
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, value);
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
     });
   }
   
@@ -79,6 +83,13 @@ const request = async <T>(
     
     // 执行请求
     console.log(`API Request: ${endpoint}`, { config: mergedConfig });
+    
+    // 加入请求日志，用于调试
+    console.log(`
+        
+        
+       ${mergedConfig.method || 'GET'} ${buildUrl(endpoint, params)}`);
+    
     const response = await fetch(buildUrl(endpoint, params), mergedConfig);
     
     // 处理响应

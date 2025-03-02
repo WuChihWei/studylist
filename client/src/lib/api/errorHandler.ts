@@ -1,5 +1,6 @@
 // 错误处理器
 import { ApiError } from './apiService';
+import { toast } from 'react-hot-toast'; // 假设使用toast库做通知
 
 // 错误类型
 export type ErrorType = 'auth' | 'network' | 'server' | 'validation' | 'notFound' | 'unknown';
@@ -76,10 +77,9 @@ export const handleApiError = (
     }
   }
   
-  // 这里可以集成您的toast通知
+  // 使用toast通知
   if (opts.showToast) {
-    // 例如: toast.error(message);
-    console.warn('Toast would show:', message);
+    toast.error(message);
   }
   
   return { message, type };
