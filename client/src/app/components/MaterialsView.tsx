@@ -23,7 +23,7 @@ import { Card, CardContent } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
 import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
-import { NoteCard } from "./NoteCard"
+import { NoteCard } from "./ui/NoteCard"
 import { ListItem } from './ListItem';
 
 interface MaterialInput {

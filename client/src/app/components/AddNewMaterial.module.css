@@ -1,0 +1,133 @@
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
+.addNewMaterialContainer {
+  display: inline-flex;
+  align-items: center;
+
+  /* 外框可以視需求加上邊框或陰影 */
+  border: 1px solid #ccc;
+  border-radius: 9999px; /* 讓容器四周圓角 */
+  padding: 8px 12px;
+  width: 100%;
+  background-color: white;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 按鈕本身的外觀 */
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background-color: #007bff; /* 依需求更改主色 */
+  color: #fff;
+  cursor: pointer;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.addButton:hover {
+  background-color: #0056b3;
+}
+
+.plusIcon {
+  font-size: 14px;
+}
+
+.typeSelector {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.typeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.menuIcon {
+  margin-right: 8px;
+}
+
+.materialInput {
+  flex-grow: 1; /* 讓輸入框可以撐開 */
+  border: none;
+  outline: none; /* 移除輸入框被點擊後的預設框線 */
+  font-size: 16px;
+  margin-right: 8px; /* 與搜尋圖示之間留一點間距 */
+  background: transparent;
+}
+
+.urlButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #888;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.urlButton.active {
+  color: #007bff;
+}
+
+.searchButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchIcon {
+  font-size: 16px;
+  color: #888; /* 顏色可以視需求調整 */
+}
+
+.searchButton:hover .searchIcon {
+  color: #333;
+}
+
+.urlInputContainer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  padding: 12px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.urlInput {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.urlInput:focus {
+  border-color: #007bff;
+} 

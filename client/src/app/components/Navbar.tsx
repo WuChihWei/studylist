@@ -7,12 +7,14 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
-import { Plus, Link as LinkIcon } from "lucide-react"
+import { Plus, Link as LinkIcon, Search } from "lucide-react"
 import { MdWeb } from "react-icons/md"
 import { FiVideo, FiBook } from "react-icons/fi"
 import { HiOutlineMicrophone } from "react-icons/hi"
 import styles from './Navbar.module.css'
 import { usePathname } from 'next/navigation'
+import { useUserData } from '../../hooks/useUserData'
+import AddNewMaterial from './AddNewMaterial'
 
 interface NavbarProps {
   onAddMaterial?: (material: {
@@ -24,46 +26,46 @@ interface NavbarProps {
   activeTopicId?: string;
 }
 
-const Navbar = ({ onAddMaterial, activeTopicId }: NavbarProps) => {
-  const [selectedType, setSelectedType] = useState('webpage')
-  const [showUrlInput, setShowUrlInput] = useState(false)
-  const pathname = usePathname()
-
+const Navbar = ({ onAddMaterial: externalAddMaterial, activeTopicId: externalTopicId }: NavbarProps) => {
+  const pathname = usePathname() || '/'
+  
+  // 整合 ClientNavbar 的功能
+  const { userData, addMaterial } = useUserData();
+  
+  // 使用外部提供的 activeTopicId 或從 userData 中獲取第一個 topic 作為預設值
+  const activeTopicId = externalTopicId || userData?.topics?.[0]?._id || '';
+  
+  console.log('Navbar - userData:', userData);
   console.log('Navbar - activeTopicId:', activeTopicId);
 
-  const categoryIcons = {
-    webpage: <MdWeb size={18} />,
-    video: <FiVideo size={18} />,
-    podcast: <HiOutlineMicrophone size={18} />,
-    book: <FiBook size={18} />
-  }
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!onAddMaterial) return;
-    
-    console.log('Navbar handleSubmit - activeTopicId:', activeTopicId);
+  const handleAddMaterial = async (material: any) => {
+    console.log('handleAddMaterial - material:', material);
+    console.log('handleAddMaterial - activeTopicId:', activeTopicId);
     
     if (!activeTopicId) {
-      console.log('No activeTopicId in handleSubmit');
+      console.log('No activeTopicId found');
       alert('Please select a topic first');
       return;
     }
+    
+    // 使用外部提供的 onAddMaterial 或內部的 addMaterial
+    if (externalAddMaterial) {
+      externalAddMaterial(material);
+    } else {
+      const success = await addMaterial(material, activeTopicId);
+      console.log('handleAddMaterial - success:', success);
+      
+      if (!success) {
+        alert('Failed to add material. Please try again.');
+      }
+    }
+  };
 
-    const formData = new FormData(e.currentTarget);
-    const title = formData.get('title')?.toString() || '';
-    const url = formData.get('url')?.toString() || null;
-    
-    console.log('Navbar handleSubmit - form data:', { title, url, type: selectedType });
-    
-    onAddMaterial({
-      title,
-      type: selectedType,
-      url,
+  const handleAddNewMaterial = (materialData: { title: string; type: string; url: string | null }) => {
+    handleAddMaterial({
+      ...materialData,
       rating: 5
     });
-    setShowUrlInput(false);
-    (e.target as HTMLFormElement).reset();
   };
 
   return (
@@ -77,68 +79,7 @@ const Navbar = ({ onAddMaterial, activeTopicId }: NavbarProps) => {
 
       {pathname === '/profile' && (
         <div className={styles.centerSection}>
-          <form onSubmit={handleSubmit} className={styles.addForm}>
-            <div className={styles.addMaterialRow}>
-              <Button type="submit" variant="ghost" size="icon">
-                <Plus className="h-4 w-4" />
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    {categoryIcons[selectedType]}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={() => setSelectedType('webpage')}>
-                    <MdWeb size={18} className="mr-2" />
-                    <span>Webpage</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedType('video')}>
-                    <FiVideo size={18} className="mr-2" />
-                    <span>Video</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedType('podcast')}>
-                    <HiOutlineMicrophone size={18} className="mr-2" />
-                    <span>Podcast</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setSelectedType('book')}>
-                    <FiBook size={18} className="mr-2" />
-                    <span>Book</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <div className={styles.inputContainer}>
-                <Input
-                  type="text"
-                  name="title"
-                  placeholder="Add Material..."
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowUrlInput(prev => !prev)}
-                  className={showUrlInput ? 'text-primary' : 'text-muted-foreground'}
-                >
-                  <LinkIcon className="h-4 w-4" />
-                </Button>
-                {showUrlInput && (
-                  <div className={styles.urlInputOverlay}>
-                    <Input
-                      type="url"
-                      name="url"
-                      placeholder="Url(Optional)"
-                      className={styles.urlInput}
-                      autoFocus
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </form>
+          <AddNewMaterial onSubmit={handleAddNewMaterial} />
         </div>
       )}
 

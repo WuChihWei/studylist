@@ -22,6 +22,7 @@ import Link from "next/link"
 import { MdWeb } from "react-icons/md"
 import { FiVideo, FiBook } from "react-icons/fi"
 import { HiOutlineMicrophone } from "react-icons/hi"
+import AddNewMaterial from '../components/AddNewMaterial';
 
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic, updateMaterialProgress } = useUserData();
@@ -357,61 +358,24 @@ export default function ProfilePage() {
         className="border-r"
       />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col pr-8 pl-8">
         {/* 頂部導航欄 */}
         <div className="flex justify-between items-center p-4 border-b">
           <div className="flex items-center gap-2">
-            {/* Add Material 下拉選單 */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add New Material...
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <form className="p-4 w-80" onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const title = formData.get('title') as string;
-                  const url = formData.get('url') as string;
-                  const type = formData.get('type') as string;
-                  
-                  if (activeTab && title) {
-                    addMaterial({
-                      title,
-                      type,
-                      url: url || undefined,
-                      rating: 5
-                    }, activeTab);
-                    
-                    // 關閉下拉選單
-                    document.body.click();
-                  }
-                }}>
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="title" className="block text-sm font-medium mb-1">Title</label>
-                      <Input id="title" name="title" placeholder="Enter material title" required />
-                    </div>
-                    <div>
-                      <label htmlFor="url" className="block text-sm font-medium mb-1">URL (Optional)</label>
-                      <Input id="url" name="url" placeholder="https://example.com" />
-                    </div>
-                    <div>
-                      <label htmlFor="type" className="block text-sm font-medium mb-1">Type</label>
-                      <select id="type" name="type" className="w-full p-2 border rounded-md">
-                        <option value="webpage">Webpage</option>
-                        <option value="video">Video</option>
-                        <option value="podcast">Podcast</option>
-                        <option value="book">Book</option>
-                      </select>
-                    </div>
-                    <Button type="submit" className="w-full">Add Material</Button>
-                  </div>
-                </form>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* 使用新的 AddNewMaterial 組件 */}
+            <AddNewMaterial onSubmit={(material) => {
+              if (activeTab) {
+                addMaterial({
+                  title: material.title,
+                  type: material.type,
+                  url: material.url || undefined,
+                  rating: 5,
+                  dateAdded: new Date()
+                }, activeTab);
+              } else {
+                alert('Please select a topic first');
+              }
+            }} />
           </div>
           
           <div className="flex items-center gap-2">

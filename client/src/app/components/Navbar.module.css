@@ -34,13 +34,10 @@
   color: inherit;
 }
 
-.navLink {
-  /* Additional styles for the My Profile link if needed */
-}
+/* 刪除空的規則集，改為註釋 */
+/* 導航鏈接的樣式 */
 
-.loginButton {
-  /* Additional styles for the Login button if needed */
-}
+/* 登錄按鈕的樣式 */
 
 .actions {
   display: flex;
@@ -59,9 +56,114 @@
 
 .addForm {
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
 }
 
+/* 新的 Add Material 按鈕樣式 */
+.addMaterialButton {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e5e5;
+  background-color: white;
+  color: #666;
+  font-size: 14px;
+  width: 100%;
+  max-width: 480px;
+  justify-content: flex-start;
+  transition: all 0.2s;
+}
+
+.addMaterialButton:hover {
+  background-color: #f9f9f9;
+  border-color: #d5d5d5;
+}
+
+/* 搜尋風格的容器 */
+.searchStyleContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #e5e5e5;
+  border-radius: 9999px;
+  padding: 4px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+  padding-left: 4px;
+}
+
+.plusButton {
+  color: #666;
+  margin-right: 2px;
+}
+
+.typeButton {
+  color: #666;
+  margin-right: 4px;
+  padding: 0 4px;
+  height: 32px;
+}
+
+.titleInput {
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  flex: 1;
+  font-size: 14px;
+  outline: none;
+  box-shadow: none;
+  min-width: 200px;
+}
+
+.titleInput:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.urlContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  border-left: 1px solid #eaeaea;
+  margin-left: 4px;
+}
+
+.urlInput {
+  border: none;
+  background: transparent;
+  padding: 8px 4px;
+  width: 150px;
+  font-size: 14px;
+  outline: none;
+  box-shadow: none;
+}
+
+.urlInput:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.searchButton {
+  color: #666;
+  margin-left: 2px;
+  height: 36px;
+  width: 36px;
+}
+
+/* 舊的樣式保留，但可能不再使用 */
 .addMaterialRow {
   display: flex;
   align-items: center;
@@ -69,6 +171,17 @@
   padding: 0.25rem;
   border: 1px solid #eaeaea;
   border-radius: 6px;
+}
+
+.newAddMaterialContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #eaeaea;
+  border-radius: 9999px;
+  padding: 4px 8px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .inputGroup {
@@ -96,10 +209,6 @@
   border: 1px solid #eaeaea;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-}
-
-.urlInput {
-  width: 100%;
 }
 
 .addButton {
