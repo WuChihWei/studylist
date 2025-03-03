@@ -60,7 +60,6 @@ export default function StudyListView({
     return completed;
   });
   
-  // Add state for content popup
   const [contentPopup, setContentPopup] = useState<{
     isOpen: boolean;
     url: string;
@@ -216,10 +215,26 @@ export default function StudyListView({
     }
   };
   
-  // Add function to open video popup
   const handleOpenContent = (material: Material & { type: keyof Categories }) => {
     if (!material.url) return;
     
+    setContentPopup({
+      isOpen: true,
+      url: material.url,
+      title: material.title || 'Untitled Content'
+    });
+    
+    // 直接在新視窗中打開連結
+    window.open(material.url, '_blank');
+  };
+
+  const handlePlayClick = (material: Material & { type: keyof Categories }) => {
+    if (!material.url) return;
+    
+    // 在新視窗中打開連結
+    window.open(material.url, '_blank');
+    
+    // 同時打開計時器
     setContentPopup({
       isOpen: true,
       url: material.url,
@@ -250,7 +265,7 @@ export default function StudyListView({
             <span>mins/unit</span>
           </div>
         </div>
-        {/* <div className={styles.headerRight}>
+        <div className={styles.headerRight}>
           <div className={styles.progressBar}>
             <div 
               className={styles.progressFill} 
@@ -259,7 +274,7 @@ export default function StudyListView({
               }} 
             />
           </div>
-        </div> */}
+        </div>
       </div>
 
       <div className={styles.materialsList}>
@@ -333,7 +348,7 @@ export default function StudyListView({
                   {material.url && (
                     <button 
                       className={styles.playButton}
-                      onClick={() => handleOpenContent(material)}
+                      onClick={() => handlePlayClick(material)}
                       title="Open Content"
                     >
                       <FaPlay size={16} />
@@ -346,13 +361,13 @@ export default function StudyListView({
         </div>
       </div>
       
-      {/* Content Popup */}
       <VideoPopup 
         isOpen={contentPopup.isOpen}
         onClose={() => setContentPopup(prev => ({ ...prev, isOpen: false }))}
         url={contentPopup.url}
         title={contentPopup.title}
         unitMinutes={unitMinutes}
+        showVideoContent={false}
       />
     </div>
   );

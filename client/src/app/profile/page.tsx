@@ -16,6 +16,12 @@ import { Sidebar } from "@/app/components/ui/sidebar"
 import { Button } from "@/app/components/ui/button"
 import { EditProfileDialog } from "../components/EditProfileDialog"
 import { Input } from "@/app/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu"
+import { Plus } from "lucide-react"
+import Link from "next/link"
+import { MdWeb } from "react-icons/md"
+import { FiVideo, FiBook } from "react-icons/fi"
+import { HiOutlineMicrophone } from "react-icons/hi"
 
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic, updateMaterialProgress } = useUserData();
@@ -344,14 +350,105 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-screen w-full flex-col md:flex-row">
       <Sidebar 
         activeView={activeView} 
         onViewChange={setActiveView} 
         className="border-r"
       />
       
-      <div className="flex-1 p-4 md:p-8 lg:p-14 flex flex-col gap-2">
+      <div className="flex-1 flex flex-col">
+        {/* 頂部導航欄 */}
+        <div className="flex justify-between items-center p-4 border-b">
+          <div className="flex items-center gap-2">
+            {/* Add Material 下拉選單 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add New Material...
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <form className="p-4 w-80" onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  const title = formData.get('title') as string;
+                  const url = formData.get('url') as string;
+                  const type = formData.get('type') as string;
+                  
+                  if (activeTab && title) {
+                    addMaterial({
+                      title,
+                      type,
+                      url: url || undefined,
+                      rating: 5
+                    }, activeTab);
+                    
+                    // 關閉下拉選單
+                    document.body.click();
+                  }
+                }}>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="title" className="block text-sm font-medium mb-1">Title</label>
+                      <Input id="title" name="title" placeholder="Enter material title" required />
+                    </div>
+                    <div>
+                      <label htmlFor="url" className="block text-sm font-medium mb-1">URL (Optional)</label>
+                      <Input id="url" name="url" placeholder="https://example.com" />
+                    </div>
+                    <div>
+                      <label htmlFor="type" className="block text-sm font-medium mb-1">Type</label>
+                      <select id="type" name="type" className="w-full p-2 border rounded-md">
+                        <option value="webpage">Webpage</option>
+                        <option value="video">Video</option>
+                        <option value="podcast">Podcast</option>
+                        <option value="book">Book</option>
+                      </select>
+                    </div>
+                    <Button type="submit" className="w-full">Add Material</Button>
+                  </div>
+                </form>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Account 下拉選單 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <Link href="/profile" className="w-full">
+                    My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/login" className="w-full">
+                    Log in
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/signup" className="w-full">
+                    Sign up
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        
         {/* Profile Header Section */}
         <div className="">
           <div className={styles.profileInfo}>
@@ -404,7 +501,7 @@ export default function ProfilePage() {
                   <Input
                     value={editedTopicName}
                     onChange={(e) => setEditedTopicName(e.target.value)}
-                    className="w-[200px]"
+                    className="w-full"
                   />
                 </div>
               ) : (

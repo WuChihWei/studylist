@@ -1,84 +1,79 @@
 .floatingTimer {
   position: fixed;
-  z-index: 9999;
-  background: white;
-  border-radius: 12px;
+  background-color: white;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 180px;
-  overflow: hidden;
-  transition: all 0.2s ease;
+  padding: 15px;
+  z-index: 1000;
+  width: 200px;
   user-select: none;
-  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px solid #4169E1;
+  top: 20px;
+  right: 20px;
 }
 
 .timerHeader {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  padding: 10px 12px;
   cursor: grab;
-}
-
-.timerHeader:active {
-  cursor: grabbing;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 .timerTime {
-  font-weight: 600;
-  font-size: 24px;
-  color: #333;
+  font-size: 28px;
+  font-weight: bold;
+  color: #4169E1;
 }
 
 .timerInfo {
-  font-size: 12px;
+  font-size: 14px;
   color: #666;
-  margin-top: 2px;
 }
 
 .timerControls {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-top: 1px solid #eee;
+  gap: 10px;
+}
+
+.doneButton, .playPauseButton {
+  padding: 8px 15px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .doneButton {
-  background: #f0f0f0;
-  border: none;
-  padding: 6px 16px;
-  border-radius: 16px;
-  font-size: 14px;
+  background-color: #f0f0f0;
   color: #333;
-  cursor: pointer;
-  transition: all 0.2s;
+  flex: 1;
 }
 
 .doneButton:hover {
-  background: #e0e0e0;
+  background-color: #e0e0e0;
 }
 
 .playPauseButton {
-  background: #4169E1;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  background-color: #4169E1;
+  color: white;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  color: white;
-  transition: all 0.2s;
+  border-radius: 50%;
 }
 
 .playPauseButton:hover {
-  background: #3158D0;
-}
-
-.pauseIcon, .playIcon {
-  stroke-width: 3;
+  background-color: #3158D0;
+  transform: scale(1.05);
 }
 
 /* Reopen video button */
@@ -222,4 +217,35 @@
 
 .openExternalButton:hover {
   background: #3158D0;
+}
+
+.youtubePlayOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.youtubePlayButton {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(255, 0, 0, 0.8);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.youtubePlayButton:hover {
+  background-color: rgb(255, 0, 0);
+  transform: scale(1.1);
 } 

@@ -17,10 +17,17 @@ import {
   TooltipTrigger,
 } from "@/app/components/ui/tooltip"
 import { ScrollArea } from "@/app/components/ui/scroll-area"
-import { Menu } from "lucide-react"
+import { Menu, Plus } from "lucide-react"
 import { BsGrid, BsListUl } from "react-icons/bs"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useIsMobile } from "@/hooks/use-mobile"
+import Image from "next/image"
+import Link from "next/link"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/app/components/ui/dropdown-menu"
+import { MdWeb } from "react-icons/md"
+import { FiVideo, FiBook } from "react-icons/fi"
+import { HiOutlineMicrophone } from "react-icons/hi"
+import { useUserData } from "@/hooks/useUserData"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -726,22 +733,42 @@ const SidebarComponent = ({ activeView, onViewChange, className }: SidebarProps)
         </SheetTrigger>
         <SheetContent side="left" className="w-[240px]">
           <div className="px-1 py-2">
-            <h2 className="mb-2 px-4 text-lg font-semibold">Views</h2>
-            <div className="space-y-1">
+            <div className="mb-6">
+              <Image 
+                src="/davinci-logo.png" 
+                alt="DAVINCI" 
+                width={120} 
+                height={40} 
+                className="ml-4"
+              />
+            </div>
+            <div className="space-y-4">
+              <Link href="/">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-gray-400 hover:text-gray-700"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                  </svg>
+                  Home
+                </Button>
+              </Link>
               <Button
-                variant={activeView === 'materials' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                variant="ghost"
+                className={`w-full justify-start ${activeView === 'materials' ? 'font-medium text-black' : 'text-gray-400 hover:text-gray-700'}`}
                 onClick={() => onViewChange('materials')}
               >
-                <BsGrid className="mr-2 h-4 w-4" />
+                <BsGrid className="mr-2 h-5 w-5" />
                 Materials
               </Button>
               <Button
-                variant={activeView === 'studylist' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
+                variant="ghost"
+                className={`w-full justify-start ${activeView === 'studylist' ? 'font-medium text-black' : 'text-gray-400 hover:text-gray-700'}`}
                 onClick={() => onViewChange('studylist')}
               >
-                <BsListUl className="mr-2 h-4 w-4" />
+                <BsListUl className="mr-2 h-5 w-5" />
                 Study List
               </Button>
             </div>
@@ -752,24 +779,44 @@ const SidebarComponent = ({ activeView, onViewChange, className }: SidebarProps)
   }
 
   return (
-    <div className={cn("pb-12 w-[240px]", className)}>
+    <div className={cn("pb-12 w-[240px] bg-white border-r", className)}>
       <div className="space-y-4 py-4">
+        <div className="px-4 mb-6">
+          <Image 
+            src="/davinci-logo.png" 
+            alt="DAVINCI" 
+            width={120} 
+            height={40} 
+          />
+        </div>
         <div className="px-3 py-2">
-          <div className="space-y-1">
+          <div className="space-y-4">
+            <Link href="/">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-gray-400 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                Home
+              </Button>
+            </Link>
             <Button
-              variant={activeView === 'materials' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${activeView === 'materials' ? 'font-medium text-black' : 'text-gray-400 hover:text-gray-700'}`}
               onClick={() => onViewChange('materials')}
             >
-              <BsGrid className="mr-2 h-4 w-4" />
+              <BsGrid className="mr-2 h-5 w-5" />
               Materials
             </Button>
             <Button
-              variant={activeView === 'studylist' ? 'secondary' : 'ghost'}
-              className="w-full justify-start"
+              variant="ghost"
+              className={`w-full justify-start ${activeView === 'studylist' ? 'font-medium text-black' : 'text-gray-400 hover:text-gray-700'}`}
               onClick={() => onViewChange('studylist')}
             >
-              <BsListUl className="mr-2 h-4 w-4" />
+              <BsListUl className="mr-2 h-5 w-5" />
               Study List
             </Button>
           </div>

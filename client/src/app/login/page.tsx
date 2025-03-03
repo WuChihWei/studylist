@@ -197,7 +197,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen">
+    <div className="flex md:flex-row min-h-screen">
       {/* 左側區塊 - 在手機版時隱藏 */}
       <div className="hidden md:flex md:flex-1 bg-gradient-to-b from-[#88bbfe] via-[#8686ff] to-[#050561] p-8 md:p-16 flex-col justify-center text-white">
         <h1 className="text-3xl md:text-5xl mb-4">Learn With Your Role Models</h1>

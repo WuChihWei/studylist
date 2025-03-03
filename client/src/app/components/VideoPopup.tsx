@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './VideoPopup.module.css';
 import { Pause, Play, X, ExternalLink } from 'lucide-react';
+import { FaPlay } from 'react-icons/fa';
 
 // YouTube API 類型定義
 declare global {
@@ -19,16 +20,17 @@ interface VideoPopupProps {
   url: string;
   title: string;
   unitMinutes: number;
+  showVideoContent?: boolean;
 }
 
-export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }: VideoPopupProps) {
+export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes, showVideoContent = false }: VideoPopupProps) {
   const [timeRemaining, setTimeRemaining] = useState(unitMinutes * 60);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const popupRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showContent, setShowContent] = useState(true);
+  const [showContent, setShowContent] = useState(showVideoContent);
   const [videoWindow, setVideoWindow] = useState<Window | null>(null);
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -137,26 +139,28 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
   useEffect(() => {
     if (isYouTubeUrl(url) && showContent && isOpen) {
       // Add YouTube API script if it doesn't exist
-      if (!window.YT) {
+      if (!document.getElementById('youtube-api')) {
         const tag = document.createElement('script');
+        tag.id = 'youtube-api';
         tag.src = 'https://www.youtube.com/iframe_api';
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
       }
-
+      
       // Setup YouTube player when API is ready
       window.onYouTubeIframeAPIReady = () => {
-        if (showContent && isOpen) {
-          initializeYouTubePlayer();
+        if (playerRef.current) {
+          playerRef.current.destroy();
         }
+        initializeYouTubePlayer();
       };
-
-      // If YT is already loaded, initialize player directly
+      
+      // If API is already loaded, initialize player directly
       if (window.YT && window.YT.Player) {
         initializeYouTubePlayer();
       }
     }
-  }, [url, showContent, isOpen]);
+  }, [isOpen, url, showContent]);
 
   // Initialize YouTube player
   const initializeYouTubePlayer = () => {
@@ -168,16 +172,33 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
       playerRef.current.destroy();
     }
 
-    // Create new player
+    // Create new player with custom play button overlay
     playerRef.current = new window.YT.Player('youtube-player', {
       videoId: youtubeVideoId,
       playerVars: {
-        autoplay: 1,
+        autoplay: 0, // 設置為 0，不自動播放
         start: Math.floor(videoCurrentTime),
         rel: 0,
+        controls: 0, // 隱藏 YouTube 控制項
+        showinfo: 0,
+        modestbranding: 1
       },
       events: {
-        onStateChange: onPlayerStateChange
+        onStateChange: onPlayerStateChange,
+        onReady: (event) => {
+          // 創建自定義播放按鈕覆蓋層
+          const playerElement = document.getElementById('youtube-player');
+          if (playerElement) {
+            const playOverlay = document.createElement('div');
+            playOverlay.className = styles.youtubePlayOverlay;
+            playOverlay.innerHTML = '<div class="' + styles.youtubePlayButton + '">▶</div>';
+            playOverlay.onclick = () => {
+              // 在新視窗中打開 YouTube 視頻
+              window.open(`https://www.youtube.com/watch?v=${youtubeVideoId}&t=${Math.floor(videoCurrentTime)}`, '_blank');
+            };
+            playerElement.parentNode?.appendChild(playOverlay);
+          }
+        }
       }
     });
   };
@@ -206,7 +227,6 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
       // Reset timer when popup opens
       setTimeRemaining(unitMinutes * 60);
       setIsTimerRunning(true);
-      setShowContent(true);
       setIframeError(false);
     }
   }, [isOpen, unitMinutes]);
@@ -246,19 +266,14 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
 
   // Save video time before closing
   const handleCloseContent = () => {
-    if (isYouTubeUrl(url) && playerRef.current && playerRef.current.getCurrentTime) {
-      setVideoCurrentTime(playerRef.current.getCurrentTime());
-    }
-    setShowContent(false);
+    // 不再需要關閉內容，因為我們只顯示計時器
   };
 
-  // Reopen content
+  // Reopen content 
+  // 完全禁用此功能，因為我們不需要顯示內容
   const reopenContent = () => {
-    if (iframeError) {
-      openInExternalWindow();
-    } else {
-      setShowContent(true);
-    }
+    // 不允許顯示內容
+    return;
   };
 
   // Handle drag start
@@ -313,6 +328,12 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
     onClose();
   };
 
+  // 確保 showContent 的狀態始終為初始值
+  useEffect(() => {
+    // 強制保持 showContent 為初始值 (showVideoContent)
+    setShowContent(showVideoContent);
+  }, [isOpen, showVideoContent]);
+
   if (!isOpen) return null;
 
   // Get YouTube video ID if applicable
@@ -357,16 +378,6 @@ export default function VideoPopup({ isOpen, onClose, url, title, unitMinutes }:
           </button>
         </div>
         
-        {/* Button to reopen content if it was closed */}
-        <div className={styles.reopenContainer}>
-          <button 
-            className={styles.reopenButton}
-            onClick={reopenContent}
-          >
-            {showContent ? 'Hide Content' : 'Show Content'}
-          </button>
-        </div>
-
         {/* Display current video time for YouTube videos */}
         {isYouTubeUrl(url) && videoCurrentTime > 0 && (
           <div className={styles.videoProgressInfo}>

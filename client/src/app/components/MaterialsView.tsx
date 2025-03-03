@@ -234,27 +234,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     }
   };
 
-  // const ViewToggle = () => (
-  //   <div className="flex items-center gap-2">
-  //     <Button
-  //       variant="ghost"
-  //       size="icon"
-  //       onClick={() => setViewMode('list')}
-  //       className={viewMode === 'list' ? 'bg-accent' : ''}
-  //     >
-  //       <BsListUl size={20} />
-  //     </Button>
-  //     <Button
-  //       variant="ghost"
-  //       size="icon"
-  //       onClick={() => setViewMode('grid')}
-  //       className={viewMode === 'grid' ? 'bg-accent' : ''}
-  //     >
-  //       <BsGrid size={20} />
-  //     </Button>
-  //   </div>
-  // );
-
   const MaterialsList = ({ materials, category }: { materials: Material[], category: string }) => {
     return (
       <div className={styles.listContainer}>
@@ -292,20 +271,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
       </div>
     );
   };
-
-  // const CollectLegend = () => (
-  //   <div className={styles.collectLegend}>
-  //     <span>No Collect</span>
-  //     <div className={styles.collectScale}>
-  //       <div className={styles.collectDot}></div>
-  //       <div className={styles.collectDot}></div>
-  //       <div className={styles.collectDot}></div>
-  //       <div className={styles.collectDot}></div>
-  //       <div className={styles.collectDot}></div>
-  //     </div>
-  //     <span>Great Collect</span>
-  //   </div>
-  // );
 
   return (
     <div className={styles.container}>

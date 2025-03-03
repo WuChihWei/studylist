@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ClientNavbar from './components/ClientNavbar';
 import { FirebaseProvider } from './firebase/FirebaseProvider';
 
 const inter = Inter({
@@ -23,7 +22,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable} suppressHydrationWarning>
         <FirebaseProvider>
-          <ClientNavbar />
           {children}
         </FirebaseProvider>
       </body>
