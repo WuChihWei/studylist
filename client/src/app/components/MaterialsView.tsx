@@ -344,11 +344,39 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
             ) : (
               <div className={styles.gridView}>
                 {(['webpage', 'video', 'podcast', 'book'] as const).map((type) => (
-                  <MaterialsList 
-                    key={type} 
-                    materials={categories[type] || []} 
-                    category={type}
-                  />
+                  <div key={type} className={styles.materialCard}>
+                    <div className={styles.gridHeader}>
+                      <div className={styles.headerNo}>No.</div>
+                      <div className={styles.headerType}>Type</div>
+                      <div className={styles.headerTitle}>Title</div>
+                    </div>
+                    <div className={styles.gridCardContent}>
+                      {categories[type].map((material, index) => (
+                        <ListItem
+                          key={material._id}
+                          material={{...material, type}}
+                          index={index + 1}
+                          categoryIcons={categoryIcons}
+                          onEdit={(material) => {
+                            setNotePopup({
+                              isOpen: true,
+                              materialId: material._id || '',
+                              title: material.title || '',
+                              note: material.note || ''
+                            });
+                          }}
+                          onDelete={async (materialId) => {
+                            console.log('Delete material called with ID:', materialId, 'and topicId:', activeTab);
+                            if (!activeTab) {
+                              console.error('No active tab/topicId available for delete operation');
+                              return false;
+                            }
+                            return await onDeleteMaterial(materialId, activeTab);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}

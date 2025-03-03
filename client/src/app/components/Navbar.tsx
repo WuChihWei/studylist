@@ -117,4 +117,4 @@ const Navbar = ({ onAddMaterial: externalAddMaterial, activeTopicId: externalTop
   )
 }
 
-export default Navbar 
+export default Navbar

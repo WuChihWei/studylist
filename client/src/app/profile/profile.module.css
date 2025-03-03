@@ -1,7 +1,6 @@
 .profileContainer {
   max-width: 1200px;
   margin: 0 auto;
-  /* padding: 1rem; */
 }
 
 .profileHeader {
@@ -14,17 +13,13 @@
   flex-direction: row;
   width: 100%;
   background: white;
-  /* gap: 2rem; */
+  padding-bottom: 1rem;
 }
 
 .profileUser {
   width: 50%;
   display: flex;
   flex-direction: column;
-  /* justify-content: space-between; */
-  /* background-color: blanchedalmond; */
-  /* gap: 1.5rem; */
-  /* border: 1px solid #eee; */
 }
 
 .contributionSection {
@@ -32,7 +27,6 @@
   padding: 1rem;
   background: #fff;
   border-radius: 8px;
-  border: 1px solid #eee;
 }
 
 .contributionSection > div {
@@ -42,26 +36,27 @@
 
 .avatarSection {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 100%;
+  padding-top: 1rem;
 }
 
 .leftSection {
-  width: 20%;
+  width: 80px;
   display: flex;
   flex-direction: column;
-  /* align-items: flex-start; */
-  /* background-color: blueviolet; */
+  margin-right: 1rem;
 }
 
 .rightSection {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .avatarArea {
   position: relative;
-  width: 60%;
+  width: 100%;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
@@ -78,7 +73,6 @@
 .userInfo {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
 .userName {
@@ -91,20 +85,6 @@
   color: #666;
   font-size: 14px;
   line-height: 1.5;
-}
-
-.editButton {
-  padding: 8px 16px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  background: white;
-  color: #666;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  margin-top: 1rem;
-  text-align: center;
-  width: 60%;  /* Match avatarArea width */
 }
 
 .editButton:hover {
@@ -122,8 +102,6 @@
   display: flex;
   flex-direction: column;
   border-bottom: none !important;
-
-  /* padding: 1.5rem; */
 }
 
 .topicHeaderContainer {
@@ -140,7 +118,6 @@
   flex-direction: row;
   justify-content: space-between;
   background-color: antiquewhite;
-
 }
 
 .topicMainInfo {
@@ -187,54 +164,6 @@
 
 .materialsGrid {
   display: grid;
-  /* grid-template-columns: repeat(2, 1fr); */
-  /* gap: 1.5rem; */
-}
-
-/* .materialColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: #ffffff;
-  border-radius: 8px;
-} */
-
-/* .materialSection {
-  background: #ffffff;
-  border-radius: 8px;
-  border: 1px solid rgb(237, 237, 237); 
-}
-
-.materialHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight:500;
-  color: #777777;
-} */
-
-/* .materialIcon {
-  font-size: 1rem;
-} */
-
-/* .materialItems {
-  display: flex;
-  flex-direction: column;
-} */
-
-/* .materialRow {
-  display: flex;
-  align-items: center;
-  padding: 0.6rem 0.6rem 0rem 0.6rem;
-  border-radius: 6px;
-  gap: 0.8rem;
-} */
-
-.materialNumber {
-  color: #666;
-  font-size: 1rem;
-  min-width: 0.8rem;
-  font-weight: 600;
 }
 
 .materialPreview {
@@ -279,7 +208,6 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  /* padding: 0.75rem; */
   border: 1px dashed #dee2e6;
   background: none;
   color: #666;
@@ -324,7 +252,6 @@
 }
 
 .addForm {
-  /* margin-top: 0.5rem; */
   width: 100%;
 }
 
@@ -361,7 +288,6 @@
   font-size: 0.8rem;
   color: #c9c9c9;
   background: transparent;
-  /* background-color: #955858 */
 }
 
 .uploadButton {
@@ -406,8 +332,8 @@
 
 .addInput::placeholder,
 .urlInput::placeholder {
-  color: #c9c9c9; /* 你想要的顏色 */
-  opacity: 1; /* 確保顏色不透明 */
+  color: #c9c9c9;
+  opacity: 1;
 }
 
 .editInput {
@@ -437,7 +363,6 @@
 .topicTabWrapper {
   display: flex;
   align-items: center;
-  /* gap: 0.5rem; */
 }
 
 .editTopicButton {
@@ -450,7 +375,6 @@
   border: none;
   color: #666;
   cursor: pointer;
-  /* padding: 0.25rem; */
   font-size: 1rem;
 }
 
@@ -460,7 +384,6 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  /* border-radius: 4px; */
   background: var(--secondary);
   border: none;
   cursor: pointer;
@@ -488,7 +411,6 @@
 .iconButton {
   background: none;
   border: none;
-  /* padding: 4px; */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -511,7 +433,6 @@
 .topicNameContainer {
   display: flex;
   align-items: center;
-  /* gap: 8px; */
 }
 
 .avatarWrapper {
@@ -544,7 +465,6 @@
 
 .mainTopicWrapper h1 {
   margin: 0;
-  /* font-size: 2.2rem; */
   font-weight: 800;
 }
 
@@ -569,7 +489,6 @@
   position: relative;
 }
 
-
 .viewTab.active::after {
   content: '';
   position: absolute;
@@ -580,18 +499,12 @@
   background: #333;
 }
 
-
-
-
-
-
 .viewTabsContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
-
 
 .collectLegend {
   display: flex;
@@ -619,14 +532,12 @@
   gap: 4px;
 }
 
-/* Materials view colors */
 .materialsScale .collectDot:nth-child(1) { background-color: var(--collection-empty); }
 .materialsScale .collectDot:nth-child(2) { background-color: var(--collection-l1); }
 .materialsScale .collectDot:nth-child(3) { background-color: var(--collection-l2); }
 .materialsScale .collectDot:nth-child(4) { background-color: var(--collection-l3); }
 .materialsScale .collectDot:nth-child(5) { background-color: var(--collection-l4); }
 
-/* Study list colors */
 .studyScale .collectDot:nth-child(1) { background-color: var(--study-l1); }
 .studyScale .collectDot:nth-child(2) { background-color: var(--study-l2); }
 .studyScale .collectDot:nth-child(3) { background-color: var(--study-l3); }
@@ -677,7 +588,6 @@
   background-color: rgba(244, 67, 54, 0.1);
 }
 
-/* 平板和手機版面配置 */
 @media (max-width: 1024px) {
   .profileInfo {
     flex-direction: column;
@@ -686,17 +596,9 @@
   .profileUser, .contributionSection {
     width: 100%;
   }
-  
-  .contributionSection {
-    margin-top: 1.5rem;
-  }
 }
 
 @media (max-width: 768px) {
-  .profileInfo {
-    padding: 1rem;
-  }
-  
   .avatarSection {
     flex-direction: column;
     align-items: center;
@@ -704,16 +606,8 @@
   }
   
   .leftSection {
-    width: 100px;
-  }
-  
-  .avatarArea {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .editButton {
-    align-self: center;
+    margin-right: 0;
+    margin-bottom: 1rem;
   }
   
   .topicTabs {

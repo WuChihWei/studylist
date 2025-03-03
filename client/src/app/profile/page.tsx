@@ -229,30 +229,6 @@ export default function ProfilePage() {
             </div>
           ))}
           
-          {/* <form onSubmit={handleSubmit} className={styles.addForm}>
-            <div className={styles.inputGroup}>
-              <div className={styles.nameGroup}>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder={`Add New ${type}...`}
-                  required
-                  className={styles.addInput}
-                />
-                <input
-                  type="url"
-                  name="url"
-                  placeholder="url..."
-                  className={styles.urlInput}
-                />
-              </div>
-              <div>
-                <button type="submit" className={styles.uploadButton}>
-                  +
-                </button>
-              </div>
-            </div>
-          </form> */}
         </div>
       </div>
     );
@@ -337,9 +313,9 @@ export default function ProfilePage() {
                 <Image 
                   src={userData?.photoURL || '/default-avatar.png'}
                   alt={userData?.name || 'User'}
-                  width={20}
-                  height={20}
-                  className={styles.memberAvatar}
+                  width={80}
+                  height={80}
+                  className={styles.avatar}
                 />
                 <span className={styles.memberTooltip}>{userData?.name || 'User'}</span>
               </div>
@@ -358,11 +334,11 @@ export default function ProfilePage() {
         className="border-r"
       />
       
-      <div className="flex-1 flex flex-col pr-8 pl-8">
+      <div className="flex-1 flex flex-col pr-16 pl-16">
         {/* 頂部導航欄 */}
-        <div className="flex justify-between items-center p-4 border-b">
-          <div className="flex items-center gap-2">
-            {/* 使用新的 AddNewMaterial 組件 */}
+        <div className="flex justify-between items-center pt-6">
+          <div className="flex items-center gap-2 w-1/2">
+            {/* 使用新的 AddNewMaterial 組件，寬度設為 100% */}
             <AddNewMaterial onSubmit={(material) => {
               if (activeTab) {
                 addMaterial({
@@ -399,6 +375,11 @@ export default function ProfilePage() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
+                  <button onClick={handleEditProfile} className="w-full text-left">
+                    Edit Profile
+                  </button>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
                   <Link href="/login" className="w-full">
                     Log in
                   </Link>
@@ -415,33 +396,28 @@ export default function ProfilePage() {
         
         {/* Profile Header Section */}
         <div className="">
-          <div className={styles.profileInfo}>
-            <div className={styles.profileUser}>
-              <div className={styles.avatarSection}>
-                <div className={styles.leftSection}>
-                  <div className={styles.avatarArea}>
+          <div className="flex flex-col md:flex-row w-full bg-white pt-6 pb-6">
+            <div className="w-full md:w-1/2 flex flex-col">
+              <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start w-full">
+                <div className="w-20 flex flex-col mb-4 md:mb-0 md:mr-4">
+                  <div className="relative w-full rounded-full overflow-hidden flex justify-center items-center">
                     <Image 
                       src={userData?.photoURL || '/default-avatar.png'}
                       alt={userData?.name || 'User'}
-                      width={120}
-                      height={120}
-                      className={styles.avatar}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
                     />
                   </div>
-                  <div>
-                  <Button variant="outline" onClick={handleEditProfile} className={styles.editButton}>
-                    Edit
-                  </Button>
-                  </div>
                 </div>
-                <div className={styles.rightSection}>
+                <div className="flex flex-col justify-center text-center md:text-left">
                   <h4 className="text-xl font-semibold">{userData?.name}</h4>
-                  <p className={`${styles.bio} max-w-md`}>{userData?.bio || 'Introduce yourself'}</p>
+                  <p className="text-gray-600 text-sm leading-normal max-w-md">{userData?.bio || 'Introduce yourself'}</p>
                 </div>
               </div>
             </div>
             
-            <div className={styles.contributionSection}>
+            <div className="w-full md:w-1/2 bg-white rounded-lg ">
               <ContributionGraph 
                 data={getContributionData()}
                 activeView={activeView}
@@ -470,7 +446,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold">
+                  <h1 className="">
                     {userData?.topics.find(t => t._id === activeTab)?.name}
                   </h1>
                   <Button 

@@ -6,12 +6,13 @@
   border-bottom: 1px dashed gainsboro;
   padding-bottom: 10px;
   margin-bottom: 20px;
-
 }
 
 .categoryTabs {
   display: flex;
   gap: 20px;
+  width: 100%;
+  max-width: 80%; /* Leave space for view toggle */
 }
 
 .viewToggle {
@@ -27,9 +28,12 @@
 .categoryTab {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.5rem 0;
-  
+  width: 20%; /* Set equal width for all tabs */
+  min-width: 100px;
+  text-align: center;
   border: none;
   background: none;
   color: #999;
@@ -38,13 +42,22 @@
   transition: color 0.2s;
 }
 
+.categoryTab span {
+  white-space: nowrap;
+}
+
 .categoryTab:hover {
   color: #666;
 }
 
 .categoryTab.active {
-  color: #333;
+  color: #ffffff;
   font-weight: 500;
+  background-color: #000000;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  width: 20%; /* Maintain the same width as inactive tabs */
+  min-width: 100px;
 }
 
 .categoryIcon {
@@ -462,6 +475,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    width: 100%;
   }
   
   .viewToggle {
@@ -473,6 +487,13 @@
     overflow-x: auto;
     padding-bottom: 0.5rem;
     gap: 15px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .categoryTab {
+    flex: 1;
+    min-width: 90px; /* Slightly smaller on mobile */
   }
   
   .gridView {
@@ -507,8 +528,9 @@
   }
   
   .categoryTab {
+    padding: 0.5rem 0.25rem;
     font-size: 0.9rem;
-    padding: 0.4rem 0;
+    min-width: 80px;
   }
   
   .addInput, .urlInput {
@@ -518,12 +540,31 @@
   .typeButton {
     padding: 0.4rem 0.6rem;
   }
+  
+  .categoryTab.active {
+    min-width: 80px;
+    padding: 0.5rem 0.25rem;
+  }
 }
 
 .gridView {
   display: grid;
   gap: 1.2rem;
   grid-template-columns: repeat(2, 1fr);
+  margin-bottom: 2rem;
+  height: 400px;
+}
+
+@media (max-width: 1200px) {
+  .gridView {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .gridView {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* .listContainer {
@@ -546,14 +587,17 @@
 
 .headerNo {
   min-width: 40px;
+  width: 25%;
 }
 
 .headerType {
   min-width: 40px;
+  width: 25%;
 }
 
 .headerTitle {
   flex: 1;
+  width: 25%;
 }
 
 .listContent {
@@ -579,24 +623,26 @@
 
 .itemNumber {
   min-width: 40px;
+  width: 25%;
   color: #666;
   font-size: 14px;
 }
 
 .itemIcon {
   min-width: 40px;
+  width: 25%;
   display: flex;
   align-items: center;
   color: #666;
 }
 
 .itemTitle {
+  width: 25%;
   color: #333;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  width: 100%;
 }
 
 .moreButton {
@@ -615,10 +661,14 @@
   /* padding: 1rem; */
   transition: all 0.2s ease;
   box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .materialCard:hover {
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .centerIcon {
@@ -661,29 +711,33 @@
 
 .headerNo {
   min-width: 40px;
+  width: 25%;
 }
 
 .headerType {
   min-width: 40px;
+  width: 25%;
 }
 
 .headerTitle {
   flex: 1;
+  width: 25%;
 }
 
 .gridCardContent {
   height: calc(100% - 33px);  /* 減去標頭高度 */
   padding: 0 !important;
   overflow-y: auto;
+  flex: 1;
 }
 
 .itemTitle {
+  width: 25%;
   color: #333;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 140px;
 }
 
 .tableHeader {
@@ -698,15 +752,18 @@
 
 .headerNo {
   min-width: 40px;
+  width: 25%;
 }
 
 .headerType {
   min-width: 40px;
+  width: 25%;
   margin-right: 8px;
 }
 
 .headerTitle {
   flex: 1;
+  width: 25%;
 }
 
 .gridListItem, .materialItem {
@@ -718,24 +775,26 @@
 
 .itemNumber, .materialNumber {
   min-width: 40px;
+  width: 25%;
   color: #666;
   font-size: 14px;
 }
 
 .itemIcon, .materialIcon {
   min-width: 40px;
+  width: 25%;
   display: flex;
   align-items: center;
   color: #666;
 }
 
 .itemTitle, .materialTitle {
+  width: 25%;
   color: #333;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: calc(100% - 100px);
 }
 
 .collectLegend {
