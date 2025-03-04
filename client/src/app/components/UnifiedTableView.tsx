@@ -98,7 +98,7 @@ export default function UnifiedTableView({
           <span className={styles.columnNumber}>#</span>
           <span className={styles.columnType}>Type</span>
           <span className={styles.columnTitle}>Name</span>
-          <span className={styles.columnActions}>Actions</span>
+          <span className={styles.columnActions}>{viewMode === 'list' ? 'Actions' : ''}</span>
         </div>
       );
     } else {
@@ -110,8 +110,8 @@ export default function UnifiedTableView({
           </span>
           <span className={styles.columnType}>Type</span>
           <span className={styles.columnTitle}>Name</span>
-          <span className={styles.columnProgressText}>To Finish</span>
-          <span className={styles.columnActions}>Link</span>
+          <span className={styles.columnProgressText}>{viewMode === 'list' ? 'To Finish' : ''}</span>
+          <span className={styles.columnActions}>{viewMode === 'list' ? 'Link' : ''}</span>
         </div>
       );
     }
@@ -272,55 +272,69 @@ export default function UnifiedTableView({
           {(['webpage', 'video', 'podcast', 'book'] as const).map((type) => (
             <div key={type} className={styles.gridCategory}>
               <div className={styles.gridCategoryHeader}>
-                <span className={styles.gridCategoryTitle}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </span>
-                <span className={styles.gridCategoryCount}>
-                  {materials.filter(m => m.type === type).length}
-                </span>
+                <div className={styles.gridCategoryHeaderLeft}>
+                  <span className={styles.columnNumber}>#</span>
+                  <span className={styles.columnType}>Type</span>
+                  <span className={styles.columnTitle}>Name</span>
+                </div>
+                <div className={styles.gridCategoryTitleContainer}>
+                    <span className={styles.gridCategoryTitle}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </span>
+                    <span className={styles.gridCategoryCount}>
+                    {materials.filter(m => m.type === type).length}
+                    </span>
+                </div>
+               
               </div>
               <div className={styles.gridItems}>
                 {materials
                   .filter(m => m.type === type)
-                  .map(material => (
-                    <div key={material._id || material.index} className={styles.gridItem}>
-                      <div className={styles.gridItemHeader}>
-                        <span className={styles.gridItemNumber}>{material.index}</span>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className={styles.actionButton}>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            {onEdit && (
-                              <DropdownMenuItem onSelect={() => onEdit(material)}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                            )}
-                            {onDelete && (
-                              <DropdownMenuItem onSelect={() => onDelete(material._id || '')}>
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <div className={styles.gridItemContent}>
-                        <div className={styles.gridItemTitle}>
-                          {material.url ? (
-                            <a href={material.url} target="_blank" rel="noopener noreferrer">
-                              {material.title}
-                            </a>
-                          ) : (
-                            material.title
-                          )}
+                  .map(material => {
+                    const TypeIcon = TYPE_ICONS[material.type];
+                    return (
+                      <div key={material._id || material.index} className={styles.gridItem}>
+                        <div className={styles.gridItemHeader}>
+                          <span className={styles.gridItemNumber}>{material.index}</span>
+                          <span className={styles.columnType}>
+                            <TypeIcon className={styles.typeIcon} />
+                          </span>
+                          <div className={styles.gridItemContent}>
+                            <div className={styles.gridItemTitle}>
+                              {material.url ? (
+                                <a href={material.url} target="_blank" rel="noopener noreferrer">
+                                  {material.title}
+                                </a>
+                              ) : (
+                                material.title
+                              )}
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className={styles.actionButton}>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {onEdit && (
+                                <DropdownMenuItem onSelect={() => onEdit(material)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                              )}
+                              {onDelete && (
+                                <DropdownMenuItem onSelect={() => onDelete(material._id || '')}>
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </div>
           ))}

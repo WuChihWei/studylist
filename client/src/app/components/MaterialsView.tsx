@@ -25,6 +25,7 @@ import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
 import { NoteCard } from "@/app/components/ui/NoteCard"
 import UnifiedTableView from './UnifiedTableView';
+import { cn } from "@/lib/utils"
 
 interface MaterialInput {
   title: string;
@@ -241,35 +242,50 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           <div className={styles.categoriesContainer}>
             <div className={styles.categoryTabs}>
               <button
-                className={`${styles.categoryTab} ${activeCategory === 'all' ? styles.active : ''}`}
+                className={cn(
+                  styles.categoryTab,
+                  activeCategory === 'all' ? cn(styles.active, 'font-bold text-black') : 'text-gray-400'
+                )}
                 onClick={() => setActiveCategory('all')}
               >
                 {categoryIcons.all}
                 <span>All ({getCategoryCount('all')})</span>
               </button>
               <button
-                className={`${styles.categoryTab} ${activeCategory === 'webpage' ? styles.active : ''}`}
+                className={cn(
+                  styles.categoryTab,
+                  activeCategory === 'webpage' ? cn(styles.active, 'font-bold text-black') : 'text-gray-400'
+                )}
                 onClick={() => setActiveCategory('webpage')}
               >
                 {categoryIcons.webpage}
                 <span>Web ({getCategoryCount('webpage')})</span>
               </button>
               <button
-                className={`${styles.categoryTab} ${activeCategory === 'video' ? styles.active : ''}`}
+                className={cn(
+                  styles.categoryTab,
+                  activeCategory === 'video' ? cn(styles.active, 'font-bold text-black') : 'text-gray-400'
+                )}
                 onClick={() => setActiveCategory('video')}
               >
                 {categoryIcons.video}
                 <span>Video ({getCategoryCount('video')})</span>
               </button>
               <button
-                className={`${styles.categoryTab} ${activeCategory === 'podcast' ? styles.active : ''}`}
+                className={cn(
+                  styles.categoryTab,
+                  activeCategory === 'podcast' ? cn(styles.active, 'font-bold text-black') : 'text-gray-400'
+                )}
                 onClick={() => setActiveCategory('podcast')}
               >
                 {categoryIcons.podcast}
                 <span>Podcast ({getCategoryCount('podcast')})</span>
               </button>
               <button
-                className={`${styles.categoryTab} ${activeCategory === 'book' ? styles.active : ''}`}
+                className={cn(
+                  styles.categoryTab,
+                  activeCategory === 'book' ? cn(styles.active, 'font-bold text-black') : 'text-gray-400'
+                )}
                 onClick={() => setActiveCategory('book')}
               >
                 {categoryIcons.book}
@@ -281,7 +297,10 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? styles.activeView : ''}
+                className={cn(
+                  styles.viewToggleButton,
+                  viewMode === 'list' ? 'font-bold text-black' : 'text-gray-400'
+                )}
               >
                 <BsListUl size={18} />
               </Button>
@@ -289,7 +308,10 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
                 variant="ghost"
                 size="icon"
                 onClick={() => setViewMode('grid')}
-                className={viewMode === 'grid' ? styles.activeView : ''}
+                className={cn(
+                  styles.viewToggleButton,
+                  viewMode === 'grid' ? 'font-bold text-black' : 'text-gray-400'
+                )}
               >
                 <BsGrid size={18} />
               </Button>
@@ -319,94 +341,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
             }}
           />
           
-          {/* Add Material Form */}
-          {/* <div className={styles.addFormContainer}>
-            <div className={styles.addForm}>
-              <div className={styles.addMaterialRow}>
-                <div className={styles.inputGroup}>
-                  <div className={styles.typeIconContainer}>
-                    {TYPE_ICONS[selectedType]({ size: 16, color: '#666' })}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Add new material..."
-                    className={styles.addInput}
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    onFocus={() => setShowUrlInput(true)}
-                  />
-                </div>
-                <div className={styles.addButtonContainer}>
-                  <button
-                    className={styles.addButton}
-                    onClick={async () => {
-                      if (editedTitle.trim()) {
-                        const newMaterial = {
-                          title: editedTitle,
-                          type: selectedType,
-                          url: '',
-                          dateAdded: new Date()
-                        };
-                        const success = await onAddMaterial(newMaterial);
-                        if (success) {
-                          setEditedTitle('');
-                          setShowUrlInput(false);
-                        }
-                      }
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              {showUrlInput && (
-                <div className={styles.urlInputRow}>
-                  <div className={styles.inputGroup}>
-                    <div className={styles.typeDropdownTrigger} onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}>
-                      <div className={styles.selectedType}>
-                        {TYPE_ICONS[selectedType]({ size: 16, color: '#666' })}
-                        <span>{selectedType}</span>
-                      </div>
-                      <IoChevronDownSharp size={12} />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="URL (optional)"
-                      className={styles.urlInput}
-                    />
-                  </div>
-                  {isTypeDropdownOpen && (
-                    <div className={styles.typeDropdown}>
-                      <div className={styles.dropdownHeader}>
-                        <span>Select Type</span>
-                        <button
-                          className={styles.closeButton}
-                          onClick={() => setIsTypeDropdownOpen(false)}
-                        >
-                          <IoClose size={16} />
-                        </button>
-                      </div>
-                      <div className={styles.typeOptions}>
-                        {Object.keys(TYPE_ICONS).map((type) => (
-                          <button
-                            key={type}
-                            className={`${styles.typeOption} ${selectedType === type ? styles.selected : ''}`}
-                            onClick={() => {
-                              setSelectedType(type as 'webpage' | 'video' | 'podcast' | 'book');
-                              setIsTypeDropdownOpen(false);
-                            }}
-                          >
-                            {TYPE_ICONS[type as keyof typeof TYPE_ICONS]({ size: 16, color: selectedType === type ? '#fff' : '#666' })}
-                            <span>{type}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div> */}
         </div>
       </div>
       
