@@ -7,6 +7,7 @@ import { FiBook, FiVideo } from "react-icons/fi";
 import { FaCheck, FaTimes, FaPlay } from "react-icons/fa";
 import CircleProgress from './ui/circleProgress';
 import VideoPopup from './VideoPopup';
+import UnifiedTableView from './UnifiedTableView';
 
 interface StudyListViewProps {
   categories: Categories;
@@ -113,140 +114,113 @@ export default function StudyListView({
   };
 
   const estimateTimeUnits = (material: Material & { type: keyof Categories }) => {
-    if (!material.readingTime) {
-      return 6;
+    if (material.readingTime) {
+      return Math.ceil(material.readingTime / unitMinutes);
     }
-    return Math.ceil(material.readingTime / unitMinutes);
+    
+    // Default units based on content type if not specified
+    switch (material.type) {
+      case 'video': return 6;
+      case 'podcast': return 8;
+      case 'book': return 12;
+      case 'webpage': return 3;
+      default: return 4;
+    }
   };
 
   const getAllMaterials = () => {
-    const allMaterials = [
+    return [
       ...categories.webpage.map(m => ({ ...m, type: 'webpage' as const })),
       ...categories.video.map(m => ({ ...m, type: 'video' as const })),
       ...categories.podcast.map(m => ({ ...m, type: 'podcast' as const })),
       ...categories.book.map(m => ({ ...m, type: 'book' as const }))
     ];
-
-    return allMaterials.sort((a, b) => {
-      const aCompleted = completedMaterials.has(a._id || '');
-      const bCompleted = completedMaterials.has(b._id || '');
-      if (aCompleted === bCompleted) return 0;
-      return aCompleted ? 1 : -1;
-    });
   };
 
   const handleComplete = async (material: Material) => {
     if (!material._id) return;
     
-    const isCompleted = material.completed || false;
-    console.log('7. Completing material:', {
-      materialId: material._id,
-      currentStatus: isCompleted,
-      material: material
-    });
+    const isCurrentlyCompleted = completedMaterials.has(material._id);
     
     try {
-      await onCompleteMaterial(material._id, isCompleted);
-      console.log('Successfully called onCompleteMaterial');
+      await onCompleteMaterial(material._id, !isCurrentlyCompleted);
       
+      // Update local state
       const newCompleted = new Set(completedMaterials);
-      if (isCompleted) {
+      if (isCurrentlyCompleted) {
         newCompleted.delete(material._id);
       } else {
         newCompleted.add(material._id);
       }
       setCompletedMaterials(newCompleted);
-      console.log('Updated local state:', {
-        newCompletedSize: newCompleted.size,
-        isCompleted
-      });
     } catch (error) {
-      console.error('Error in handleComplete:', error);
+      console.error('Error toggling completion status:', error);
     }
   };
 
   const handleUnitComplete = async (material: Material & { type: keyof Categories }, clickedIndex: number) => {
     if (!material._id) return;
     
-    console.log('1. Starting handleUnitComplete:', {
-      materialId: material._id,
-      clickedIndex,
-      currentCompletedUnits: material.completedUnits
-    });
-
-    if (clickedIndex < (material.completedUnits || 0)) {
-      console.log('2. Clicked on already completed unit, returning');
-      return;
-    }
-
-    const newCompletedUnits = clickedIndex + 1;
     const totalUnits = estimateTimeUnits(material);
+    const currentCompleted = material.completedUnits || 0;
     
-    console.log('3. Preparing update:', {
-      newCompletedUnits,
-      totalUnits,
-      readingTime: totalUnits * unitMinutes
-    });
-
-    try {
-      const success = await onUpdateMaterial(material._id, {
-        completedUnits: newCompletedUnits,
-        completed: newCompletedUnits === totalUnits,
-        readingTime: totalUnits * unitMinutes
+    // If clicking on a completed unit, mark it and all after it as incomplete
+    if (clickedIndex < currentCompleted) {
+      await onUpdateMaterial(material._id, {
+        completedUnits: clickedIndex,
+        completed: false
+      });
+    } 
+    // If clicking on the last uncompleted unit, mark all as complete
+    else if (clickedIndex === totalUnits - 1) {
+      await onUpdateMaterial(material._id, {
+        completedUnits: totalUnits,
+        completed: true
       });
       
-      console.log('4. Update result:', { success });
-
-      if (success) {
-        const newCompleted = new Set(completedMaterials);
-        if (newCompletedUnits === totalUnits) {
-          newCompleted.add(material._id);
-        } else {
-          newCompleted.delete(material._id);
-        }
-        setCompletedMaterials(newCompleted);
-        console.log('5. Local state updated:', {
-          totalCompleted: newCompleted.size,
-          isFullyCompleted: newCompletedUnits === totalUnits
-        });
-      }
-    } catch (error) {
-      console.error('6. Error updating units:', error);
+      // Update local state
+      const newCompleted = new Set(completedMaterials);
+      newCompleted.add(material._id);
+      setCompletedMaterials(newCompleted);
+    } 
+    // Otherwise mark up to the clicked unit as complete
+    else {
+      await onUpdateMaterial(material._id, {
+        completedUnits: clickedIndex + 1,
+        completed: false
+      });
     }
   };
-  
+
   const handleOpenContent = (material: Material & { type: keyof Categories }) => {
     if (!material.url) return;
     
-    setContentPopup({
-      isOpen: true,
-      url: material.url,
-      title: material.title || 'Untitled Content'
-    });
-    
-    // 直接在新視窗中打開連結
-    window.open(material.url, '_blank');
+    if (material.type === 'video') {
+      setContentPopup({
+        isOpen: true,
+        url: material.url,
+        title: material.title || ''
+      });
+    } else {
+      window.open(material.url, '_blank');
+    }
   };
 
   const handlePlayClick = (material: Material & { type: keyof Categories }) => {
-    if (!material.url) return;
-    
-    // 在新視窗中打開連結
-    window.open(material.url, '_blank');
-    
-    // 同時打開計時器
-    setContentPopup({
-      isOpen: true,
-      url: material.url,
-      title: material.title || 'Untitled Content'
-    });
+    handleOpenContent(material);
   };
 
+  const data = getAllMaterials().map((material, index) => ({
+    ...material,
+    index: index + 1,
+    type: material.type
+  }));
+
   return (
-    <div className={styles.materialsContainer}>
+    <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <span>All ({getAllMaterials().length})</span>
+          <h2 className={styles.title}>Study List</h2>
           <div className={styles.unitMinutesInput}>
             <input
               type="number"
@@ -277,89 +251,17 @@ export default function StudyListView({
         </div>
       </div>
 
-      <div className={styles.materialsList}>
-        <div className={styles.materialsHeader}>
-          <span>#</span>
-          <span>Process</span>
-          <span>Type</span>
-          <span>Name</span>
-          <span>Units</span>
-          <span>Progress</span>
-          <span>Action</span>
-        </div>
-        <div className={styles.materialsListContent}>
-          {getAllMaterials().map((material, index) => {
-            const totalUnits = estimateTimeUnits(material);
-            const completedUnits = material.completedUnits || 0;
-            const progress = completedUnits / totalUnits;
-
-            return (
-              <div 
-                key={material._id || index} 
-                className={styles.materialItem}
-              >
-                <span className={styles.materialNumber}>{index + 1}</span>
-                <div className={styles.materialProgress}>
-                  <CircleProgress progress={progress} />
-                  <span>{`${completedUnits}/${totalUnits}`}</span>
-                </div>
-                <div className={styles.materialPreview}>
-                  {typeIcons[material.type]}
-                </div>
-                <div className={styles.materialNameContainer}>
-                  <span className={styles.materialName} title={material.title || ''}>
-                    {material.title ? 
-                      (material.title.length > 60 ? `${material.title.slice(0, 60)}...` : material.title)
-                      : 'Untitled'
-                    }
-                  </span>
-                  <div className={styles.unitsProgress}>
-                    {Array.from({ length: totalUnits }).map((_, i) => (
-                      <div 
-                        key={i}
-                        className={`${styles.unitBlock} ${i < completedUnits ? styles.completed : ''}`}
-                        onClick={() => handleUnitComplete(material, i)}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.unitsEdit}>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={totalUnits}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value) || 1;
-                      if (value > 0 && value <= 100) {
-                        onUpdateMaterial(material._id!, {
-                          readingTime: value * unitMinutes
-                        });
-                      }
-                    }}
-                    className={styles.unitsInput}
-                  />
-                  <span>units</span>
-                </div>
-                <div className={styles.progressText}>
-                  {Math.round(progress * 100)}% Complete
-                </div>
-                <div className={styles.actionButtons}>
-                  {material.url && (
-                    <button 
-                      className={styles.playButton}
-                      onClick={() => handlePlayClick(material)}
-                      title="Open Content"
-                    >
-                      <FaPlay size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <UnifiedTableView
+        materials={data}
+        viewType="studylist"
+        onComplete={async (materialId, isCompleted) => {
+          await onCompleteMaterial(materialId, isCompleted);
+        }}
+        onUpdateProgress={async (materialId, updates) => {
+          return await onUpdateMaterial(materialId, updates);
+        }}
+        unitMinutes={unitMinutes}
+      />
       
       <VideoPopup 
         isOpen={contentPopup.isOpen}

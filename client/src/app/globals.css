@@ -1,3 +1,5 @@
+/* postcss-import */
+/* tailwindcss */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -80,6 +82,9 @@ a {
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-width: 16rem;
+    --sidebar-width-icon: 3rem;
+    --content-max-width: 1200px;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -158,7 +163,7 @@ a {
     @apply scroll-m-20 text-2xl font-semibold tracking-tight;  /* 24px */
   }
   h4, .h4 {
-    @apply scroll-m-20 text-xl font-semibold tracking-tight;  /* 20px */
+    @apply scroll-m-20 text-xl font-semibold tracking-normal;  /* 20px */
   }
   h5, .h5 {
     @apply scroll-m-14 text-lg font-semibold tracking-tight;  /* 18px */

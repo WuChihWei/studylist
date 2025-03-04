@@ -12,16 +12,16 @@ import {
   import { useState } from "react"
   
   interface EditProfileDialogProps {
-    isOpen: boolean
-    onClose: () => void
+    open: boolean
+    onOpenChange: (open: boolean) => void
     onSave: (name: string, bio: string) => void
     initialName: string
     initialBio: string
   }
   
   export function EditProfileDialog({ 
-    isOpen, 
-    onClose, 
+    open, 
+    onOpenChange, 
     onSave, 
     initialName, 
     initialBio 
@@ -31,11 +31,11 @@ import {
   
     const handleSave = () => {
       onSave(name, bio)
-      onClose()
+      onOpenChange(false)
     }
   
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
@@ -64,7 +64,7 @@ import {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button onClick={handleSave}>Save changes</Button>

@@ -163,8 +163,7 @@
   width: 36px;
 }
 
-/* 舊的樣式保留，但可能不再使用 */
-.addMaterialRow {
+/* .addMaterialRow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -250,4 +249,4 @@
 
 .dropdownItem:hover {
   background-color: #f7f7f7;
-} 
+}  */

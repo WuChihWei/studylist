@@ -1,115 +1,5 @@
-.materialsContainer {
+.container {
   width: 100%;
-  padding: 1rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.materialsList {
-  width: 100%;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.materialsListContent {
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.materialItem {
-  display: grid;
-  grid-template-columns: 50px 100px 50px 1fr 100px 120px 60px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  align-items: center;
-}
-
-.materialItem:last-child {
-  border-bottom: none;
-}
-
-.materialItem:hover {
-  background: #f9f9f9;
-}
-
-.materialNumber {
-  color: #999;
-  font-size: 14px;
-}
-
-.materialPreview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  color: #666;
-}
-
-.materialNameContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.materialName {
-  font-weight: 500;
-  color: #333;
-}
-
-.materialActions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.completeButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  border: none;
-  background: #f5f5f5;
-  color: #666;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.completeButton:hover {
-  background: #eee;
-}
-
-.completeButton.completed {
-  background: #4169E1;
-  color: white;
-}
-
-.completeButton.completed:hover {
-  background: #3158D0;
-}
-
-.materialsListContent::-webkit-scrollbar {
-  width: 8px;
-}
-
-.materialsListContent::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.materialsListContent::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
-}
-
-.materialsListContent::-webkit-scrollbar-thumb:hover {
-  background: #999;
 }
 
 .header {
@@ -117,178 +7,70 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  padding: 0 0.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .headerLeft {
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: #666;
-  font-size: 14px;
 }
 
-.unitMinutes {
-  color: #999;
-}
-
-.headerRight {
-  flex: 1;
-  max-width: 200px;
-}
-
-.progressBar {
-  width: 100%;
-  height: 4px;
-  background: #eee;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: #4169E1;
-  transition: width 0.3s ease;
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .unitMinutesInput {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: 1rem;
+  background: #f5f5f5;
+  padding: 0.5rem;
+  border-radius: 4px;
 }
 
 .minutesInput {
-  width: 50px;
+  width: 40px;
   padding: 0.25rem;
   border: 1px solid #ddd;
   border-radius: 4px;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
 .minutesInput:focus {
-  outline: none;
   border-color: #007bff;
 }
 
-.materialsHeader {
-  display: grid;
-  grid-template-columns: 50px 100px 50px 1fr 100px 120px 60px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #eee;
-  font-weight: 500;
-  color: #666;
+.headerRight {
+  width: 200px;
 }
 
-.materialProgress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.unitsProgress {
-  display: flex;
-  gap: 4px;
-}
-
-.unitBlock {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
+.progressBar {
+  width: 100%;
+  height: 8px;
   background: #eee;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.unitBlock:hover {
-  background: #ddd;
-}
-
-.unitBlock.completed {
-  background: #4169E1;
-}
-
-.unitBlock.completed:hover {
-  background: #3158D0;
-}
-
-.unitsEdit {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #666;
-  font-size: 14px;
-}
-
-.unitsInput {
-  width: 50px;
-  padding: 4px;
-  border: 1px solid #ddd;
   border-radius: 4px;
-  text-align: center;
-  font-size: 14px;
+  overflow: hidden;
 }
 
-.unitsInput:focus {
-  outline: none;
-  border-color: #4169E1;
+.progressFill {
+  height: 100%;
+  background: #4caf50;
+  border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
-.progressText {
-  color: #666;
-  font-size: 14px;
-  text-align: right;
-}
-
-.actionButtons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.playButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
-  background: #4169E1;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.playButton:hover {
-  background: #3158D0;
-  transform: scale(1.05);
-}
-
-@media (max-width: 1024px) {
-  .materialItem {
-    grid-template-columns: 40px 80px 40px 1fr 80px 100px 50px;
-    padding: 10px 12px;
-  }
-  
-  .materialPreview {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .materialName {
-    font-size: 0.9rem;
-  }
-}
-
+/* 响应式样式 */
 @media (max-width: 768px) {
-  .materialItem {
-    grid-template-columns: 30px 60px 30px 1fr 70px 80px 40px;
-    padding: 8px 10px;
-    font-size: 0.9rem;
-  }
-  
   .header {
     flex-direction: column;
     align-items: flex-start;
@@ -300,60 +82,12 @@
   }
   
   .unitMinutesInput {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .materialItem {
-    grid-template-columns: 30px 50px 1fr 60px;
-    padding: 10px;
-  }
-  
-  .materialProgress, .unitsProgress {
-    display: none;
-  }
-  
-  .materialsHeader {
-    display: none;
-  }
-  
-  .materialPreview {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .materialName {
-    font-size: 0.85rem;
-  }
-  
-  .actionButtons {
-    flex-direction: column;
-    gap: 0.5rem;
+    margin-top: 0.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .materialItem {
-    grid-template-columns: 25px 40px 1fr 50px;
-    padding: 8px;
-  }
-  
-  .materialNumber {
-    font-size: 12px;
-  }
-  
-  .materialPreview {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .materialName {
-    font-size: 0.8rem;
-  }
-  
-  .completeButton {
-    padding: 4px 8px;
-    font-size: 12px;
+  .title {
+    font-size: 1.25rem;
   }
 }

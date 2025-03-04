@@ -4,7 +4,7 @@ import { Button } from "@/app/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { TYPE_ICONS } from "../MaterialsView"
 import React from "react"
-import { NoteCard } from "./NoteCard"
+// import { NoteCard } from "../components/ui/NoteCard"
 
 type TableMaterial = Material & {
   index: number;

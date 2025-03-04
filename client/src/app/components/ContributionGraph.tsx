@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './ContributionGraph.module.css';
+import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
+import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 
 interface ContributionData {
   date: string;
@@ -80,7 +82,7 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
 
   const currentYear = new Date().getFullYear();
   const months = getMonths();
-  const days = ['M', '', 'W', '', 'F', '', ''] as const;
+  const days = ['Mon', '', 'Wed', '', 'Fri', '', ''] as const;
 
   const handleScroll = (direction: 'left' | 'right') => {
     const container = scrollContainerRef.current;
@@ -119,38 +121,40 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
     <div className={styles.graphContainer}>
       <div className={styles.header}>
         <div className={styles.yearInfo}>
-          <span className={styles.yearLabel}>{currentYear}</span>
-          <div className={styles.collectLegend}>
-            {activeView === 'materials' ? (
-              <>
-                <span>No Collect</span>
-                <div className={`${styles.collectScale} ${styles.materialsScale}`}>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                </div>
-                <span>Great Collect</span>
-              </>
-            ) : (
-              <>
-                <span>Only Collect</span>
-                <div className={`${styles.collectScale} ${styles.studyScale}`}>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                  <div className={styles.collectDot}></div>
-                </div>
-                <span>Finished</span>
-              </>
-            )}
+          <div className={styles.yearNavigation}>
+            <button className={styles.navButton} onClick={() => handleScroll('left')}>
+              <MdOutlineKeyboardArrowLeft />
+            </button>
+            <h5 className={styles.yearLabel}>{currentYear}</h5>
+            <button className={styles.navButton} onClick={() => handleScroll('right')}>
+              <MdOutlineKeyboardArrowRight />
+            </button>
           </div>
-        </div>
-        <div className={styles.navigationButtons}>
-          <button className={styles.navButton} onClick={() => handleScroll('left')}>◀</button>
-          <button className={styles.navButton} onClick={() => handleScroll('right')}>▶</button>
+          {activeView === 'materials' ? (
+            <div className={styles.collectLegend}>
+              <span>No Collect</span>
+              <div className={`${styles.collectScale} ${styles.materialsScale}`}>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+              </div>
+              <span>Great Collect</span>
+            </div>
+          ) : (
+            <div className={styles.collectLegend}>
+              <span>Only Collect</span>
+              <div className={`${styles.collectScale} ${styles.studyScale}`}>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+                <div className={styles.collectDot}></div>
+              </div>
+              <span>Finished</span>
+            </div>
+          )}
         </div>
       </div>
       <div className={styles.graphScrollContainer} ref={scrollContainerRef}>

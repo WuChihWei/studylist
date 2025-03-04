@@ -23,8 +23,8 @@ import { Card, CardContent } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
 import { Plus, MoreHorizontal, Link, Pencil, Trash2 } from "lucide-react"
 import { Input } from "@/app/components/ui/input"
-import { NoteCard } from "./ui/NoteCard"
-import { ListItem } from './ListItem';
+import { NoteCard } from "@/app/components/ui/NoteCard"
+import UnifiedTableView from './UnifiedTableView';
 
 interface MaterialInput {
   title: string;
@@ -234,44 +234,6 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
     }
   };
 
-  const MaterialsList = ({ materials, category }: { materials: Material[], category: string }) => {
-    return (
-      <div className={styles.listContainer}>
-        <div className={styles.listHeader}>
-          <div className={styles.headerNo}>No.</div>
-          <div className={styles.headerType}>Type</div>
-          <div className={styles.headerTitle}>Title</div>
-        </div>
-        <div className={styles.listContent}>
-          {materials.map((material, index) => (
-            <ListItem
-              key={material._id}
-              material={material}
-              index={index + 1}
-              categoryIcons={categoryIcons}
-              onEdit={(material) => {
-                setNotePopup({
-                  isOpen: true,
-                  materialId: material._id || '',
-                  title: material.title || '',
-                  note: material.note || ''
-                });
-              }}
-              onDelete={async (materialId) => {
-                console.log('Delete material called with ID:', materialId, 'and topicId:', activeTab);
-                if (!activeTab) {
-                  console.error('No active tab/topicId available for delete operation');
-                  return false;
-                }
-                return await onDeleteMaterial(materialId, activeTab);
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.content}>
@@ -335,64 +297,134 @@ export default function MaterialsView({ categories, onAddMaterial, onDeleteMater
           </div>
         </div>
         <div className={styles.materials}>
-          <div className={styles.materialsList}>
-            {viewMode === 'list' ? (
-              <MaterialsList 
-                materials={data} 
-                category="all"
-              />
-            ) : (
-              <div className={styles.gridView}>
-                {(['webpage', 'video', 'podcast', 'book'] as const).map((type) => (
-                  <div key={type} className={styles.materialCard}>
-                    <div className={styles.gridHeader}>
-                      <div className={styles.headerNo}>No.</div>
-                      <div className={styles.headerType}>Type</div>
-                      <div className={styles.headerTitle}>Title</div>
-                    </div>
-                    <div className={styles.gridCardContent}>
-                      {categories[type].map((material, index) => (
-                        <ListItem
-                          key={material._id}
-                          material={{...material, type}}
-                          index={index + 1}
-                          categoryIcons={categoryIcons}
-                          onEdit={(material) => {
-                            setNotePopup({
-                              isOpen: true,
-                              materialId: material._id || '',
-                              title: material.title || '',
-                              note: material.note || ''
-                            });
-                          }}
-                          onDelete={async (materialId) => {
-                            console.log('Delete material called with ID:', materialId, 'and topicId:', activeTab);
-                            if (!activeTab) {
-                              console.error('No active tab/topicId available for delete operation');
-                              return false;
-                            }
-                            return await onDeleteMaterial(materialId, activeTab);
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <NoteCard
-            isOpen={notePopup.isOpen}
-            title={notePopup.title}
-            note={notePopup.note}
-            onClose={() => setNotePopup(prev => ({ ...prev, isOpen: false }))}
-            onSave={async (note) => {
-              await onUpdateMaterial(notePopup.materialId, { note });
+          <UnifiedTableView
+            materials={data}
+            viewType="materials"
+            viewMode={viewMode}
+            onEdit={(material) => {
+              setNotePopup({
+                isOpen: true,
+                materialId: material._id || '',
+                title: material.title || '',
+                note: material.note || ''
+              });
+            }}
+            onDelete={async (materialId) => {
+              console.log('Delete material called with ID:', materialId, 'and topicId:', activeTab);
+              if (!activeTab) {
+                console.error('No active tab/topicId available for delete operation');
+                return false;
+              }
+              return await onDeleteMaterial(materialId, activeTab);
             }}
           />
+          
+          {/* Add Material Form */}
+          {/* <div className={styles.addFormContainer}>
+            <div className={styles.addForm}>
+              <div className={styles.addMaterialRow}>
+                <div className={styles.inputGroup}>
+                  <div className={styles.typeIconContainer}>
+                    {TYPE_ICONS[selectedType]({ size: 16, color: '#666' })}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Add new material..."
+                    className={styles.addInput}
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    onFocus={() => setShowUrlInput(true)}
+                  />
+                </div>
+                <div className={styles.addButtonContainer}>
+                  <button
+                    className={styles.addButton}
+                    onClick={async () => {
+                      if (editedTitle.trim()) {
+                        const newMaterial = {
+                          title: editedTitle,
+                          type: selectedType,
+                          url: '',
+                          dateAdded: new Date()
+                        };
+                        const success = await onAddMaterial(newMaterial);
+                        if (success) {
+                          setEditedTitle('');
+                          setShowUrlInput(false);
+                        }
+                      }
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              {showUrlInput && (
+                <div className={styles.urlInputRow}>
+                  <div className={styles.inputGroup}>
+                    <div className={styles.typeDropdownTrigger} onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}>
+                      <div className={styles.selectedType}>
+                        {TYPE_ICONS[selectedType]({ size: 16, color: '#666' })}
+                        <span>{selectedType}</span>
+                      </div>
+                      <IoChevronDownSharp size={12} />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="URL (optional)"
+                      className={styles.urlInput}
+                    />
+                  </div>
+                  {isTypeDropdownOpen && (
+                    <div className={styles.typeDropdown}>
+                      <div className={styles.dropdownHeader}>
+                        <span>Select Type</span>
+                        <button
+                          className={styles.closeButton}
+                          onClick={() => setIsTypeDropdownOpen(false)}
+                        >
+                          <IoClose size={16} />
+                        </button>
+                      </div>
+                      <div className={styles.typeOptions}>
+                        {Object.keys(TYPE_ICONS).map((type) => (
+                          <button
+                            key={type}
+                            className={`${styles.typeOption} ${selectedType === type ? styles.selected : ''}`}
+                            onClick={() => {
+                              setSelectedType(type as 'webpage' | 'video' | 'podcast' | 'book');
+                              setIsTypeDropdownOpen(false);
+                            }}
+                          >
+                            {TYPE_ICONS[type as keyof typeof TYPE_ICONS]({ size: 16, color: selectedType === type ? '#fff' : '#666' })}
+                            <span>{type}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div> */}
         </div>
       </div>
+      
+      {/* Note Popup */}
+      <NoteCard
+        isOpen={notePopup.isOpen}
+        onClose={() => setNotePopup(prev => ({ ...prev, isOpen: false }))}
+        title={notePopup.title}
+        note={notePopup.note}
+        onSave={async (note) => {
+          if (notePopup.materialId) {
+            const success = await onUpdateMaterial(notePopup.materialId, { note });
+            if (success) {
+              setNotePopup(prev => ({ ...prev, isOpen: false }));
+            }
+          }
+        }}
+      />
     </div>
   );
 }

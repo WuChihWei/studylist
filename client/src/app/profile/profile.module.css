@@ -1,7 +1,12 @@
 .profileContainer {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  transition: all 0.3s ease-in-out;
+  background-color: #f9fafb;
+  flex: 1;
 }
+
 
 .profileHeader {
   margin-bottom: 2rem;
@@ -40,7 +45,7 @@
   width: 100%;
   padding-top: 1rem;
 }
-
+/* 
 .leftSection {
   width: 80px;
   display: flex;
@@ -52,7 +57,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
+} */
 
 .avatarArea {
   position: relative;
@@ -138,18 +143,20 @@
 }
 
 .topicTab {
-  padding: 8px 16px;
+  padding: 4px 12px;
   border-radius: 6px;
-  background: var(--background);
   border: 1px solid var(--border);
   cursor: pointer;
   transition: all 0.2s;
+  font-size: medium;
+  color: #b1b1b1;
 }
 
 .topicTab.active {
   background: var(--primary);
   color: var(--primary-foreground);
   border-color: var(--primary);
+  font-weight:700;
 }
 
 .tabContent {
@@ -159,8 +166,9 @@
 }
 
 .tabName {
-  font-size: 14px;
+  font-size: 18px;
 }
+
 
 .materialsGrid {
   display: grid;
@@ -589,6 +597,10 @@
 }
 
 @media (max-width: 1024px) {
+  .profileContainer {
+    padding: 0 0.5rem;
+  }
+  
   .profileInfo {
     flex-direction: column;
   }
@@ -599,6 +611,20 @@
 }
 
 @media (max-width: 768px) {
+  .profileContainer {
+    width: 100%;
+    padding-top: 60px; /* 为移动端顶部导航栏留出空间 */
+  }
+  
+  .profileInfo {
+    flex-direction: column;
+  }
+  
+  .profileUser,
+  .contributionSection {
+    width: 100%;
+  }
+  
   .avatarSection {
     flex-direction: column;
     align-items: center;
@@ -619,9 +645,11 @@
   }
 }
 
-@media (max-width: 640px) {
-  .profileInfo {
-    padding: 0.5rem;
+@media (min-width: 769px) and (max-width: 1024px) {
+  .profileContainer {
+    flex: 1;
+  }
+
   }
   
   .topicHeaderContainer {
@@ -640,7 +668,26 @@
     justify-content: flex-start;
     margin-top: 0.5rem;
   }
-}
+  
+  .avatarSection {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .leftSection {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .rightSection {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .topicTab {
+    padding: 4px 8px;
+    font-size: small;
+  }
 
 @media (max-width: 480px) {
   .avatarSection {
@@ -665,6 +712,15 @@
   .addTopicButton {
     padding: 6px;
     font-size: 12px;
+  }
+  
+  .profileContainer {
+    padding: 0 0.25rem;
+  }
+  
+  .topicHeaderContainer {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
 
@@ -709,3 +765,19 @@
 .memberWrapper:hover .memberTooltip {
   opacity: 1;
 }
+
+/* 添加媒体查询来控制大屏幕上的宽度比例 */
+/* @media (min-width: 1200px) {
+  .profileContainer {
+    width: calc(100% - var(--profile-sidebar-width, 20rem));
+    flex-grow: 1;
+  }
+}
+
+@media (min-width: 1600px) {
+  .profileContainer {
+    width: calc(100% - var(--profile-sidebar-width, 20rem));
+    max-width: 1400px;
+    margin-left: 0;
+  }
+} */
