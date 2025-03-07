@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Material, Categories } from '../../types/User';
+import { Material, Categories, Contributions } from '../../types/User';
 import styles from './StudyListView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
@@ -10,7 +10,8 @@ import VideoPopup from '../components/VideoPopup';
 import UnifiedTableView from '../components/UnifiedTableView';
 
 interface StudyListViewProps {
-  categories: Categories;
+  materials: Material[];
+  contributions?: Contributions;
   onCompleteMaterial: (materialId: string, isCompleted: boolean) => Promise<void>;
   unitMinutes: number;
   onUnitMinutesChange: (minutes: number) => void;
@@ -20,7 +21,8 @@ interface StudyListViewProps {
 }
 
 export default function StudyListView({ 
-  categories, 
+  materials, 
+  contributions,
   onCompleteMaterial,
   unitMinutes = 6,
   onUnitMinutesChange,
@@ -31,34 +33,11 @@ export default function StudyListView({
   const [completedMaterials, setCompletedMaterials] = useState<Set<string>>(() => {
     const completed = new Set<string>();
     
-    if (categories.webpage) {
-      categories.webpage.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.video) {
-      categories.video.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.podcast) {
-      categories.podcast.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.book) {
-      categories.book.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
+    materials.forEach(material => {
+      if (material.completed && material._id) {
+        completed.add(material._id);
+      }
+    });
     
     return completed;
   });
@@ -76,37 +55,14 @@ export default function StudyListView({
   useEffect(() => {
     const completed = new Set<string>();
     
-    if (categories.webpage) {
-      categories.webpage.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.video) {
-      categories.video.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.podcast) {
-      categories.podcast.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
-    if (categories.book) {
-      categories.book.forEach(material => {
-        if (material.completed && material._id) {
-          completed.add(material._id);
-        }
-      });
-    }
+    materials.forEach(material => {
+      if (material.completed && material._id) {
+        completed.add(material._id);
+      }
+    });
     
     setCompletedMaterials(completed);
-  }, [categories]);
+  }, [materials]);
 
   const typeIcons = {
     webpage: <LuGlobe size={20} />,
@@ -115,7 +71,7 @@ export default function StudyListView({
     book: <FiBook size={20} />
   };
 
-  const estimateTimeUnits = (material: Material & { type: keyof Categories }) => {
+  const estimateTimeUnits = (material: Material) => {
     if (material.readingTime) {
       return Math.ceil(material.readingTime / unitMinutes);
     }
@@ -131,36 +87,33 @@ export default function StudyListView({
   };
 
   const getAllMaterials = () => {
-    return [
-      ...categories.webpage.map(m => ({ ...m, type: 'webpage' as const })),
-      ...categories.video.map(m => ({ ...m, type: 'video' as const })),
-      ...categories.podcast.map(m => ({ ...m, type: 'podcast' as const })),
-      ...categories.book.map(m => ({ ...m, type: 'book' as const }))
-    ];
+    return materials.sort((a, b) => a.order - b.order);
   };
 
   const handleComplete = async (material: Material) => {
     if (!material._id) return;
     
-    const isCurrentlyCompleted = completedMaterials.has(material._id);
+    const isCompleted = completedMaterials.has(material._id);
     
     try {
-      await onCompleteMaterial(material._id, !isCurrentlyCompleted);
+      await onCompleteMaterial(material._id, isCompleted);
       
       // Update local state
-      const newCompleted = new Set(completedMaterials);
-      if (isCurrentlyCompleted) {
-        newCompleted.delete(material._id);
-      } else {
-        newCompleted.add(material._id);
-      }
-      setCompletedMaterials(newCompleted);
-    } catch (error) {
-      console.error('Error toggling completion status:', error);
+      setCompletedMaterials(prev => {
+        const newSet = new Set(prev);
+        if (isCompleted) {
+          newSet.delete(material._id!);
+        } else {
+          newSet.add(material._id!);
+        }
+        return newSet;
+      });
+    } catch (err) {
+      console.error('Error updating completion status:', err);
     }
   };
 
-  const handleUnitComplete = async (material: Material & { type: keyof Categories }, clickedIndex: number) => {
+  const handleUnitComplete = async (material: Material, clickedIndex: number) => {
     if (!material._id) return;
     
     const totalUnits = estimateTimeUnits(material);
@@ -180,10 +133,12 @@ export default function StudyListView({
         completed: true
       });
       
-      // Update local state
-      const newCompleted = new Set(completedMaterials);
-      newCompleted.add(material._id);
-      setCompletedMaterials(newCompleted);
+      // Add to completed set
+      setCompletedMaterials(prev => {
+        const newSet = new Set(prev);
+        newSet.add(material._id!);
+        return newSet;
+      });
     } 
     // Otherwise mark up to the clicked unit as complete
     else {
@@ -194,68 +149,39 @@ export default function StudyListView({
     }
   };
 
-  const handleOpenContent = (material: Material & { type: keyof Categories }) => {
-    if (!material.url) return;
-    
-    if (material.type === 'video') {
-      setContentPopup({
-        isOpen: true,
-        url: material.url,
-        title: material.title || ''
-      });
-    } else {
+  const handleOpenContent = (material: Material) => {
+    if (material.url) {
       window.open(material.url, '_blank');
     }
   };
 
-  const handlePlayClick = (material: Material & { type: keyof Categories }) => {
-    handleOpenContent(material);
-  };
-
-  const data = getAllMaterials().map((material, index) => ({
-    ...material,
-    index: index + 1,
-    type: material.type
-  }));
-
-  // Add this function to handle reordering
-  const handleReorderItems = async (reorderedItems: (Material & { type: keyof Categories; index: number })[]) => {
-    console.log('📚 StudyListView - handleReorderItems 開始', reorderedItems.map(item => `${item._id}:${item.index}`));
-    
-    // Group the items by type
-    const reorderedByType: Categories = {
-      webpage: [],
-      video: [],
-      book: [],
-      podcast: []
-    };
-
-    // Reorganize items by type but preserve the index and order
-    reorderedItems.forEach((item, idx) => {
-      if (reorderedByType[item.type]) {
-        // Keep the index property and add an order property based on the current position
-        reorderedByType[item.type].push({
-          ...item,
-          order: idx, // Add order property based on the current position in the array
-          index: item.index // Preserve the original index property
-        } as Material & { type: keyof Categories; index: number });
+  const handlePlayClick = (material: Material) => {
+    if (material.url) {
+      switch (material.type) {
+        case 'video':
+          // 打開視頻彈窗
+          break;
+        default:
+          window.open(material.url, '_blank');
       }
-    });
-
-    // Call the parent component's reorder function if available
-    if (onReorderMaterials) {
-      // Flatten the categories into a single array, preserving the order
-      const allMaterials = [
-        ...reorderedByType.webpage,
-        ...reorderedByType.video,
-        ...reorderedByType.podcast,
-        ...reorderedByType.book
-      ].sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
-      
-      console.log('📚 StudyListView - 調用 onReorderMaterials', allMaterials.map(item => `${item._id}:${item.order}`));
-      await onReorderMaterials(allMaterials);
     }
   };
+
+  const handleReorderItems = async (reorderedItems: (Material & { index: number })[]) => {
+    if (!onReorderMaterials) return;
+    
+    const itemsWithOrder = reorderedItems.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+    
+    await onReorderMaterials(itemsWithOrder);
+  };
+
+  const materialsWithIndex = getAllMaterials().map((material, index) => ({
+    ...material,
+    index: index + 1
+  }));
 
   return (
     <div className={styles.container}>
@@ -294,7 +220,7 @@ export default function StudyListView({
 
       <UnifiedTableView
         key={`studylist-${topicId}-${Date.now()}`}
-        materials={data}
+        materials={materialsWithIndex}
         viewType="studylist"
         onComplete={async (materialId, isCompleted) => {
           await onCompleteMaterial(materialId, isCompleted);

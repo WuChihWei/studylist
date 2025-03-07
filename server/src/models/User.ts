@@ -29,6 +29,11 @@ const MaterialSchema = new mongoose.Schema({
   progress: {
     type: Number,
     default: 0
+  },
+  favicon: String,
+  order: {
+    type: Number,
+    default: 0
   }
 });
 

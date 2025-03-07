@@ -83,15 +83,45 @@ export const useUserData = () => {
   }, [auth]);
 
   const addMaterial = async (materialData: MaterialInput, topicId: string) => {
+    // 只在開發環境中輸出日誌
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 materialData.favicon:', materialData.favicon);
+    }
+    
     try {
       const user = auth.currentUser;
-      if (!user) throw new Error('No user logged in');
+      if (!user) {
+        console.log('🔧 沒有用戶登錄');
+        throw new Error('No user logged in');
+      }
 
-      console.log('Adding material:', { materialData, topicId });
+      console.log('🔧 準備調用 API', { uid: user.uid, topicId, materialData });
       const updatedUser = await userApi.addMaterial(user.uid, topicId, materialData);
+      console.log('🔧 API 返回結果', updatedUser);
+      
+      // 檢查返回的用戶數據
+      if (!updatedUser) {
+        console.log('🔧 API 沒有返回用戶數據');
+        throw new Error('API did not return user data');
+      }
+      
+      // 檢查返回的主題是否包含新添加的材料
+      const topic = updatedUser.topics?.find(t => t._id === topicId);
+      if (topic) {
+        if (topic.materials) {
+          console.log('🔧 新數據結構 - 主題材料數量:', topic.materials.length);
+        } else if (topic.categories) {
+          const categoryType = materialData.type as keyof typeof topic.categories;
+          console.log('🔧 舊數據結構 - 類別材料數量:', topic.categories[categoryType]?.length || 0);
+        }
+      } else {
+        console.log('🔧 在返回的用戶數據中找不到主題:', topicId);
+      }
+      
       setUserData(updatedUser);
       return true;
     } catch (error) {
+      console.error('🔧 添加材料錯誤:', error);
       handleApiError(error, 'Failed to add material');
       return false;
     }

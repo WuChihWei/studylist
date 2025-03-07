@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Material, Categories } from '@/types/User';
+import { Material } from '@/types/User';
 import styles from './UnifiedTableView.module.css';
 import { LuGlobe, LuGoal } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { FaCheck, FaPlay } from "react-icons/fa";
+import { BiWorld } from "react-icons/bi";
 import { MoreHorizontal, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import CircleProgress from './ui/circleProgress';
@@ -16,6 +17,7 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 import DraggableList, { DraggableListHandle } from './DraggableList';
 import DragHandle from './DragHandle';
+import Image from 'next/image';
 
 export const TYPE_ICONS = {
   video: FiVideo,
@@ -25,7 +27,7 @@ export const TYPE_ICONS = {
 };
 
 interface UnifiedTableViewProps {
-  materials: (Material & { type: keyof Categories; index: number })[];
+  materials: (Material & { index: number })[];
   viewType: 'materials' | 'studylist';
   viewMode?: 'list' | 'grid';
   onEdit?: (material: Material) => void;
@@ -33,7 +35,7 @@ interface UnifiedTableViewProps {
   onComplete?: (materialId: string, isCompleted: boolean) => Promise<void>;
   onUpdateProgress?: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
   unitMinutes?: number;
-  onReorderItems?: (items: (Material & { type: keyof Categories; index: number })[]) => void;
+  onReorderItems?: (items: (Material & { index: number })[]) => void;
   onUnitMinutesChange?: (newMinutes: number) => void;
 }
 
@@ -61,7 +63,6 @@ export default function UnifiedTableView({
   const materialsRef = useRef(materials);
 
   useEffect(() => {
-    console.log('📊 UnifiedTableView - materials 變化', materials.map(m => `${m._id}:${m.index}`));
     setLocalMaterials(materials);
     materialsRef.current = materials;
     
@@ -71,24 +72,20 @@ export default function UnifiedTableView({
 
   useEffect(() => {
     if (reorderCount > 0) {
-      console.log('📊 UnifiedTableView - reorderCount 變化', reorderCount);
-      // 強制重新渲染
       setForceRender(prev => prev + 1);
     }
   }, [reorderCount]);
 
   useEffect(() => {
-    console.log('📊 UnifiedTableView - draggableListKey 變化', draggableListKey);
   }, [draggableListKey]);
 
   // 添加一個效果來處理強制渲染
   useEffect(() => {
     if (forceRender > 0) {
-      console.log('📊 UnifiedTableView - forceRender 變化，強制重新渲染', forceRender);
     }
   }, [forceRender]);
 
-  const estimateTimeUnits = (material: Material & { type: keyof Categories }) => {
+  const estimateTimeUnits = (material: Material) => {
     if (material.readingTime) {
       return Math.ceil(material.readingTime / unitMinutes);
     }
@@ -103,7 +100,7 @@ export default function UnifiedTableView({
     }
   };
 
-  const handleUnitComplete = async (material: Material & { type: keyof Categories }, clickedIndex: number) => {
+  const handleUnitComplete = async (material: Material, clickedIndex: number) => {
     if (!material._id || !onUpdateProgress) return;
     
     const totalUnits = estimateTimeUnits(material);
@@ -133,121 +130,95 @@ export default function UnifiedTableView({
   };
 
   const handleRestoreOriginalOrder = () => {
-    console.log('📊 UnifiedTableView - 開始恢復原始順序');
     if (draggableListRef.current) {
-      console.log('📊 UnifiedTableView - 使用 draggableListRef 恢復原始順序');
       draggableListRef.current.restoreOriginalOrder();
       setReorderCount(prev => {
-        console.log('📊 UnifiedTableView - 增加 reorderCount', prev, prev + 1);
         return prev + 1;
       });
       const newKey = `draggable-list-${Date.now()}`;
-      console.log('📊 UnifiedTableView - 更新 draggableListKey', draggableListKey, newKey);
       setDraggableListKey(newKey);
     } else {
-      console.log('📊 UnifiedTableView - draggableListRef 不存在，使用備用方法');
       const topicId = localStorage.getItem('activeTopicId');
       if (!topicId) {
-        console.log('📊 UnifiedTableView - 找不到 activeTopicId，無法恢復');
         return;
       }
       
       try {
         const savedOrder = localStorage.getItem(`original_order_${topicId}`);
         if (!savedOrder) {
-          console.log('📊 UnifiedTableView - 找不到原始順序資料');
           alert('找不到原始順序資料');
           return;
         }
         
-        console.log('📊 UnifiedTableView - 從 localStorage 獲取原始順序', savedOrder);
         const orderMap = new Map(JSON.parse(savedOrder));
         
         // Sort materials based on original order
-        console.log('📊 UnifiedTableView - 排序前的材料', localMaterials.map(m => `${m._id}:${m.index}`));
         const sortedMaterials = [...localMaterials].sort((a, b) => {
           const orderA = a._id ? (orderMap.get(a._id) ?? 0) : 0;
           const orderB = b._id ? (orderMap.get(b._id) ?? 0) : 0;
           return Number(orderA) - Number(orderB);
         });
-        console.log('📊 UnifiedTableView - 排序後的材料', sortedMaterials.map(m => `${m._id}:${m.index}`));
         
         // Update indexes
         const materialsWithUpdatedIndexes = sortedMaterials.map((item, index) => ({
           ...item,
           index: index + 1
         }));
-        console.log('📊 UnifiedTableView - 更新索引後的材料', materialsWithUpdatedIndexes.map(m => `${m._id}:${m.index}`));
         
         // 更新本地狀態
         setLocalMaterials(materialsWithUpdatedIndexes);
         
         // Call the parent component's reorder function
         if (onReorderItems) {
-          console.log('📊 UnifiedTableView - 調用 onReorderItems');
           onReorderItems(materialsWithUpdatedIndexes);
           
           // Force re-render of the DraggableList component
           const newKey = `draggable-list-${Date.now()}`;
-          console.log('📊 UnifiedTableView - 更新 draggableListKey', draggableListKey, newKey);
           setDraggableListKey(newKey);
           
           // 增加計數器，強制UI刷新
           setReorderCount(prev => {
-            console.log('📊 UnifiedTableView - 增加 reorderCount', prev, prev + 1);
             return prev + 1;
           });
-        } else {
-          console.log('📊 UnifiedTableView - onReorderItems 不存在');
         }
       } catch (error) {
-        console.error('📊 UnifiedTableView - 恢復原始順序失敗', error);
         alert('恢復原始順序失敗');
       }
     }
   };
 
-  const handleReorderWithRefresh = (reorderedItems: (Material & { type: keyof Categories; index: number })[]) => {
-    console.log('📊 UnifiedTableView - handleReorderWithRefresh 開始', reorderedItems.map(m => `${m._id}:${m.index}`));
+  const handleReorderWithRefresh = (reorderedItems: (Material & { index: number })[]) => {
+    // 確保所有項目都有正確的 order 屬性
+    const itemsWithOrder = reorderedItems.map((item, idx) => ({
+      ...item,
+      order: idx // 確保 order 屬性與當前位置一致
+    }));
     
     // 立即更新本地狀態
-    setLocalMaterials(reorderedItems);
-    materialsRef.current = reorderedItems;
-    console.log('📊 UnifiedTableView - 更新本地狀態完成');
+    setLocalMaterials(itemsWithOrder);
+    materialsRef.current = itemsWithOrder;
     
     if (onReorderItems) {
-      console.log('📊 UnifiedTableView - 調用 onReorderItems');
-      onReorderItems(reorderedItems);
+      onReorderItems(itemsWithOrder);
       
       // 增加計數器，強制UI刷新
       setReorderCount(prev => {
-        console.log('📊 UnifiedTableView - 增加 reorderCount', prev, prev + 1);
-        return prev + 1;
+        const newCount = prev + 1;
+        return newCount;
       });
       
       // 更新DraggableList的key，強制其重新渲染
       const newKey = `draggable-list-${Date.now()}`;
-      console.log('📊 UnifiedTableView - 更新 draggableListKey', draggableListKey, newKey);
       setDraggableListKey(newKey);
       
       // 延遲 100ms 後再次強制刷新
       setTimeout(() => {
-        console.log('📊 UnifiedTableView - 延遲強制刷新');
         setForceRender(prev => prev + 1);
         
         // 再次更新DraggableList的key，確保其重新渲染
         const newerKey = `draggable-list-${Date.now()}`;
-        console.log('📊 UnifiedTableView - 再次更新 draggableListKey', draggableListKey, newerKey);
         setDraggableListKey(newerKey);
       }, 100);
-      
-      // 延遲 200ms 後第二次強制刷新
-      setTimeout(() => {
-        console.log('📊 UnifiedTableView - 第二次延遲強制刷新');
-        setForceRender(prev => prev + 1);
-      }, 200);
-    } else {
-      console.log('📊 UnifiedTableView - onReorderItems 不存在');
     }
   };
 
@@ -258,8 +229,9 @@ export default function UnifiedTableView({
         <div className={styles.tableHeader}>
           <span className={styles.columnHandle}></span>
           <span className={styles.columnNumber}>#</span>
-          <span className={styles.columnType}>Type</span>
+          <span className={styles.columnNumber}>Icon</span>
           <span className={styles.columnTitle}>Name</span>
+          <span className={styles.columnType}>Type</span>
           <span className={styles.columnActions}>{viewMode === 'list' ? 'Actions' : ''}</span>
         </div>
       );
@@ -268,11 +240,12 @@ export default function UnifiedTableView({
         <div className={styles.tableHeader}>
           <span className={styles.columnHandle}></span>
           <span className={styles.columnNumber}>#</span>
+          <span className={styles.columnNumber}>Icon</span>
           <span className={styles.columnProgress}>
             <LuGoal className={styles.headerIcon} />
           </span>
-          <span className={styles.columnType}>Type</span>
           <span className={styles.columnTitle}>Name</span>
+          <span className={styles.columnType}>Type</span>
           <span className={styles.columnProgressText}>{viewMode === 'list' ? 'To Finish' : ''}</span>
           <span className={styles.columnActions}>{viewMode === 'list' ? 'Link' : ''}</span>
         </div>
@@ -281,8 +254,31 @@ export default function UnifiedTableView({
   };
 
   // Render a table row based on view type
-  const renderTableRow = (material: Material & { type: keyof Categories; index: number }) => {
+  const renderTableRow = (material: Material & { index: number }) => {
     const TypeIcon = TYPE_ICONS[material.type];
+    
+    // 如果 material.favicon 是 undefined，則使用 Google Favicon 服務作為備用
+    let favicon = material.favicon;
+    if (!favicon && material.url) {
+      try {
+        const domain = new URL(material.url).hostname;
+        favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+        // 只在開發環境中輸出日誌
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`為 ${material.title} 生成默認 favicon:`, favicon);
+        }
+      } catch (e) {
+        // 只在開發環境中輸出日誌
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`無法為 ${material.title} 生成默認 favicon:`, e);
+        }
+      }
+    }
+    
+    // 只在開發環境中輸出日誌，並且只在 favicon 存在時輸出
+    if (process.env.NODE_ENV === 'development' && (material.favicon || favicon)) {
+      console.log(`Material ${material.title} - favicon:`, material.favicon || favicon);
+    }
     
     if (viewType === 'materials') {
       return (
@@ -291,17 +287,75 @@ export default function UnifiedTableView({
             <DragHandle />
           </span>
           <span className={styles.columnNumber}>{material.index}</span>
-          <span className={styles.columnType}>
-            <TypeIcon className={styles.typeIcon} />
-          </span>
           <span className={styles.columnTitleContent}>
+            <span className={styles.titleIconContainer}>
+              {(material.favicon || favicon) ? (
+                <img 
+                  src={material.favicon || favicon} 
+                  alt={`${material.title} favicon`} 
+                  className={styles.favicon} 
+                  onError={(e) => {
+                    // 只在開發環境中輸出日誌
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log(`Favicon load error for ${material.title}:`, e);
+                      console.log(`Favicon URL: ${material.favicon || favicon}`);
+                    }
+                    
+                    // 嘗試使用 Google Favicon 服務作為備用
+                    try {
+                      const domain = new URL(material.url || '').hostname;
+                      const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+                      // 只在開發環境中輸出日誌
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log(`使用 Google Favicon 服務作為備用: ${googleFavicon}`);
+                      }
+                      
+                      // 創建一個新的圖片元素
+                      const img = e.currentTarget;
+                      img.src = googleFavicon;
+                      
+                      // 如果 Google Favicon 也加載失敗，則顯示默認圖標
+                      img.onerror = () => {
+                        // 只在開發環境中輸出日誌
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log(`Google Favicon 也加載失敗: ${googleFavicon}`);
+                        }
+                        img.style.display = 'none';
+                        const nextElement = img.nextElementSibling;
+                        if (nextElement) {
+                          nextElement.classList.remove(styles.hidden);
+                        }
+                      };
+                    } catch (err) {
+                      // 只在開發環境中輸出日誌
+                      if (process.env.NODE_ENV === 'development') {
+                        console.error('無法設置 Google Favicon:', err);
+                      }
+                      // If image fails to load, hide it and show the default icon
+                      e.currentTarget.style.display = 'none';
+                      const nextElement = e.currentTarget.nextElementSibling;
+                      if (nextElement) {
+                        nextElement.classList.remove(styles.hidden);
+                      }
+                    }
+                  }}
+                />
+              ) : (
+                <BiWorld className={styles.typeIcon} />
+              )}
+              {(material.favicon || favicon) && <BiWorld className={`${styles.typeIcon} ${styles.hidden}`} />}
+            </span>
             {material.url ? (
               <a href={material.url} target="_blank" rel="noopener noreferrer">
-                {material.title}
+                {material.title.length > 60 ? `${material.title.slice(0, 60)}...` : material.title}
               </a>
             ) : (
               material.title
             )}
+          </span>
+          <span className={styles.columnType}>
+            <TypeIcon className={styles.typeIconRight} />
+            {/* <span className={styles.typeText}>{material.type.charAt(0).toUpperCase() + material.type.slice(1)}</span> */}
           </span>
           <span className={styles.columnActions}>
             <DropdownMenu>
@@ -342,10 +396,64 @@ export default function UnifiedTableView({
           <span className={styles.columnProgress}>
             <CircleProgress progress={progress} />
           </span>
-          <span className={styles.columnType}>
-            <TypeIcon className={styles.typeIcon} />
-          </span>
-          <span className={styles.columnTitle}>
+          <span className={styles.columnTitleContent}>
+            <span className={styles.titleIconContainer}>
+              {(material.favicon || favicon) ? (
+                <img 
+                  src={material.favicon || favicon} 
+                  alt={material.title} 
+                  className={styles.favicon} 
+                  onError={(e) => {
+                    // 只在開發環境中輸出日誌
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log(`Favicon load error for ${material.title}:`, e);
+                      console.log(`Favicon URL: ${material.favicon || favicon}`);
+                    }
+                    
+                    // 嘗試使用 Google Favicon 服務作為備用
+                    try {
+                      const domain = new URL(material.url || '').hostname;
+                      const googleFavicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+                      // 只在開發環境中輸出日誌
+                      if (process.env.NODE_ENV === 'development') {
+                        console.log(`使用 Google Favicon 服務作為備用: ${googleFavicon}`);
+                      }
+                      
+                      // 創建一個新的圖片元素
+                      const img = e.currentTarget;
+                      img.src = googleFavicon;
+                      
+                      // 如果 Google Favicon 也加載失敗，則顯示默認圖標
+                      img.onerror = () => {
+                        // 只在開發環境中輸出日誌
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log(`Google Favicon 也加載失敗: ${googleFavicon}`);
+                        }
+                        img.style.display = 'none';
+                        const nextElement = img.nextElementSibling;
+                        if (nextElement) {
+                          nextElement.classList.remove(styles.hidden);
+                        }
+                      };
+                    } catch (err) {
+                      // 只在開發環境中輸出日誌
+                      if (process.env.NODE_ENV === 'development') {
+                        console.error('無法設置 Google Favicon:', err);
+                      }
+                      // If image fails to load, hide it and show the default icon
+                      e.currentTarget.style.display = 'none';
+                      const nextElement = e.currentTarget.nextElementSibling;
+                      if (nextElement) {
+                        nextElement.classList.remove(styles.hidden);
+                      }
+                    }
+                  }}
+                />
+              ) : (
+                <BiWorld className={styles.typeIcon} />
+              )}
+              {(material.favicon || favicon) && <BiWorld className={`${styles.typeIcon} ${styles.hidden}`} />}
+            </span>
             <div className={styles.titleContainer}>
               <span className={styles.materialTitle}>
                 {material.title ? 
@@ -363,6 +471,10 @@ export default function UnifiedTableView({
                 ))}
               </div>
             </div>
+          </span>
+          <span className={styles.columnType}>
+            <TypeIcon className={styles.typeIconRight} />
+            <span className={styles.typeText}>{material.type.charAt(0).toUpperCase() + material.type.slice(1)}</span>
           </span>
           <span className={styles.columnProgressText}>
             <div className={styles.editableUnits}>
@@ -426,37 +538,9 @@ export default function UnifiedTableView({
   };
 
   // Render the table based on view type and mode
-  console.log('📊 UnifiedTableView - 渲染組件', { reorderCount, draggableListKey, materialsLength: localMaterials.length, forceRender });
   return (
     <div className={viewMode === 'list' ? styles.tableContainer : styles.gridContainer}>
       {viewMode === 'list' && renderTableHeader()}
-      
-      {viewType === 'studylist' && viewMode === 'list' && (
-        <div className={styles.unitMinutesControl}>
-          <label>Unit Minutes: {unitMinutes}</label>
-          <input 
-            type="range" 
-            min="1" 
-            max="60" 
-            value={unitMinutes} 
-            onChange={(e) => onUnitMinutesChange && onUnitMinutesChange(parseInt(e.target.value))} 
-          />
-        </div>
-      )}
-      
-      {onReorderItems && (
-        <div className={styles.restoreOrderButton}>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRestoreOriginalOrder}
-            className={styles.restoreButton}
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Restore Original Order
-          </Button>
-        </div>
-      )}
       
       <DraggableList
         key={`${viewType}-${draggableListKey}-${reorderCount}`}

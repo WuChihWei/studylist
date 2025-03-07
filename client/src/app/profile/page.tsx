@@ -150,6 +150,12 @@ export default function ProfilePage() {
     }
   }, [userData]);
 
+  useEffect(() => {
+    if (userData && userData.topics) {
+      console.log('🔍 用戶的所有主題:', userData.topics.map(t => ({ id: t._id, name: t.name })));
+    }
+  }, [userData]);
+
   const handleEditProfile = () => {
     setEditedName(userData?.name || '');
     setEditedBio(userData?.bio || '');
@@ -235,17 +241,49 @@ export default function ProfilePage() {
 
   const handleAddMaterial = async (material: any) => {
     try {
+      // 計算新材料的 order
+      let newOrder = 0;
+      if (userData && userData.topics && userData.topics.length > 0 && activeTab) {
+        const currentTopic = userData.topics.find(t => t._id === activeTab);
+        if (currentTopic) {
+          // 如果使用新的數據結構
+          if (currentTopic.materials) {
+            newOrder = currentTopic.materials.length;
+          } 
+          // 如果使用舊的數據結構
+          else if (currentTopic.categories) {
+            const totalMaterials = 
+              (currentTopic.categories.webpage?.length || 0) +
+              (currentTopic.categories.video?.length || 0) +
+              (currentTopic.categories.podcast?.length || 0) +
+              (currentTopic.categories.book?.length || 0);
+            newOrder = totalMaterials;
+          }
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+      
+      console.log('🔍 準備添加材料，order:', newOrder);
+      // 只在開發環境中輸出日誌
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 準備添加材料，favicon:', material.favicon);
+      }
       const success = await addMaterial({
         title: material.title.trim(),
         type: material.type,
         url: material.url?.trim(),
         rating: material.rating || 5,
-        dateAdded: new Date()
+        dateAdded: new Date(),
+        order: newOrder, // 設置新材料的 order
+        favicon: material.favicon // 添加 favicon
       }, activeTab);
       
       return success === true;
     } catch (error) {
-      console.error('Error adding material:', error);
+      console.error('🔍 添加材料錯誤:', error);
       return false;
     }
   };
@@ -966,11 +1004,26 @@ export default function ProfilePage() {
                   ) : activeView === 'materials' ? (
                     <>
                       <MaterialsView 
-                        categories={currentTopic.categories || {
-                          webpage: [],
-                          video: [],
-                          podcast: [],
-                          book: []
+                        materials={currentTopic.materials || currentTopic.categories ? 
+                          // 如果 currentTopic 有 materials 屬性，直接使用
+                          currentTopic.materials || 
+                          // 否則，將 categories 轉換為扁平的 materials 陣列（向後兼容）
+                          [
+                            ...(currentTopic.categories?.webpage || []).map(m => ({ ...m, type: 'webpage' as const })),
+                            ...(currentTopic.categories?.video || []).map(m => ({ ...m, type: 'video' as const })),
+                            ...(currentTopic.categories?.podcast || []).map(m => ({ ...m, type: 'podcast' as const })),
+                            ...(currentTopic.categories?.book || []).map(m => ({ ...m, type: 'book' as const }))
+                          ] : []
+                        }
+                        contributions={currentTopic.contributions || {
+                          totalCount: 0,
+                          lastUpdated: new Date(),
+                          byType: {
+                            webpage: 0,
+                            video: 0,
+                            podcast: 0,
+                            book: 0
+                          }
                         }}
                         onAddMaterial={handleAddMaterial}
                         onDeleteMaterial={async (materialId, topicId) => {
@@ -1012,11 +1065,26 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <StudyListView 
-                        categories={currentTopic.categories || {
-                          webpage: [],
-                          video: [],
-                          podcast: [],
-                          book: []
+                        materials={currentTopic.materials || currentTopic.categories ? 
+                          // 如果 currentTopic 有 materials 屬性，直接使用
+                          currentTopic.materials || 
+                          // 否則，將 categories 轉換為扁平的 materials 陣列（向後兼容）
+                          [
+                            ...(currentTopic.categories?.webpage || []).map(m => ({ ...m, type: 'webpage' as const })),
+                            ...(currentTopic.categories?.video || []).map(m => ({ ...m, type: 'video' as const })),
+                            ...(currentTopic.categories?.podcast || []).map(m => ({ ...m, type: 'podcast' as const })),
+                            ...(currentTopic.categories?.book || []).map(m => ({ ...m, type: 'book' as const }))
+                          ] : []
+                        }
+                        contributions={currentTopic.contributions || {
+                          totalCount: 0,
+                          lastUpdated: new Date(),
+                          byType: {
+                            webpage: 0,
+                            video: 0,
+                            podcast: 0,
+                            book: 0
+                          }
                         }}
                         onCompleteMaterial={async (materialId, isCompleted) => {
                           try {
@@ -1026,7 +1094,7 @@ export default function ProfilePage() {
                               await completeMaterial(materialId, activeTab);
                             }
                           } catch (error) {
-                            console.error('Error completing material:', error);
+                            console.error('Error toggling material completion:', error);
                           }
                         }}
                         unitMinutes={unitMinutes}

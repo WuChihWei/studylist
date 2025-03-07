@@ -1,0 +1,1 @@
+{"error":"Authentication required","details":"No valid authorization token provided","receivedHeaders":{"host":"localhost:4001","user-agent":"curl/7.88.1","accept":"*/*"}}

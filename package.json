@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
+    "got": "^14.4.6",
     "react-hot-toast": "^2.5.2"
   }
 }

@@ -128,10 +128,14 @@ export const createUser = async (req: Request, res: Response) => {
 
 export const addMaterial = async (req: Request, res: Response) => {
   try {
+    console.log('🔧 後端 addMaterial 開始執行', { params: req.params, body: req.body });
     const { firebaseUID, topicId } = req.params;
-    const { type, title, url, rating } = req.body;
+    const { type, title, url, rating, order, favicon } = req.body;
+    
+    console.log('🔧 收到的 favicon:', favicon);
     
     if (!firebaseUID || !topicId) {
+      console.log('🔧 缺少必要參數');
       return res.status(400).json({ 
         error: 'Missing required params'
       });
@@ -147,27 +151,64 @@ export const addMaterial = async (req: Request, res: Response) => {
       completedUnits: 0,
       readingTime: 0,
       progress: 0,
-      completed: false
+      completed: false,
+      order: order || 0, // 使用提供的 order 或默認為 0
+      favicon: favicon || null // 添加 favicon 字段
     };
+
+    console.log('🔧 新建材料對象:', newMaterial);
+    console.log('🔧 新建材料對象中的 favicon:', newMaterial.favicon);
 
     // Get today's date in YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
 
-    // First, add the material to the topic
-    let user = await User.findOneAndUpdate(
-      { 
-        firebaseUID,
-        'topics._id': topicId
-      },
-      { 
-        $push: { [`topics.$.categories.${type}`]: newMaterial }
-      },
-      { new: true }
+    // 檢查主題是否使用新的數據結構
+    const topic = await User.findOne(
+      { firebaseUID, 'topics._id': topicId },
+      { 'topics.$': 1 }
     );
 
+    console.log('🔧 查詢到的主題:', topic);
+
+    let user;
+    
+    // 檢查主題是否有 materials 屬性
+    const hasMaterialsArray = topic?.topics?.[0] && 'materials' in topic.topics[0];
+    
+    if (hasMaterialsArray) {
+      console.log('🔧 使用新的數據結構添加材料');
+      // 使用新的數據結構 (materials 陣列)
+      user = await User.findOneAndUpdate(
+        { 
+          firebaseUID,
+          'topics._id': topicId
+        },
+        { 
+          $push: { 'topics.$.materials': newMaterial }
+        },
+        { new: true }
+      );
+    } else {
+      console.log('🔧 使用舊的數據結構添加材料');
+      // 使用舊的數據結構 (categories 對象)
+      user = await User.findOneAndUpdate(
+        { 
+          firebaseUID,
+          'topics._id': topicId
+        },
+        { 
+          $push: { [`topics.$.categories.${type}`]: newMaterial }
+        },
+        { new: true }
+      );
+    }
+
     if (!user) {
+      console.log('🔧 找不到用戶或主題');
       return res.status(404).json({ error: 'User or topic not found' });
     }
+
+    console.log('🔧 材料添加成功，更新貢獻數據');
 
     // Then, handle the contribution count
     const existingContribution = user.contributions?.find(c => c.date === today);
@@ -217,9 +258,10 @@ export const addMaterial = async (req: Request, res: Response) => {
       { new: true }
     );
 
+    console.log('🔧 返回更新後的用戶數據');
     res.status(200).json(user);
   } catch (error) {
-    console.error('Error adding material:', error);
+    console.error('🔧 添加材料錯誤:', error);
     res.status(500).json({ 
       error: 'Server error',
       details: error instanceof Error ? error.message : 'Unknown error'

@@ -8,13 +8,13 @@ import {
   DropResult,
   DraggableStateSnapshot
 } from '@hello-pangea/dnd';
-import { Material, Categories } from '@/types/User';
+import { Material } from '@/types/User';
 import styles from './DraggableList.module.css';
 
 interface DraggableListProps {
-  items: (Material & { type: keyof Categories; index: number })[];
-  onReorder: (reorderedItems: (Material & { type: keyof Categories; index: number })[]) => void;
-  renderItem: (item: Material & { type: keyof Categories; index: number }, index: number) => React.ReactNode;
+  items: (Material & { index: number })[];
+  onReorder: (reorderedItems: (Material & { index: number })[]) => void;
+  renderItem: (item: Material & { index: number }, index: number) => React.ReactNode;
   droppableId: string;
 }
 
@@ -35,59 +35,42 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
   const [dragCompleted, setDragCompleted] = useState(false);
   // 添加一個狀態來強制重新渲染
   const [forceRender, setForceRender] = useState(0);
-  // 添加一個 ref 來追踪最新的 localItems
-  const localItemsRef = useRef(items);
-  // 添加一個標誌來控制是否應該從外部 items 更新本地狀態
-  const shouldUpdateFromProps = useRef(true);
-  // 添加一個標誌來追踪是否正在進行拖拽操作
-  const isDraggingRef = useRef(false);
-  
-  // 保存原始順序的參考
+  // 使用 ref 來保存最新的 items 和控制是否從 props 更新
+  const localItemsRef = useRef<(Material & { index: number })[]>([]);
+  const isDraggingRef = useRef<boolean>(false);
+  const shouldUpdateFromProps = useRef<boolean>(true);
   const originalOrderRef = useRef<Map<string, number>>(new Map());
   
-  // 當外部項目變化時更新本地狀態和原始順序參考
+  // 當 items 變化時，更新本地狀態
   useEffect(() => {
-    console.log('🔍 DraggableList - items 變化', items.map(item => `${item._id}:${item.index}`));
-    
-    // 只有當應該從 props 更新時才更新本地狀態
-    if (shouldUpdateFromProps.current && !isDraggingRef.current) {
-      console.log('🔍 DraggableList - 從 props 更新本地狀態');
+    // 只有在非拖拽狀態下，或者 shouldUpdateFromProps 為 true 時，才從 props 更新本地狀態
+    if (!isDraggingRef.current || shouldUpdateFromProps.current) {
       setLocalItems(items);
       localItemsRef.current = items;
-    } else {
-      console.log('🔍 DraggableList - 跳過從 props 更新本地狀態，因為剛完成拖拽或正在拖拽中');
-      // 重置標誌，下次可以從 props 更新
-      shouldUpdateFromProps.current = true;
-    }
-    
-    // 更新原始順序參考
-    const orderMap = new Map<string, number>();
-    items.forEach((item, index) => {
-      if (item._id) {
-        orderMap.set(item._id, index);
-      }
-    });
-    originalOrderRef.current = orderMap;
-    console.log('🔍 DraggableList - 更新原始順序參考', Array.from(orderMap.entries()));
-    
-    // 將原始順序保存到 localStorage，以便在頁面刷新後恢復
-    if (items.length > 0) {
+      
+      // 更新原始順序參考
       try {
+        const originalOrderMap = new Map<string, number>();
+        items.forEach((item, index) => {
+          if (item._id) {
+            originalOrderMap.set(item._id, index);
+          }
+        });
+        originalOrderRef.current = originalOrderMap;
+        
+        // 保存原始順序到 localStorage
         const topicId = localStorage.getItem('activeTopicId');
         if (topicId) {
-          localStorage.setItem(`original_order_${topicId}`, JSON.stringify(Array.from(orderMap.entries())));
-          console.log('🔍 DraggableList - 保存原始順序到 localStorage', topicId);
+          localStorage.setItem(`original_order_${topicId}`, JSON.stringify(Array.from(originalOrderMap.entries())));
         }
       } catch (error) {
-        console.error('保存原始順序到 localStorage 失敗:', error);
+        console.error('更新原始順序參考失敗:', error);
       }
     }
   }, [items]);
   
   // 添加一個效果來處理 droppableId 變化
   useEffect(() => {
-    console.log('🔍 DraggableList - droppableId 變化', droppableId);
-    
     // 當 droppableId 變化時，強制從 props 更新本地狀態
     setLocalItems(items);
     localItemsRef.current = items;
@@ -102,39 +85,51 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
     
     // 延遲 50ms 後再次強制刷新，確保 UI 完全更新
     setTimeout(() => {
-      console.log('🔍 DraggableList - droppableId 變化後的延遲強制刷新');
       setForceRender(prev => prev + 1);
       
       // 再次確保從 props 更新本地狀態
       setLocalItems(items);
       localItemsRef.current = items;
     }, 50);
+    
+    // 延遲 100ms 後第三次強制刷新
+    setTimeout(() => {
+      setForceRender(prev => prev + 1);
+      
+      // 再次確保從 props 更新本地狀態
+      setLocalItems(items);
+      localItemsRef.current = items;
+    }, 100);
+    
+    // 延遲 150ms 後第四次強制刷新
+    setTimeout(() => {
+      setForceRender(prev => prev + 1);
+      
+      // 再次確保從 props 更新本地狀態
+      setLocalItems(items);
+      localItemsRef.current = items;
+    }, 150);
   }, [droppableId, items]);
   
   // 添加一個效果來處理拖拽完成後的UI刷新
   useEffect(() => {
     if (dragCompleted) {
-      console.log('🔍 DraggableList - 拖拽完成，重置狀態');
       // 重置狀態
       setDragCompleted(false);
       isDraggingRef.current = false;
       
       // 強制重新渲染
       setForceRender(prev => prev + 1);
-      console.log('🔍 DraggableList - 強制重新渲染', forceRender + 1);
       
       // 延遲 50ms 後再次強制刷新
       setTimeout(() => {
-        console.log('🔍 DraggableList - 延遲強制刷新');
         setForceRender(prev => prev + 1);
-        console.log('🔍 DraggableList - 再次強制重新渲染', forceRender + 2);
       }, 50);
     }
   }, [dragCompleted, forceRender]);
   
   // 恢復原始順序的函數
   const restoreOriginalOrder = () => {
-    console.log('🔍 DraggableList - 開始恢復原始順序');
     if (originalOrderRef.current.size === 0) {
       // 嘗試從 localStorage 恢復
       try {
@@ -143,7 +138,6 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
           const savedOrder = localStorage.getItem(`original_order_${topicId}`);
           if (savedOrder) {
             originalOrderRef.current = new Map(JSON.parse(savedOrder));
-            console.log('🔍 DraggableList - 從 localStorage 恢復原始順序', Array.from(originalOrderRef.current.entries()));
           }
         }
       } catch (error) {
@@ -160,10 +154,8 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
         return Number(orderA) - Number(orderB);
       });
       
-      console.log('🔍 DraggableList - 恢復後的順序', sortedItems.map(item => `${item._id}:${item.index}`));
       setLocalItems(sortedItems);
       localItemsRef.current = sortedItems;
-      console.log('🔍 DraggableList - 更新本地狀態完成，調用父組件的 onReorder');
       
       // 設置標誌，防止下一次 props 更新覆蓋本地狀態
       shouldUpdateFromProps.current = false;
@@ -173,7 +165,6 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
       setDragCompleted(true);
       // 強制重新渲染
       setForceRender(prev => prev + 1);
-      console.log('🔍 DraggableList - 強制重新渲染', forceRender + 1);
     }
   };
   
@@ -183,45 +174,36 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
   }));
   
   const handleDragStart = () => {
-    console.log('🔍 DraggableList - 開始拖拽');
     isDraggingRef.current = true;
     shouldUpdateFromProps.current = false;
   };
   
   const handleDragEnd = (result: DropResult) => {
-    console.log('🔍 DraggableList - 拖拽結束', result);
-    
     // Dropped outside the list
     if (!result.destination) {
-      console.log('🔍 DraggableList - 拖拽到列表外，不處理');
       isDraggingRef.current = false;
       return;
     }
 
-    console.log('🔍 DraggableList - 拖拽前的順序', localItems.map(item => `${item._id}:${item.index}`));
     const reorderedItems = reorderList(
       localItems,
       result.source.index,
       result.destination.index
     );
-    console.log('🔍 DraggableList - 拖拽後的順序', reorderedItems.map(item => `${item._id}:${item.index}`));
 
     // 設置標誌，防止下一次 props 更新覆蓋本地狀態
     shouldUpdateFromProps.current = false;
 
     // 立即更新本地狀態，這樣UI會立即反映新的順序
-    console.log('🔍 DraggableList - 開始更新本地狀態');
     setLocalItems(reorderedItems);
     localItemsRef.current = reorderedItems;
-    console.log('🔍 DraggableList - 本地狀態更新完成');
 
-    // Update indexes
+    // Update indexes and order
     const itemsWithUpdatedIndexes = reorderedItems.map((item, index) => ({
       ...item,
-      index: index + 1,
-      order: index // Add order property to ensure proper sorting
+      index: index + 1, // Keep the index property for display purposes
+      order: index      // Add order property for database sorting
     }));
-    console.log('🔍 DraggableList - 更新索引後的順序', itemsWithUpdatedIndexes.map(item => `${item._id}:${item.index}`));
     
     // 更新本地存儲的順序
     try {
@@ -234,88 +216,62 @@ const DraggableList = forwardRef<DraggableListHandle, DraggableListProps>(({
           }
         });
         localStorage.setItem(`temp_order_${topicId}`, JSON.stringify(Array.from(newOrderMap.entries())));
-        console.log('🔍 DraggableList - 保存臨時順序到 localStorage', topicId, Array.from(newOrderMap.entries()));
       }
     } catch (error) {
       console.error('保存臨時順序到 localStorage 失敗:', error);
     }
 
-    // 調用父組件的重排序函數
-    console.log('🔍 DraggableList - 調用父組件的 onReorder 函數');
+    // 通知父組件順序已更改
     onReorder(itemsWithUpdatedIndexes);
-    console.log('🔍 DraggableList - onReorder 調用完成');
     
     // 標記拖拽完成，觸發UI刷新
-    console.log('🔍 DraggableList - 設置 dragCompleted 為 true');
     setDragCompleted(true);
-    
-    // 強制重新渲染
-    setForceRender(prev => prev + 1);
-    console.log('🔍 DraggableList - 強制重新渲染', forceRender + 1);
-    
-    // 延遲 50ms 後再次強制刷新
-    setTimeout(() => {
-      console.log('🔍 DraggableList - 延遲強制刷新');
-      setForceRender(prev => prev + 1);
-      console.log('🔍 DraggableList - 再次強制重新渲染', forceRender + 2);
-    }, 50);
+    isDraggingRef.current = false;
   };
 
-  // Helper function to reorder the list
   const reorderList = (
-    list: (Material & { type: keyof Categories; index: number })[],
+    list: (Material & { index: number })[],
     startIndex: number,
     endIndex: number
   ) => {
-    console.log(`🔍 DraggableList - reorderList: 從 ${startIndex} 移動到 ${endIndex}`);
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
     return result;
   };
 
-  console.log('🔍 DraggableList - 渲染組件', localItems.map(item => `${item._id}:${item.index}`), '強制渲染計數:', forceRender);
   return (
-    <div key={`draggable-list-${forceRender}`} data-force-render={forceRender}>
-      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <Droppable droppableId={droppableId}>
-          {(provided: DroppableProvided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className={styles.droppableContainer}
-              data-force-render={forceRender} // 添加一個屬性來強制重新渲染
-            >
-              {localItems.map((item, index) => (
-                <Draggable 
-                  key={item._id || `item-${index}`} 
-                  draggableId={item._id || `item-${index}`} 
-                  index={index}
-                >
-                  {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className={`${styles.draggableItem} ${snapshot.isDragging ? styles.dragging : ''}`}
-                      data-id={item._id}
-                      data-index={index}
-                      data-force-render={forceRender}
-                    >
-                      {renderItem(item, index)}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </div>
+    <DragDropContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+      <Droppable droppableId={droppableId}>
+        {(provided: DroppableProvided) => (
+          <div
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className={styles.droppableContainer}
+          >
+            {localItems.map((item, index) => (
+              <Draggable key={item._id || index} draggableId={item._id || `item-${index}`} index={index}>
+                {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    className={`${styles.draggableItem} ${snapshot.isDragging ? styles.dragging : ''}`}
+                    style={{
+                      ...provided.draggableProps.style,
+                    }}
+                  >
+                    {renderItem(item, index)}
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 });
-
-DraggableList.displayName = 'DraggableList';
 
 export default DraggableList; 

@@ -39,33 +39,50 @@ const Navbar = ({ onAddMaterial: externalAddMaterial, activeTopicId: externalTop
   console.log('Navbar - activeTopicId:', activeTopicId);
 
   const handleAddMaterial = async (material: any) => {
-    console.log('handleAddMaterial - material:', material);
-    console.log('handleAddMaterial - activeTopicId:', activeTopicId);
+    console.log('🚀 Navbar.handleAddMaterial - 開始執行', material);
+    console.log('🚀 Navbar.handleAddMaterial - activeTopicId:', activeTopicId);
     
     if (!activeTopicId) {
-      console.log('No activeTopicId found');
+      console.log('🚀 Navbar.handleAddMaterial - 沒有找到 activeTopicId');
       alert('Please select a topic first');
       return;
     }
     
     // 使用外部提供的 onAddMaterial 或內部的 addMaterial
     if (externalAddMaterial) {
+      console.log('🚀 Navbar.handleAddMaterial - 使用外部提供的 onAddMaterial');
       externalAddMaterial(material);
     } else {
-      const success = await addMaterial(material, activeTopicId);
-      console.log('handleAddMaterial - success:', success);
-      
-      if (!success) {
-        alert('Failed to add material. Please try again.');
+      console.log('🚀 Navbar.handleAddMaterial - 使用內部的 addMaterial');
+      try {
+        const materialWithOrder = {
+          ...material,
+          order: 0 // 設置默認 order
+        };
+        console.log('🚀 Navbar.handleAddMaterial - 準備添加材料:', materialWithOrder);
+        const success = await addMaterial(materialWithOrder, activeTopicId);
+        console.log('🚀 Navbar.handleAddMaterial - 添加結果:', success);
+        
+        if (!success) {
+          console.log('🚀 Navbar.handleAddMaterial - 添加失敗');
+          alert('Failed to add material. Please try again.');
+        } else {
+          console.log('🚀 Navbar.handleAddMaterial - 添加成功');
+        }
+      } catch (error) {
+        console.error('🚀 Navbar.handleAddMaterial - 錯誤:', error);
+        alert('An error occurred while adding material.');
       }
     }
   };
 
   const handleAddNewMaterial = (materialData: { title: string; type: string; url: string | null }) => {
+    console.log('🚀 Navbar.handleAddNewMaterial - 開始執行', materialData);
     handleAddMaterial({
       ...materialData,
       rating: 5
     });
+    console.log('🚀 Navbar.handleAddNewMaterial - 調用 handleAddMaterial 完成');
   };
 
   return (

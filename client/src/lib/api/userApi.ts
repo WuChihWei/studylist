@@ -28,8 +28,26 @@ const userApi = {
     api.delete<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}`),
   
   // 添加学习材料
-  addMaterial: (userId: string, topicId: string, materialData: MaterialInput) => 
-    api.post<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}/materials`, materialData),
+  addMaterial: async (userId: string, topicId: string, materialData: MaterialInput) => {
+    // 只在開發環境中輸出日誌
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔌 materialData.favicon:', materialData.favicon);
+    }
+    
+    try {
+      const endpoint = `${USERS_ENDPOINT}/${userId}/topics/${topicId}/materials`;
+      console.log('🔌 API 請求 URL:', endpoint);
+      console.log('🔌 請求數據:', materialData);
+      
+      const data = await api.post<User>(endpoint, materialData);
+      console.log('🔌 API 響應數據:', data);
+      
+      return data;
+    } catch (error) {
+      console.error('🔌 API 請求錯誤:', error);
+      throw error;
+    }
+  },
   
   // 更新材料完成状态
   completeMaterial: (userId: string, topicId: string, materialId: string) => 

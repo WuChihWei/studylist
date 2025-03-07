@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Material, Categories } from '@/types/User';
+import { Material, Categories, Contributions } from '@/types/User';
 import styles from './MaterialsView.module.css';
 import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
@@ -29,14 +29,17 @@ import { cn } from "@/lib/utils"
 
 interface MaterialInput {
   title: string;
-  type: keyof Categories;
+  type: 'webpage' | 'video' | 'podcast' | 'book';
   url?: string;
   rating?: number;
   dateAdded: Date;
+  order?: number; // 新增 order 欄位
 }
 
 interface MaterialsViewProps {
-  categories: Categories;
+  // 改為直接使用 materials 陣列而不是 categories 物件
+  materials: Material[];
+  contributions?: Contributions;
   onAddMaterial: (material: MaterialInput) => Promise<boolean>;
   onDeleteMaterial: (materialId: string, topicId: string) => Promise<boolean>;
   onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
@@ -58,7 +61,8 @@ const truncateTitle = (title: string, maxLength: number = 40) => {
 };
 
 export default function MaterialsView({ 
-  categories, 
+  materials, 
+  contributions,
   onAddMaterial, 
   onDeleteMaterial, 
   onUpdateMaterial, 
@@ -99,34 +103,23 @@ export default function MaterialsView({
     book: <span className={styles.categoryIcon}><FiBook size={18} /></span>
   };
 
+  // 重新實現 getCategoryCount 方法，使用 filter 來計算各類別的數量
   const getCategoryCount = (category: string) => {
     if (category === 'all') {
-      return categories.webpage.length + 
-             categories.video.length + 
-             categories.podcast.length + 
-             categories.book.length;
+      return materials.length;
     }
-    return categories[category as keyof Categories]?.length || 0;
+    return materials.filter(material => material.type === category).length;
   };
 
+  // 重新實現 getAllMaterials 方法，使用 filter 來獲取各類別的材料
   const getAllMaterials = () => {
-    const webpages: Material[] = categories.webpage || [];
-    const videos: Material[] = categories.video || [];
-    const podcasts: Material[] = categories.podcast || [];
-    const books: Material[] = categories.book || [];
-    
-    // 首先根據活動類別過濾材料
+    // 根據活動類別過濾材料
     let filteredMaterials: Material[];
+    
     if (activeCategory === 'all') {
-      filteredMaterials = [
-        ...webpages.map(m => ({ ...m, type: 'webpage' as const })),
-        ...videos.map(m => ({ ...m, type: 'video' as const })),
-        ...podcasts.map(m => ({ ...m, type: 'podcast' as const })),
-        ...books.map(m => ({ ...m, type: 'book' as const }))
-      ];
+      filteredMaterials = materials;
     } else {
-      filteredMaterials = categories[activeCategory as keyof Categories]
-        .map(m => ({ ...m, type: activeCategory as Material['type'] }));
+      filteredMaterials = materials.filter(material => material.type === activeCategory);
     }
     
     // 如果提供了自定義材料獲取函數，使用它
@@ -134,7 +127,7 @@ export default function MaterialsView({
       return getCustomMaterials(filteredMaterials);
     } else {
       // 否則按 order 字段排序
-      return filteredMaterials.sort((a, b) => (a.order || 0) - (b.order || 0));
+      return filteredMaterials.sort((a, b) => a.order - b.order);
     }
   };
 
@@ -143,7 +136,7 @@ export default function MaterialsView({
       ...material,
       index: index + 1
     }));
-  }, [categories, activeCategory, getCustomMaterials, reorderCounter, refreshKey]);
+  }, [materials, activeCategory, getCustomMaterials, reorderCounter, refreshKey]);
 
   const MoreMenu = ({ 
     materialId, 
@@ -154,7 +147,7 @@ export default function MaterialsView({
   }: { 
     materialId: string, 
     title: string,
-    type: keyof Categories,
+    type: 'webpage' | 'video' | 'podcast' | 'book',
     onClose: () => void,
     onDelete: () => Promise<boolean>
   }) => {
@@ -263,174 +256,56 @@ export default function MaterialsView({
     }
   };
 
-  const handleReorderItems = async (reorderedItems: (Material & { type: keyof Categories; index: number })[]) => {
+  // 更新 handleReorderItems 方法以適應新的資料結構
+  const handleReorderItems = async (reorderedItems: (Material & { index: number })[]) => {
     console.log('🧩 handleReorderItems 開始執行，收到項目數量:', reorderedItems.length);
-    console.log(' 重新排序前的項目:', reorderedItems.map(item => `${item._id}:${item.index}:${item.order}`));
+    
+    // 確保所有項目都有正確的 order 屬性
+    const itemsWithOrder = reorderedItems.map((item, idx) => ({
+      ...item,
+      order: idx // 確保 order 屬性與當前位置一致
+    }));
     
     // 立即更新本地UI，不等待服務器響應
-    // 這是關鍵：我們需要立即更新本地狀態，這樣用戶就能看到拖拽後的新順序
-    console.log('🧩 增加 reorderCounter 前:', reorderCounter);
-    setReorderCounter(prev => {
-      console.log(' 增加 reorderCounter:', prev, prev + 1);
-      return prev + 1;
-    });
-    console.log(' 增加 reorderCounter 後 (注意：這裡看到的值可能還是舊的，因為 setState 是非同步的)');
+    setReorderCounter(prev => prev + 1);
     
     // 保存當前重新排序的項目到 localStorage
+    const orderMap = new Map<string, number>();
     try {
-      const orderMap = new Map<string, number>();
-      reorderedItems.forEach((item, index) => {
+      itemsWithOrder.forEach((item, index) => {
         if (item._id) {
           orderMap.set(item._id, index);
         }
       });
-      
-      // 保存到 localStorage，以便在頁面刷新或網絡錯誤時恢復
       localStorage.setItem(`temp_order_${activeTab}`, JSON.stringify(Array.from(orderMap.entries())));
-      console.log('🧩 保存臨時順序到 localStorage:', activeTab, Array.from(orderMap.entries()));
     } catch (error) {
       console.error(' 保存臨時順序到 localStorage 失敗:', error);
     }
     
-    // Group the items by type
-    console.log('🧩 開始按類型分組');
-    const reorderedByType: Categories = {
-      webpage: [],
-      video: [],
-      book: [],
-      podcast: []
-    };
-    
-    reorderedItems.forEach(item => {
-      if (reorderedByType[item.type]) {
-        reorderedByType[item.type].push(item);
-      }
-    });
-    
-    console.log('🧩 按類型分組後:', Object.fromEntries(Object.entries(reorderedByType).map(([k, v]) => [k, v.length])));
-    
     // 使用 getCustomMaterials 更新本地數據
     if (getCustomMaterials) {
-      console.log(' 使用 getCustomMaterials 更新本地數據');
-      const customMaterials = getCustomMaterials(reorderedItems);
-      console.log('  getCustomMaterials 調用完成');
-      
-      // 增加 refreshKey，強制 UI 刷新
-      setRefreshKey(prev => {
-        console.log(' 增加 refreshKey 前:', prev);
-        console.log(' 增加 refreshKey 後 (注意：這裡看到的值可能還是舊的，因為 setState 是非同步的)');
-        return prev + 1;
-      });
-      
-      // 再次增加 reorderCounter，確保 UI 刷新
-      setReorderCounter(prev => {
-        console.log(' 再次增加 reorderCounter:', prev, prev + 1);
-        return prev + 1;
-      });
+      const customMaterials = getCustomMaterials(itemsWithOrder);
+      setRefreshKey(prev => prev + 1);
+      setReorderCounter(prev => prev + 1);
       
       // 延遲 50ms 後再次強制刷新
       setTimeout(() => {
-        console.log(' 延遲強制刷新');
-        setRefreshKey(prev => {
-          console.log(' 再次增加 refreshKey:', prev, prev + 1);
-          return prev + 1;
-        });
-        setReorderCounter(prev => {
-          console.log(' 再次增加 reorderCounter:', prev, prev + 1);
-          return prev + 1;
-        });
+        setRefreshKey(prev => prev + 1);
+        setReorderCounter(prev => prev + 1);
         
         // 觸發 materialReordered 事件
         const event = new CustomEvent('materialReordered', { 
           detail: { topicId: activeTab } 
         });
-        console.log('  materialReordered 事件已觸發');
         window.dispatchEvent(event);
       }, 50);
-      
-      // 延遲 150ms 後第二次強制刷新
-      setTimeout(() => {
-        console.log(' 第二次延遲強制刷新');
-        setRefreshKey(prev => {
-          console.log(' 第三次增加 refreshKey:', prev, prev + 1);
-          return prev + 1;
-        });
-        setReorderCounter(prev => {
-          console.log(' 第三次增加 reorderCounter:', prev, prev + 1);
-          return prev + 1;
-        });
-        
-        // 再次觸發 materialReordered 事件
-        const event = new CustomEvent('materialReordered', { 
-          detail: { topicId: activeTab } 
-        });
-        console.log('  materialReordered 事件再次觸發');
-        window.dispatchEvent(event);
-      }, 150);
     }
     
-    // 準備調用 onReorderMaterials
+    // 調用 onReorderMaterials 更新服務器數據
     if (onReorderMaterials) {
-      console.log(' 準備調用 onReorderMaterials');
-      
-      // 合併所有類型的材料
-      const allMaterials: Material[] = [];
-      Object.values(reorderedByType).forEach(materials => {
-        allMaterials.push(...materials);
-      });
-      
-      console.log(' 合併後的材料數量:', allMaterials.length);
-      
-      // 更新 order 屬性
-      const materialsWithOrder = allMaterials.map((material, index) => ({
-        ...material,
-        order: index
-      }));
-      
-      console.log(' 更新 order 屬性後的材料:', materialsWithOrder.map(m => `${m._id}:${m.order}`));
-      
-      console.log(' 開始調用 onReorderMaterials');
       try {
-        await onReorderMaterials(materialsWithOrder);
-        console.log(' 重排序請求成功完成');
-        
-        // 更新正式順序
-        const orderMap = new Map<string, number>();
-        materialsWithOrder.forEach((material, index) => {
-          if (material._id) {
-            orderMap.set(material._id, index);
-          }
-        });
+        await onReorderMaterials(itemsWithOrder);
         localStorage.setItem(`order_${activeTab}`, JSON.stringify(Array.from(orderMap.entries())));
-        console.log(' 更新正式順序成功:', JSON.stringify(Array.from(orderMap.entries())));
-        
-        // 再次增加 reorderCounter，確保 UI 刷新
-        console.log(' 再次增加 reorderCounter 前:', reorderCounter);
-        setReorderCounter(prev => {
-          console.log(' 再次增加 reorderCounter:', prev, prev + 1);
-          return prev + 1;
-        });
-        console.log(' 再次增加 reorderCounter 後 (注意：這裡看到的值可能還是舊的，因為 setState 是非同步的)');
-        
-        // 第三次延遲強制刷新
-        setTimeout(() => {
-          console.log(' 第三次延遲強制刷新');
-          setRefreshKey(prev => {
-            console.log(' 第三次增加 refreshKey:', prev, prev + 1);
-            return prev + 1;
-          });
-          setReorderCounter(prev => {
-            console.log(' 第三次增加 reorderCounter:', prev, prev + 1);
-            return prev + 1;
-          });
-          
-          // 再次觸發 materialReordered 事件
-          const event = new CustomEvent('materialReordered', { 
-            detail: { topicId: activeTab } 
-          });
-          console.log('  materialReordered 事件再次觸發');
-          window.dispatchEvent(event);
-        }, 200);
       } catch (error) {
         console.error(' 重排序請求失敗:', error);
         alert('重新排序失敗，請稍後再試');
@@ -440,7 +315,6 @@ export default function MaterialsView({
 
   // Add useEffect to refresh the component when reordering occurs
   useEffect(() => {
-    // This will force the component to re-render with fresh data
     if (reorderCounter > 0) {
       console.log('🔄 MaterialsView - 強制刷新頁面，reorderCounter:', reorderCounter);
       setRefreshKey(prev => prev + 1);

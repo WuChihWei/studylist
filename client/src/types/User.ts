@@ -9,7 +9,8 @@ export interface Material {
     readingTime?: number;
     note?: string;
     completedUnits?: number;
-    order?: number;
+    order: number;
+    favicon?: string;
 }
 
 export interface Categories {
@@ -31,13 +32,26 @@ export interface Contributor {
     photoURL?: string;
 }
 
+export interface Contributions {
+    totalCount: number;
+    lastUpdated: Date;
+    byType: {
+        webpage: number;
+        video: number;
+        book: number;
+        podcast: number;
+    };
+}
+
 export interface Topic {
     _id?: string;
     name: string;
     participants: Participant[];
-    categories: Categories;
+    categories?: Categories;
+    materials: Material[];
     createdAt?: Date;
     contributors?: Contributor[];
+    contributions?: Contributions;
 }
 
 interface ContributionData {
@@ -66,11 +80,13 @@ export interface User {
 }
 
 export interface MaterialInput {
-    type: string;
+    type: 'webpage' | 'book' | 'video' | 'podcast';
     title: string;
     url?: string;
     rating?: number;
     dateAdded?: Date;
+    order?: number;
+    favicon?: string;
 }
 
 export interface MaterialPayload {
@@ -79,4 +95,6 @@ export interface MaterialPayload {
     url: string | null;
     rating: number;
     dateAdded: string;
+    order: number;
+    favicon?: string;
 }
