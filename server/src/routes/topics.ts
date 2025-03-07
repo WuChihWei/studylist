@@ -4,6 +4,7 @@ import { authMiddleware } from '../middleware/auth';
 import { User } from '../models/User';
 import { Request, Response } from 'express';
 import { DecodedIdToken } from 'firebase-admin/auth';
+import { reorderMaterials } from '../controllers/materialController';
 
 const router = Router({ mergeParams: true });
 
@@ -26,6 +27,7 @@ router.post('/:topicId/materials', addMaterial);
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
+router.put('/:topicId/materials/reorder', reorderMaterials);
 router.delete('/:topicId/materials/:materialId', async (req: Request, res: Response) => {
   try {
     const { firebaseUID } = req.params;

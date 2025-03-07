@@ -13,6 +13,7 @@
     font-weight: 400;
     color: #666;
     font-size: 14px;
+    justify-content: space-between;
   }
   
   .tableBody {
@@ -407,4 +408,30 @@
     .columnActions {
       width: 60px;
     }
+  }
+
+  .columnHandle {
+    width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* Add styles for the restore button */
+  .restoreButton {
+    margin-left: auto;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #666;
+    transition: all 0.2s ease;
+  }
+  
+  .restoreButton:hover {
+    background-color: #e9ecef;
+    color: #333;
   }

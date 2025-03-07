@@ -715,66 +715,74 @@ const SidebarMenuSubButton = React.forwardRef<
 })
 SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 
-interface SidebarProps {
-  activeView: 'materials' | 'studylist';
-  onViewChange: (view: 'materials' | 'studylist') => void;
+type SidebarProps = {
+  activeView: 'topics' | 'materials' | 'studylist';
+  onViewChange: (view: 'topics' | 'materials' | 'studylist') => void;
   className?: string;
-  collapsed?: boolean;
   width?: string;
 }
 
 const SidebarComponent = ({ activeView, onViewChange, className, width }: SidebarProps) => {
-  const isMobile = useMediaQuery("(max-width: 768px)")
+  const { userData } = useUserData();
+  const firstTopicId = userData?.topics && userData.topics.length > 0 ? userData.topics[0]._id : '';
+  const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon">
-            <Menu className="h-6 w-6" />
+          <Button
+            variant="ghost"
+            className="h-9 w-9 p-0"
+            aria-label="Toggle Menu"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle Menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[240px]">
-          <div className="px-1 py-2">
-            <div className="mb-6">
+        <SheetContent side="left" className="p-0">
+          <div className="flex flex-col h-full p-4">
+            <div className="mb-6 flex justify-center items-center">
               <Image 
-                src="/davinci-logo.png" 
-                alt="DAVINCI" 
+                src="/mycel-logo.png" 
+                alt="Mycel" 
                 width={120} 
-                height={40} 
-                className="ml-4"
+                height={32} 
               />
             </div>
             <div className="space-y-4">
-              <Link href="/">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-400 hover:text-gray-700"
-                >
-                  <Home className="mr-2 h-4 w-4" />
-                  Home
-                </Button>
-              </Link>
-              <Link href="/materials">
-                <Button
-                  variant={activeView === 'materials' ? "default" : "ghost"}
-                  className={cn("w-full justify-start", activeView === 'materials' ? "font-bold" : "")}
-                  onClick={() => onViewChange('materials')}
-                >
-                  <LayoutGrid className="mr-2 h-4 w-4" />
-                  Materials
-                </Button>
-              </Link>
-              <Link href="/studylist">
-                <Button
-                  variant={activeView === 'studylist' ? "default" : "ghost"}
-                  className={cn("w-full justify-start", activeView === 'studylist' ? "font-bold" : "")}
-                  onClick={() => onViewChange('studylist')}
-                >
-                  <ListTodo className="mr-2 h-4 w-4" />
-                  Study List
-                </Button>
-              </Link>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-gray-400 hover:text-gray-700"
+                onClick={() => window.location.href = '/'}
+              >
+                <Home className="mr-2 h-4 w-4" />
+                Home
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-gray-400 hover:text-gray-700"
+                onClick={() => onViewChange('topics')}
+              >
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Topic
+              </Button>
+              <Button
+                variant={activeView === 'materials' ? "default" : "ghost"}
+                className={cn("w-full justify-start", activeView === 'materials' ? "font-bold" : "")}
+                onClick={() => onViewChange('materials')}
+              >
+                <LayoutGrid className="mr-2 h-4 w-4" />
+                Materials
+              </Button>
+              <Button
+                variant={activeView === 'studylist' ? "default" : "ghost"}
+                className={cn("w-full justify-start", activeView === 'studylist' ? "font-bold" : "")}
+                onClick={() => onViewChange('studylist')}
+              >
+                <ListTodo className="mr-2 h-4 w-4" />
+                Study List
+              </Button>
             </div>
           </div>
         </SheetContent>
@@ -783,51 +791,55 @@ const SidebarComponent = ({ activeView, onViewChange, className, width }: Sideba
   }
 
   return (
-    <div className={cn(
-      "h-full bg-white border-r flex-shrink-0", 
-      className,
-      width ? "" : "w-[var(--sidebar-width)]"
-    )}
-    style={width ? { width } : undefined}
+    <aside 
+      className={cn("w-[16rem] flex-shrink-0 border-r p-4", className)}
+      style={{ width }}
     >
-      <div className="px-3 py-2 h-full max-w-200 max-w-md flex flex-col">
+      <div className="flex flex-col h-full">
         <div className="mb-6">
           <Image 
-            src="/davinci-logo.png" 
-            alt="DAVINCI" 
+            src="/mycel-logo.png" 
+            alt="Mycel" 
             width={120} 
-            height={40} 
+            height={32} 
           />
         </div>
-        <div className="space-y-1 flex-1">
-          <Link href="/">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-400 hover:text-gray-700"
-            >
-              <Home className="mr-2 h-4 w-4" />
-              Home
-            </Button>
-          </Link>
+        <nav className="space-y-2 flex-1">
           <Button
-         variant="ghost"
-         className={cn("w-full justify-start", activeView === 'materials' ? "font-bold text-black" : "text-gray-400")}
+            variant="ghost"
+            className="w-full justify-start text-gray-400 hover:text-gray-700"
+            onClick={() => window.location.href = '/'}
+          >
+            <Home className="mr-2 h-4 w-4" />
+            Home
+          </Button>
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-gray-400 hover:text-gray-700"
+            onClick={() => onViewChange('topics')}
+          >
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            Topic
+          </Button>
+          <Button
+            variant={activeView === 'materials' ? "default" : "ghost"}
+            className={cn("w-full justify-start", activeView === 'materials' ? "font-bold" : "")}
             onClick={() => onViewChange('materials')}
           >
             <LayoutGrid className="mr-2 h-4 w-4" />
             Materials
           </Button>
           <Button
-            variant="ghost"
-            className={cn("w-full justify-start", activeView === 'studylist' ? "font-bold text-black" : "text-gray-400")}
+            variant={activeView === 'studylist' ? "default" : "ghost"}
+            className={cn("w-full justify-start", activeView === 'studylist' ? "font-bold" : "")}
             onClick={() => onViewChange('studylist')}
           >
             <ListTodo className="mr-2 h-4 w-4" />
             Study List
           </Button>
-        </div>
+        </nav>
       </div>
-    </div>
+    </aside>
   )
 }
 
@@ -875,7 +887,10 @@ export function MobileSidebar({ activeView, onViewChange }: SidebarProps) {
             <Button
               variant={activeView === 'materials' ? 'secondary' : 'ghost'}
               className={cn("w-full justify-start", activeView === 'materials' ? "font-bold" : "")}
-              onClick={() => onViewChange('materials')}
+              onClick={(e) => {
+                e.preventDefault();
+                onViewChange('materials');
+              }}
             >
               <BsGrid className="mr-2 h-4 w-4" />
               Materials
@@ -883,7 +898,10 @@ export function MobileSidebar({ activeView, onViewChange }: SidebarProps) {
             <Button
               variant={activeView === 'studylist' ? 'secondary' : 'ghost'}
               className={cn("w-full justify-start", activeView === 'studylist' ? "font-bold" : "")}
-              onClick={() => onViewChange('studylist')}
+              onClick={(e) => {
+                e.preventDefault();
+                onViewChange('studylist');
+              }}
             >
               <BsListUl className="mr-2 h-4 w-4" />
               Study List

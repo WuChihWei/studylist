@@ -15,7 +15,8 @@ import {
   completeMaterial, 
   uncompleteMaterial, 
   updateMaterialProgress, 
-  deleteMaterial 
+  deleteMaterial,
+  reorderMaterials
 } from './controllers/materialController';
 
 // 在任何其他代碼之前加載環境變數
@@ -346,7 +347,7 @@ app.delete('/api/materials/:materialId', authMiddleware, async (req, res, next) 
     req.params.userId = userId as string;
     req.params.topicId = topicId as string;
     
-    await deleteMaterial(req, res, next);
+    await deleteMaterial(req, res);
   } catch (error) {
     next(error);
   }
@@ -354,6 +355,49 @@ app.delete('/api/materials/:materialId', authMiddleware, async (req, res, next) 
 
 // API 路由 - 在直接路由之后注册
 app.use('/api/users/:userId/topics', authMiddleware, topicRoutes);
+
+// 添加特定的 reorder 路由以匹配前端請求
+app.put('/api/topics/:topicId/materials/reorder', authMiddleware, async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const userId = (req as any).user.uid || (req as any).user.id;
+    
+    console.log('🔄 REORDER MATERIALS - Direct Route');
+    console.log('TopicID:', topicId);
+    console.log('UserID:', userId);
+    
+    // 重新構建參數以適應現有的控制器函數
+    req.params.userId = userId;
+    req.params.firebaseUID = userId; // 確保 firebaseUID 也被設置
+    
+    // 調用 reorderMaterials 控制器函數
+    await reorderMaterials(req, res);
+  } catch (error) {
+    console.error('Error in reorder route:', error);
+    res.status(500).json({ message: '重新排序材料時出錯' });
+  }
+});
+
+// 添加對應舊有API路由結構的 reorder 端點
+app.put('/api/users/:userId/topics/:topicId/materials/reorder', authMiddleware, async (req, res) => {
+  try {
+    // 這個路由已經有正確的 userId 和 topicId 參數
+    const { topicId, userId } = req.params;
+    
+    console.log('🔄 REORDER MATERIALS - Standard API Route');
+    console.log('TopicID:', topicId);
+    console.log('UserID:', userId);
+    
+    // 設置 firebaseUID 參數
+    req.params.firebaseUID = userId;
+    
+    // 調用 reorderMaterials 控制器函數
+    await reorderMaterials(req, res);
+  } catch (error) {
+    console.error('Error in reorder route:', error);
+    res.status(500).json({ message: '重新排序材料時出錯' });
+  }
+});
 
 // Mount the materials route for simplified deletion
 app.use('/api/materials', authMiddleware, materialRoutes);

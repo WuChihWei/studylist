@@ -28,7 +28,7 @@ router.put('/:userId/profile', updateUserProfile);
 router.post('/update-all-bios', updateAllUsersBio);
 router.delete('/:userId/topics/:topicId/materials/:materialId', catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   console.log('⭐ DELETE MATERIAL - Route Handler');
-  await materialController.deleteMaterial(req, res, next);
+  await materialController.deleteMaterial(req, res);
 }));
 
 export default router;

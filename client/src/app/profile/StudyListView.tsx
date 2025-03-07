@@ -5,9 +5,9 @@ import { LuGlobe } from "react-icons/lu";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { FiBook, FiVideo } from "react-icons/fi";
 import { FaCheck, FaTimes, FaPlay } from "react-icons/fa";
-import CircleProgress from './ui/circleProgress';
-import VideoPopup from './VideoPopup';
-import UnifiedTableView from './UnifiedTableView';
+import CircleProgress from '../components/ui/circleProgress';
+import VideoPopup from '../components/VideoPopup';
+import UnifiedTableView from '../components/UnifiedTableView';
 
 interface StudyListViewProps {
   categories: Categories;
@@ -16,6 +16,7 @@ interface StudyListViewProps {
   onUnitMinutesChange: (minutes: number) => void;
   topicId: string;
   onUpdateMaterial: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
+  onReorderMaterials?: (materials: Material[]) => Promise<void>;
 }
 
 export default function StudyListView({ 
@@ -24,7 +25,8 @@ export default function StudyListView({
   unitMinutes = 6,
   onUnitMinutesChange,
   topicId,
-  onUpdateMaterial
+  onUpdateMaterial,
+  onReorderMaterials
 }: StudyListViewProps) {
   const [completedMaterials, setCompletedMaterials] = useState<Set<string>>(() => {
     const completed = new Set<string>();
@@ -216,11 +218,50 @@ export default function StudyListView({
     type: material.type
   }));
 
+  // Add this function to handle reordering
+  const handleReorderItems = async (reorderedItems: (Material & { type: keyof Categories; index: number })[]) => {
+    console.log('📚 StudyListView - handleReorderItems 開始', reorderedItems.map(item => `${item._id}:${item.index}`));
+    
+    // Group the items by type
+    const reorderedByType: Categories = {
+      webpage: [],
+      video: [],
+      book: [],
+      podcast: []
+    };
+
+    // Reorganize items by type but preserve the index and order
+    reorderedItems.forEach((item, idx) => {
+      if (reorderedByType[item.type]) {
+        // Keep the index property and add an order property based on the current position
+        reorderedByType[item.type].push({
+          ...item,
+          order: idx, // Add order property based on the current position in the array
+          index: item.index // Preserve the original index property
+        } as Material & { type: keyof Categories; index: number });
+      }
+    });
+
+    // Call the parent component's reorder function if available
+    if (onReorderMaterials) {
+      // Flatten the categories into a single array, preserving the order
+      const allMaterials = [
+        ...reorderedByType.webpage,
+        ...reorderedByType.video,
+        ...reorderedByType.podcast,
+        ...reorderedByType.book
+      ].sort((a, b) => (a.order || 0) - (b.order || 0)); // Sort by order
+      
+      console.log('📚 StudyListView - 調用 onReorderMaterials', allMaterials.map(item => `${item._id}:${item.order}`));
+      await onReorderMaterials(allMaterials);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h2 className={styles.title}>Study List</h2>
+          {/* <h2 className={styles.title}>Study List</h2> */}
           <div className={styles.unitMinutesInput}>
             <input
               type="number"
@@ -252,6 +293,7 @@ export default function StudyListView({
       </div>
 
       <UnifiedTableView
+        key={`studylist-${topicId}-${Date.now()}`}
         materials={data}
         viewType="studylist"
         onComplete={async (materialId, isCompleted) => {
@@ -261,6 +303,7 @@ export default function StudyListView({
           return await onUpdateMaterial(materialId, updates);
         }}
         unitMinutes={unitMinutes}
+        onReorderItems={onReorderMaterials ? handleReorderItems : undefined}
       />
       
       <VideoPopup 

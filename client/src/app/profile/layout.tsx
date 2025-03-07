@@ -7,33 +7,7 @@ export default function ProfileLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
-  useEffect(() => {
-    // Check initial state from cookie
-    const checkSidebarState = () => {
-      const cookies = document.cookie.split(';');
-      const sidebarCookie = cookies.find(cookie => cookie.trim().startsWith('sidebar_state='));
-      if (sidebarCookie) {
-        const sidebarState = sidebarCookie.split('=')[1];
-        setSidebarCollapsed(sidebarState === 'false');
-      }
-    };
-    
-    checkSidebarState();
-    
-    // Listen for cookie changes
-    const handleStorageChange = () => {
-      checkSidebarState();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-  
+  // 不再处理侧边栏状态，保留基本布局容器
   return (
     <div className="flex h-screen w-full">
       {children}

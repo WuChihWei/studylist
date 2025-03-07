@@ -9,6 +9,7 @@ export interface Material {
     readingTime?: number;
     note?: string;
     completedUnits?: number;
+    order?: number;
 }
 
 export interface Categories {

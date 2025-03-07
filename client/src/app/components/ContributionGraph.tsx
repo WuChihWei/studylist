@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import styles from './ContributionGraph.module.css';
 import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
@@ -29,8 +29,12 @@ const generateSquares = (startDate: Date, totalDays: number, contributionData: C
   });
 };
 
-const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) => {
-  console.log('5. ContributionGraph received data:', data);
+// 添加 memo 包裝器來避免不必要的重渲染
+const ContributionGraph = memo(({ data = [], activeView }: ContributionGraphProps) => {
+  // 移除頻繁的控制台日誌，僅在開發模式下日誌
+  if (process.env.NODE_ENV === 'development') {
+    console.log('5. ContributionGraph received data:', data);
+  }
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [squares, setSquares] = useState<ContributionData[]>(() => {
@@ -58,7 +62,8 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
     }
   }, [data]);
 
-  const getContributionColor = (count: number, studyCount: number = 0) => {
+  // 使用 useCallback 優化函數
+  const getContributionColor = useCallback((count: number, studyCount: number = 0) => {
     // 如果有學習記錄，優先顯示學習顏色
     if (studyCount > 0) {
       if (studyCount === 1) return 'var(--study-l1)';
@@ -73,18 +78,20 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
     if (count <= 3) return 'var(--contribution-l2)';
     if (count <= 6) return 'var(--contribution-l3)';
     return 'var(--contribution-l4)';
-  };
+  }, []);
 
-  const getMonths = () => {
+  // 使用 useCallback 優化函數  
+  const getMonths = useCallback(() => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
     return months;
-  };
+  }, []);
 
   const currentYear = new Date().getFullYear();
   const months = getMonths();
   const days = ['Mon', '', 'Wed', '', 'Fri', '', ''] as const;
 
-  const handleScroll = (direction: 'left' | 'right') => {
+  // 使用 useCallback 優化函數
+  const handleScroll = useCallback((direction: 'left' | 'right') => {
     const container = scrollContainerRef.current;
     if (!container) return;
     
@@ -97,10 +104,10 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
       left: newScrollLeft,
       behavior: 'smooth'
     });
-  };
+  }, []);
 
-  // 新增計算每月第一天位置的函數
-  const getMonthPositions = () => {
+  // 使用 useCallback 優化函數
+  const getMonthPositions = useCallback(() => {
     const positions: { [key: string]: number } = {};
     let currentColumn = 0;
     
@@ -113,7 +120,7 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
     });
     
     return positions;
-  };
+  }, [squares, months]);
 
   const monthPositions = getMonthPositions();
 
@@ -190,6 +197,6 @@ const ContributionGraph = ({ data = [], activeView }: ContributionGraphProps) =>
       </div>
     </div>
   );
-};
+});
 
 export default ContributionGraph;

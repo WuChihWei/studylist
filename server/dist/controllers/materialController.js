@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteMaterial = exports.deleteMaterialSimple = exports.updateMaterialProgress = exports.uncompleteMaterial = exports.completeMaterial = exports.addMaterial = void 0;
+exports.reorderMaterials = exports.deleteMaterial = exports.deleteMaterialSimple = exports.updateMaterialProgress = exports.uncompleteMaterial = exports.completeMaterial = exports.addMaterial = void 0;
 const User_1 = require("../models/User");
-const appError_1 = require("../middleware/appError");
 const mongoose_1 = __importDefault(require("mongoose"));
+const appError_1 = require("../middleware/appError");
 // 添加材料
 exports.addMaterial = (0, appError_1.catchAsync)(async (req, res) => {
     const { userId, topicId } = req.params;
@@ -110,7 +110,7 @@ exports.uncompleteMaterial = (0, appError_1.catchAsync)(async (req, res) => {
     res.status(200).json(user);
 });
 // 更新材料进度
-exports.updateMaterialProgress = (0, appError_1.catchAsync)(async (req, res, next) => {
+exports.updateMaterialProgress = (0, appError_1.catchAsync)(async (req, res) => {
     var _a;
     const { userId, topicId, materialId } = req.params;
     const { completedUnits, readingTime, progress } = req.body;
@@ -178,7 +178,7 @@ const deleteMaterialSimple = async (req, res) => {
 };
 exports.deleteMaterialSimple = deleteMaterialSimple;
 // RESTful风格的删除方法（可选，用于未来改进）
-const deleteMaterial = async (req, res, next) => {
+const deleteMaterial = async (req, res) => {
     try {
         const { userId, topicId, materialId } = req.params;
         // 遍历所有可能的材料类型
@@ -214,3 +214,66 @@ const deleteMaterial = async (req, res, next) => {
     }
 };
 exports.deleteMaterial = deleteMaterial;
+// 重新排序材料
+const reorderMaterials = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { topicId } = req.params;
+        const { materials } = req.body;
+        if (!Array.isArray(materials)) {
+            return res.status(400).json({ message: '材料必須是一個數組' });
+        }
+        // 獲取用戶
+        const user = await User_1.User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: '用戶未找到' });
+        }
+        // 獲取主題
+        const topic = user.topics.id(topicId);
+        if (!topic) {
+            return res.status(404).json({ message: '主題未找到' });
+        }
+        if (!topic.categories) {
+            return res.status(400).json({ message: '主題類別未找到' });
+        }
+        // 為每個類型創建一個 ID 到 order 的映射
+        const orderMaps = {
+            webpage: new Map(),
+            video: new Map(),
+            podcast: new Map(),
+            book: new Map()
+        };
+        // 填充順序映射
+        materials.forEach((material) => {
+            if (material._id && typeof material.order === 'number' && material.type) {
+                const type = material.type;
+                orderMaps[type].set(material._id, material.order);
+            }
+        });
+        // 更新每種類型的材料順序
+        for (const type of ['webpage', 'video', 'podcast', 'book']) {
+            const typeMaterials = topic.categories[type];
+            if (Array.isArray(typeMaterials)) {
+                typeMaterials.forEach((material) => {
+                    if (material._id && orderMaps[type].has(material._id.toString())) {
+                        material.order = orderMaps[type].get(material._id.toString());
+                    }
+                });
+                // 按 order 屬性排序材料
+                topic.categories[type].sort((a, b) => {
+                    const orderA = a.order !== undefined ? a.order : 9999;
+                    const orderB = b.order !== undefined ? b.order : 9999;
+                    return orderA - orderB;
+                });
+            }
+        }
+        // 保存用戶
+        await user.save();
+        res.status(200).json({ message: '材料順序更新成功' });
+    }
+    catch (error) {
+        console.error('重新排序材料時出錯:', error);
+        res.status(500).json({ message: '服務器錯誤' });
+    }
+};
+exports.reorderMaterials = reorderMaterials;

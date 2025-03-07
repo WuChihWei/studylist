@@ -4,6 +4,7 @@ const express_1 = require("express");
 const userController_1 = require("../controllers/userController");
 const auth_1 = require("../middleware/auth");
 const User_1 = require("../models/User");
+const materialController_1 = require("../controllers/materialController");
 const router = (0, express_1.Router)({ mergeParams: true });
 // 添加身份驗證中間件
 router.use(auth_1.authMiddleware);
@@ -22,6 +23,7 @@ router.post('/:topicId/materials', userController_1.addMaterial);
 router.put('/:topicId/materials/:materialId/complete', userController_1.completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', userController_1.uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', userController_1.updateMaterialProgress);
+router.put('/:topicId/materials/reorder', materialController_1.reorderMaterials);
 router.delete('/:topicId/materials/:materialId', async (req, res) => {
     try {
         const { firebaseUID } = req.params;

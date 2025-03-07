@@ -1,0 +1,31 @@
+.droppableContainer {
+  width: 100%;
+}
+
+.draggableItem {
+  margin-bottom: 4px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.dragging {
+  background-color: rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+/* Add a drag handle icon to show the item is draggable */
+.dragHandle {
+  cursor: grab;
+  opacity: 0.3;
+  transition: opacity 0.2s;
+  display: inline-flex;
+  margin-right: 8px;
+}
+
+.dragHandle:hover {
+  opacity: 0.7;
+}
+
+.draggableItem:hover .dragHandle {
+  opacity: 0.7;
+} 

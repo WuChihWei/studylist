@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { User } from '../models/User';
-import { catchAsync, AppError } from '../middleware/appError';
 import mongoose from 'mongoose';
+import { catchAsync, AppError } from '../middleware/appError';
 
 // 定义材料类型
 type MaterialType = 'webpage' | 'video' | 'podcast' | 'book';
@@ -130,7 +130,7 @@ export const uncompleteMaterial = catchAsync(async (req: Request, res: Response)
 });
 
 // 更新材料进度
-export const updateMaterialProgress = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const updateMaterialProgress = catchAsync(async (req: Request, res: Response) => {
   const { userId, topicId, materialId } = req.params;
   const { completedUnits, readingTime, progress } = req.body;
 
@@ -209,7 +209,7 @@ export const deleteMaterialSimple = async (req: Request, res: Response) => {
 };
 
 // RESTful风格的删除方法（可选，用于未来改进）
-export const deleteMaterial = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteMaterial = async (req: Request, res: Response) => {
   try {
     const { userId, topicId, materialId } = req.params;
     
@@ -250,5 +250,90 @@ export const deleteMaterial = async (req: Request, res: Response, next: NextFunc
   } catch (error) {
     console.error('Error deleting material:', error);
     return res.status(500).json({ message: 'Error deleting material', error: (error as Error).message });
+  }
+};
+
+// 重新排序材料
+export const reorderMaterials = async (req: Request, res: Response) => {
+  try {
+    console.log('reorderMaterials called with params:', req.params);
+    console.log('Body:', req.body);
+
+    // 使用 firebaseUID 作為主要用戶識別符
+    let userId = req.params.firebaseUID || req.params.userId;
+    
+    // 從 token 中也嘗試獲取
+    if (!userId && (req as any).user) {
+      userId = (req as any).user.uid || (req as any).user.id;
+    }
+    
+    console.log('Using userId:', userId);
+    
+    const { topicId } = req.params;
+    const { materials } = req.body;
+
+    if (!Array.isArray(materials)) {
+      return res.status(400).json({ message: '材料必須是一個數組' });
+    }
+
+    // 獲取用戶 (使用 firebaseUID)
+    const user = await User.findOne({ firebaseUID: userId });
+    if (!user) {
+      return res.status(404).json({ message: '用戶未找到' });
+    }
+
+    // 獲取主題
+    const topic = user.topics.find(t => t._id?.toString() === topicId);
+    if (!topic) {
+      return res.status(404).json({ message: '主題未找到' });
+    }
+
+    if (!topic.categories) {
+      return res.status(400).json({ message: '主題類別未找到' });
+    }
+
+    // 為每個類型創建一個 ID 到 order 的映射
+    const orderMaps = {
+      webpage: new Map<string, number>(),
+      video: new Map<string, number>(),
+      podcast: new Map<string, number>(),
+      book: new Map<string, number>()
+    };
+
+    // 填充順序映射
+    materials.forEach((material: any) => {
+      if (material._id && typeof material.order === 'number' && material.type) {
+        const type = material.type as keyof typeof orderMaps;
+        orderMaps[type].set(material._id, material.order);
+      }
+    });
+
+    // 更新每種類型的材料順序
+    for (const type of ['webpage', 'video', 'podcast', 'book'] as const) {
+      const typeMaterials = topic.categories[type];
+      if (Array.isArray(typeMaterials)) {
+        typeMaterials.forEach((material: any) => {
+          if (material._id && orderMaps[type].has(material._id.toString())) {
+            material.order = orderMaps[type].get(material._id.toString());
+          }
+        });
+
+        // 按 order 屬性排序材料
+        topic.categories[type].sort((a: any, b: any) => {
+          const orderA = a.order !== undefined ? a.order : 9999;
+          const orderB = b.order !== undefined ? b.order : 9999;
+          return orderA - orderB;
+        });
+      }
+    }
+
+    // 保存用戶
+    await user.save();
+
+    // 返回完整用戶數據
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('重新排序材料時出錯:', error);
+    res.status(500).json({ message: '服務器錯誤' });
   }
 }; 
