@@ -4,7 +4,7 @@ import { useUserData } from '@/hooks/useUserData';
 import styles from './profile.module.css';
 import Image from 'next/image';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ContributionGraph from '../components/ContributionGraph';
 import { MdEdit } from "react-icons/md";
 import MaterialsView from './MaterialsView';
@@ -30,6 +30,19 @@ import { cn } from "@/lib/utils";
 import { Material, Categories } from '@/types/User';
 import { IoSave } from "react-icons/io5";
 import { useFirebase } from '../firebase/FirebaseProvider';
+import Contribution from '@/app/profile/Contribution';
+import LearningGraph from '@/app/profile/LearningGraph';
+import Topics from '@/app/profile/Topics';
+import Materials from '@/app/profile/Materials';
+
+// Tab definitions
+const tabs = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'topics', label: 'Topics' },
+  { id: 'materials', label: 'Materials' },
+  { id: 'contributions', label: 'Contributions' },
+  { id: 'learning', label: 'Learning Graph' },
+];
 
 // 在組件頂部添加 debounce 工具函數
 const debounce = (func: Function, wait: number) => {
@@ -43,23 +56,26 @@ const debounce = (func: Function, wait: number) => {
 export default function ProfilePage() {
   const { userData, loading, updateProfile, addTopic, updateTopicName, addMaterial, getContributionData, completeMaterial, uncompleteMaterial, fetchUserData, deleteMaterial, deleteTopic, updateMaterialProgress } = useUserData();
   const { auth } = useFirebase();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   
-  // 定義 API URL
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
-
-  const [activeTab, setActiveTab] = useState('');
+  // 添加缺失的状态变量
+  const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [editedBio, setEditedBio] = useState('');
   const [editingTopicId, setEditingTopicId] = useState<string | null>(null);
   const [editedTopicName, setEditedTopicName] = useState('');
-  const [newMaterial, setNewMaterial] = useState({
-    title: '',
-    type: '',
-    url: '',
-    rating: 5
-  });
-  const router = useRouter();
+  
+  // 定義 API URL
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001';
+  
+  // 重定义handleTabChange函数
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    router.push(`/profile?tab=${tabId}`);
+  };
+
   const [activeView, setActiveView] = useState<'topics' | 'materials' | 'studylist'>('topics');
   const [activeCategory, setActiveCategory] = useState<'all' | 'webpage' | 'video' | 'podcast' | 'book'>('all');
   const [unitMinutes, setUnitMinutes] = useState(20);
@@ -692,485 +708,107 @@ export default function ProfilePage() {
   const currentTopic = userData?.topics?.find(t => t._id === activeTab);
 
   return (
-    <div className="flex w-full h-full" style={{ "--profile-sidebar-width": sidebarCollapsed ? "var(--sidebar-width-icon)" : "var(--sidebar-width)" } as React.CSSProperties}>
-      {!isMobile ? (
-        <Sidebar
-          activeView={activeView}
-          onViewChange={(view) => {
-            handleSidebarNavigation(view);
-          }}
-          onNavigateToLearningPath={handleNavigateToLearningPath}
-          className="border-r h-full flex-shrink-0"
-          width={sidebarCollapsed ? "var(--sidebar-width-icon)" : "var(--sidebar-width)"}
-        />
-      ) : (
-        <div className="fixed top-0 left-0 w-full z-10 border-b flex items-center justify-between px-4 py-3">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => {
-                // 在移动端打开侧边栏的逻辑
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </Button>
-            <span className="ml-2 font-semibold">Mycel</span>
+    <div className="container mx-auto px-4 py-6">
+      {/* User profile header */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            {userData?.photoURL ? (
+              <img
+                className="h-20 w-20 rounded-full"
+                src={userData.photoURL}
+                alt={userData.name || 'User'}
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-800 font-medium text-2xl">
+                  {userData?.name?.substring(0, 1) || 'U'}
+                </span>
+              </div>
+            )}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleSidebarNavigation('topics')}>
-                Topics
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSidebarNavigation('materials')}>
-                Materials
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSidebarNavigation('studylist')}>
-                Study List
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleNavigateToLearningPath}>
-                Learning Path
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
-      <div className={styles.profileContainer}>
-        <div className="flex flex-col w-full min-h-screen px-4 md:px-12 py-4">
-          <div className="flex-1">
-            <div className="flex justify-between items-center py-6 md:py-10">
-
-              <div className="flex items-center">
-                      <span className="font-medium">{currentTopic?.name || 'Topic'}</span>
-                      <span className="mx-2">&gt;</span>
-                      <span className="text-gray-600">{activeView === 'materials' ? 'Materials' : 'Study List'}</span>
-              </div>
-
-              <div className="flex items-center gap-2 w-1/2">
-                <AddNewMaterial onSubmit={handleAddMaterial} />
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2">
-                      <Image 
-                        src={userData?.photoURL || '/default-avatar.png'}
-                        alt={userData?.name || 'User'}
-                        width={32}
-                        height={32}
-                        className="rounded-full"
-                      />
-                      <span>{userData?.name || 'User'}</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem>
-                      <Link href="/profile/edit" className="w-full">
-                        <User className="mr-2 h-4 w-4" />
-                        Edit Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link href="/" className="w-full">
-                        <Home className="mr-2 h-4 w-4" />
-                        Home
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => auth.signOut()}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            
-            <div className="mt-0">
-              <div className="flex flex-col md:flex-row w-full pb-6 rounded-lg shadow-sm">
-                <div className="w-full md:w-1/2 flex flex-col">
-                  <div className="flex flex-col md:flex-row items-center md:items-start justify-center md:justify-start w-full">
-                    <div className="w-20 flex flex-col mb-4 md:mb-0 md:mr-4">
-                      <div className="relative w-full rounded-full overflow-hidden flex justify-center items-center">
-                        <Image 
-                          src={userData?.photoURL || '/default-avatar.png'}
-                          alt={userData?.name || 'User'}
-                          width={80}
-                          height={80}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col justify-center text-center md:text-left">
-                      <h4 className="font-bold">{userData?.name}</h4>
-                      <p className="text-gray-800 max-w-xl text-base font-medium leading-normal">{userData?.bio || 'Introduce yourself'}</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleEditProfile}
-                        className="mt-2 self-start"
-                      >
-                        <MdEdit className="mr-2" /> Edit Profile
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="w-full md:w-1/2 rounded-lg ">
-                  <ContributionGraph 
-                    data={getContributionData()}
-                    activeView={activeView}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              {isTopicListView ? (
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="border-none">My Topics</h2>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleAddTopic} 
-                      className="flex items-center gap-2"
-                    >
-                      <FaPlus className="h-3 w-3" /> Add Topic
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {userData.topics && userData.topics.map((topic) => (
-                      <Card 
-                        key={topic._id} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleTopicSelect(topic._id)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            {editingTopicId === topic._id ? (
-                              <div className="flex items-center gap-2 w-full">
-                                <Input
-                                  value={editedTopicName}
-                                  onChange={(e) => setEditedTopicName(e.target.value)}
-                                  className="flex-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                                <div className="flex">
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSaveTopicName(topic._id || '');
-                                    }}
-                                  >
-                                    <FaCheck className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCancelEditTopic();
-                                    }}
-                                  >
-                                    <FaTimes className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div>
-                                  <h3 className="font-medium text-lg">{topic.name}</h3>
-                                  <div className="text-sm text-gray-500 mt-1">
-                                    <div>
-                                      {Object.values(topic.categories || {}).flat().length-1} materials
-                                    </div>
-                                    {/* {topic.createdAt && (
-                                      <div>
-                                        Created: {new Date(topic.createdAt).toLocaleDateString()}
-                                      </div>
-                                    )} */}
-                                  </div>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditTopic(topic._id || '', topic.name);
-                                    }}
-                                  >
-                                    <MdEdit className="h-4 w-4" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="h-8 w-8 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteTopic(topic._id || '');
-                                    }}
-                                  >
-                                    <RiDeleteBin6Line className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          
-                          {topic.contributors && topic.contributors.length > 0 && (
-                            <div className="mt-3">
-                              <div className="flex -space-x-2">
-                                {topic.contributors.map((contributor, index) => (
-                                  <Image
-                                    key={index}
-                                    src={contributor.photoURL || '/default-avatar.png'}
-                                    alt={contributor.name}
-                                    width={24}
-                                    height={24}
-                                    className="rounded-full border-2 border-white"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    {(!userData.topics || userData.topics.length === 0) && (
-                      <div className="col-span-full flex flex-col items-center justify-center  border-dashed rounded-lg">
-                        <p className="mb-4 text-gray-500">You don't have any topics yet</p>
-                        <Button onClick={handleAddTopic}>
-                          <FaPlus className="mr-2" /> Create Your First Topic
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-end justify-end overflow-x-auto">
-                    {userData.topics && userData.topics.map((topic) => (
-                      <Button
-                        key={topic._id}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          "mr-2 whitespace-nowrap border-b-2 border-transparent rounded-none",
-                          activeTab === topic._id ? "border-primary" : ""
-                        )}
-                        onClick={() => handleTopicSelect(topic._id)}
-                      >
-                        {topic.name.toLowerCase()}
-                      </Button>
-                    ))}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="ml-2 rounded-none"
-                      onClick={handleAddTopic}
-                    >
-                      +
-                    </Button>
-                  </div>
-
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center">
-                      <h1 className="">{currentTopic?.name || 'Topic'}</h1>
-                      <Button variant="ghost" size="sm" className="ml-2" onClick={() => handleEditTopic(activeTab, currentTopic?.name || '')}>
-                        <MdEdit className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    <div>
-                      <Image 
-                        src={userData?.photoURL || '/default-avatar.png'}
-                        alt={userData?.name || 'User'}
-                        width={36}
-                        height={36}
-                        className="rounded-full"
-                      />
-                    </div>
-                  </div>
-                  
-                  
-                  
-                  
-                  {!currentTopic ? (
-                    <div className="p-8 border rounded-lg text-center">
-                      <p>Please select a topic first</p>
-                    </div>
-                  ) : activeView === 'materials' ? (
-                    <>
-                      <MaterialsView 
-                        materials={currentTopic.materials || currentTopic.categories ? 
-                          // 如果 currentTopic 有 materials 屬性，直接使用
-                          currentTopic.materials || 
-                          // 否則，將 categories 轉換為扁平的 materials 陣列（向後兼容）
-                          [
-                            ...(currentTopic.categories?.webpage || []).map(m => ({ ...m, type: 'webpage' as const })),
-                            ...(currentTopic.categories?.video || []).map(m => ({ ...m, type: 'video' as const })),
-                            ...(currentTopic.categories?.podcast || []).map(m => ({ ...m, type: 'podcast' as const })),
-                            ...(currentTopic.categories?.book || []).map(m => ({ ...m, type: 'book' as const }))
-                          ] : []
-                        }
-                        contributions={currentTopic.contributions || {
-                          totalCount: 0,
-                          lastUpdated: new Date(),
-                          byType: {
-                            webpage: 0,
-                            video: 0,
-                            podcast: 0,
-                            book: 0
-                          }
-                        }}
-                        onAddMaterial={handleAddMaterial}
-                        onDeleteMaterial={async (materialId, topicId) => {
-                          try {
-                            const success = await deleteMaterial(materialId, topicId || activeTab);
-                            if (!success) throw new Error('Failed to delete material');
-                            return true;
-                          } catch (error) {
-                            console.error('Error deleting material:', error);
-                            return false;
-                          }
-                        }}
-                        onUpdateMaterial={async (materialId, updates) => {
-                          try {
-                            const user = auth.currentUser;
-                            if (!user) throw new Error('No user logged in');
-                            
-                            if (updates.completed) {
-                              await completeMaterial(materialId, activeTab);
-                            } else {
-                              await updateMaterialProgress(materialId, activeTab, {
-                                completedUnits: updates.completedUnits as number,
-                                completed: updates.completed as boolean,
-                                readingTime: updates.readingTime as number
-                              });
-                            }
-                            
-                            return true;
-                          } catch (error) {
-                            console.error('Error updating material:', error);
-                            return false;
-                          }
-                        }}
-                        activeTab={activeTab}
-                        onReorderMaterials={handleReorderMaterials}
-                        getCustomMaterials={(materials) => getDisplayMaterials(activeTab, materials)}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <StudyListView 
-                        materials={currentTopic.materials || currentTopic.categories ? 
-                          // 如果 currentTopic 有 materials 屬性，直接使用
-                          currentTopic.materials || 
-                          // 否則，將 categories 轉換為扁平的 materials 陣列（向後兼容）
-                          [
-                            ...(currentTopic.categories?.webpage || []).map(m => ({ ...m, type: 'webpage' as const })),
-                            ...(currentTopic.categories?.video || []).map(m => ({ ...m, type: 'video' as const })),
-                            ...(currentTopic.categories?.podcast || []).map(m => ({ ...m, type: 'podcast' as const })),
-                            ...(currentTopic.categories?.book || []).map(m => ({ ...m, type: 'book' as const }))
-                          ] : []
-                        }
-                        contributions={currentTopic.contributions || {
-                          totalCount: 0,
-                          lastUpdated: new Date(),
-                          byType: {
-                            webpage: 0,
-                            video: 0,
-                            podcast: 0,
-                            book: 0
-                          }
-                        }}
-                        onCompleteMaterial={async (materialId, isCompleted) => {
-                          try {
-                            if (isCompleted) {
-                              await uncompleteMaterial(materialId, activeTab);
-                            } else {
-                              await completeMaterial(materialId, activeTab);
-                            }
-                          } catch (error) {
-                            console.error('Error toggling material completion:', error);
-                          }
-                        }}
-                        unitMinutes={unitMinutes}
-                        onUnitMinutesChange={setUnitMinutes}
-                        topicId={activeTab}
-                        onUpdateMaterial={async (materialId, updates) => {
-                          try {
-                            const user = auth.currentUser;
-                            if (!user) throw new Error('No user logged in');
-                            
-                            if (updates.completed) {
-                              await completeMaterial(materialId, activeTab);
-                            } else {
-                              await updateMaterialProgress(materialId, activeTab, {
-                                completedUnits: updates.completedUnits as number,
-                                completed: updates.completed as boolean,
-                                readingTime: updates.readingTime as number
-                              });
-                            }
-                            
-                            await fetchUserData(user);
-                            return true;
-                          } catch (error) {
-                            console.error('Error in onUpdateMaterial:', error);
-                            return false;
-                          }
-                        }}
-                        onReorderMaterials={handleReorderMaterials}
-                      />
-                    </>
-                  )}
-                </div>
-              )}
+          <div className="ml-6">
+            <h1 className="text-2xl font-bold">
+              {userData?.name || 'User Profile'}
+            </h1>
+            <div className="flex items-center mt-1 text-gray-600">
+              <span className="text-sm">
+                Total contribution: <span className="font-semibold">
+                  {userData?.contributions?.reduce((total, item) => total + (item.count || 0), 0) || 0}
+                </span> mins
+              </span>
             </div>
           </div>
         </div>
       </div>
-
-      <EditProfileDialog 
-        open={isEditing} 
-        onOpenChange={setIsEditing}
-        onSave={handleSaveProfile}
-        initialName={userData?.name || ''}
-        initialBio={userData?.bio || ''}
-      />
-
-      {deleteConfirmation.isOpen && (
-        <div className={styles.confirmationDialog}>
-          <div className={styles.dialogContent}>
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this topic? This action cannot be undone.</p>
-            <div className={styles.dialogButtons}>
-              <Button variant="destructive" onClick={handleConfirmDelete}>
-                Delete
-              </Button>
-              <Button variant="outline" onClick={handleCancelDelete}>
-                Cancel
-              </Button>
+      
+      {/* Tabs navigation */}
+      <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="flex -mb-px">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                className={`px-4 py-3 text-sm font-medium ${
+                  activeTab === tab.id
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => handleTabChange(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+      
+      {/* Tab content */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        {activeTab === 'overview' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-medium mb-3">Recent Contributions</h3>
+                <Contribution limit={3} />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-3">Learning Progress</h3>
+                <LearningGraph limit={5} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+        
+        {activeTab === 'topics' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">My Topics</h2>
+            <Topics />
+          </div>
+        )}
+        
+        {activeTab === 'materials' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Learning Materials</h2>
+            <Materials />
+          </div>
+        )}
+        
+        {activeTab === 'contributions' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Contribution History</h2>
+            <Contribution />
+          </div>
+        )}
+        
+        {activeTab === 'learning' && (
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Learning Graph</h2>
+            <LearningGraph />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
