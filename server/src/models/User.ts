@@ -37,6 +37,31 @@ const MaterialSchema = new mongoose.Schema({
   }
 });
 
+// 學習路徑節點
+const PathNodeSchema = new mongoose.Schema({
+  id: String,
+  type: String,
+  position: {
+    x: Number,
+    y: Number
+  },
+  data: mongoose.Schema.Types.Mixed
+});
+
+// 學習路徑連接
+const PathEdgeSchema = new mongoose.Schema({
+  id: String,
+  source: String,
+  target: String,
+  animated: Boolean
+});
+
+// 學習路徑
+const LearningPathSchema = new mongoose.Schema({
+  nodes: [PathNodeSchema],
+  edges: [PathEdgeSchema]
+});
+
 const categorySchema = new mongoose.Schema({
   webpage: [MaterialSchema],
   video: [MaterialSchema],
@@ -50,9 +75,13 @@ const topicSchema = new mongoose.Schema({
     required: true
   },
   categories: categorySchema,
-  createdAt: {
-    type: Date,
-    default: Date.now
+  materials: [MaterialSchema],
+  learningPath: {
+    type: LearningPathSchema,
+    default: () => ({
+      nodes: [],
+      edges: []
+    })
   }
 });
 

@@ -29,6 +29,7 @@ import { FiVideo, FiBook } from "react-icons/fi"
 import { HiOutlineMicrophone } from "react-icons/hi"
 import { useUserData } from "@/hooks/useUserData"
 import { Home, LayoutGrid, ListTodo } from "lucide-react"
+import { GitBranch } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -718,11 +719,12 @@ SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
 type SidebarProps = {
   activeView: 'topics' | 'materials' | 'studylist';
   onViewChange: (view: 'topics' | 'materials' | 'studylist') => void;
+  onNavigateToLearningPath?: () => void;
   className?: string;
   width?: string;
 }
 
-const SidebarComponent = ({ activeView, onViewChange, className, width }: SidebarProps) => {
+const SidebarComponent = ({ activeView, onViewChange, onNavigateToLearningPath, className, width }: SidebarProps) => {
   const { userData } = useUserData();
   const firstTopicId = userData?.topics && userData.topics.length > 0 ? userData.topics[0]._id : '';
   const isMobile = useIsMobile();
@@ -783,6 +785,16 @@ const SidebarComponent = ({ activeView, onViewChange, className, width }: Sideba
                 <ListTodo className="mr-2 h-4 w-4" />
                 Study List
               </Button>
+              {onNavigateToLearningPath && (
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-gray-400 hover:text-gray-700"
+                  onClick={onNavigateToLearningPath}
+                >
+                  <GitBranch className="mr-2 h-4 w-4" />
+                  Learning Path
+                </Button>
+              )}
             </div>
           </div>
         </SheetContent>
@@ -837,6 +849,16 @@ const SidebarComponent = ({ activeView, onViewChange, className, width }: Sideba
             <ListTodo className="mr-2 h-4 w-4" />
             Study List
           </Button>
+          {onNavigateToLearningPath && (
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-gray-400 hover:text-gray-700"
+              onClick={onNavigateToLearningPath}
+            >
+              <GitBranch className="mr-2 h-4 w-4" />
+              Learning Path
+            </Button>
+          )}
         </nav>
       </div>
     </aside>
@@ -872,7 +894,7 @@ export {
   type SidebarProps,
 }
 
-export function MobileSidebar({ activeView, onViewChange }: SidebarProps) {
+export function MobileSidebar({ activeView, onViewChange, onNavigateToLearningPath }: SidebarProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -906,6 +928,16 @@ export function MobileSidebar({ activeView, onViewChange }: SidebarProps) {
               <BsListUl className="mr-2 h-4 w-4" />
               Study List
             </Button>
+            {onNavigateToLearningPath && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-gray-400 hover:text-gray-700"
+                onClick={onNavigateToLearningPath}
+              >
+                <GitBranch className="mr-2 h-4 w-4" />
+                Learning Path
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>

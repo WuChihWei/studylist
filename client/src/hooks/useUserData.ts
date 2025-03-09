@@ -346,6 +346,63 @@ export const useUserData = () => {
     }
   };
 
+  // 保存學習路徑
+  const saveLearningPath = async (topicId: string, nodes: any[], edges: any[]): Promise<boolean> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user logged in');
+      }
+
+      await userApi.saveLearningPath(user.uid, topicId, { nodes, edges });
+      
+      // 更新本地數據
+      setUserData(prevData => {
+        if (!prevData) return prevData;
+        
+        const updatedTopics = prevData.topics?.map(topic => {
+          if (topic._id === topicId) {
+            return {
+              ...topic,
+              learningPath: { nodes, edges }
+            };
+          }
+          return topic;
+        });
+        
+        return {
+          ...prevData,
+          topics: updatedTopics
+        };
+      });
+      
+      return true;
+    } catch (error) {
+      handleApiError(error, 'Failed to save learning path');
+      return false;
+    }
+  };
+
+  // 獲取學習路徑
+  const getLearningPath = async (topicId: string): Promise<{ nodes: any[], edges: any[] }> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.warn('No user logged in when trying to get learning path');
+        return { nodes: [], edges: [] };
+      }
+
+      const response = await userApi.getLearningPath(user.uid, topicId);
+      // 確保返回值有正確的結構
+      return response.learningPath || { nodes: [], edges: [] };
+    } catch (error) {
+      // 記錄錯誤但不向用戶顯示
+      console.error('Failed to get learning path:', error);
+      // 返回空的學習路徑而不是 null
+      return { nodes: [], edges: [] };
+    }
+  };
+
   return {
     userData,
     loading,
@@ -360,6 +417,8 @@ export const useUserData = () => {
     uncompleteMaterial,
     deleteTopic,
     updateMaterialProgress,
-    deleteMaterial
+    deleteMaterial,
+    saveLearningPath,
+    getLearningPath
   };
 };

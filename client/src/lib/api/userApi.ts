@@ -64,6 +64,14 @@ const userApi = {
   // 删除材料
   deleteMaterial: (userId: string, topicId: string, materialId: string) => 
     api.delete<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}/materials/${materialId}`),
+  
+  // 保存學習路徑
+  saveLearningPath: (userId: string, topicId: string, data: { nodes: any[], edges: any[] }) => 
+    api.post<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}/learning-path`, data),
+  
+  // 獲取學習路徑
+  getLearningPath: (userId: string, topicId: string) => 
+    api.get<{ learningPath: { nodes: any[], edges: any[] } }>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}/learning-path`),
 };
 
 export default userApi;

@@ -13,6 +13,37 @@ export interface Material {
     favicon?: string;
 }
 
+// 學習路徑節點
+export interface PathNode {
+    id: string;
+    type: string;
+    position: {
+        x: number;
+        y: number;
+    };
+    data: {
+        label: string;
+        type: string;
+        favicon?: string;
+        url?: string;
+        completed?: boolean;
+    };
+}
+
+// 學習路徑連接
+export interface PathEdge {
+    id: string;
+    source: string;
+    target: string;
+    animated?: boolean;
+}
+
+// 學習路徑
+export interface LearningPath {
+    nodes: PathNode[];
+    edges: PathEdge[];
+}
+
 export interface Categories {
     webpage: Material[];
     video: Material[];
@@ -52,6 +83,7 @@ export interface Topic {
     createdAt?: Date;
     contributors?: Contributor[];
     contributions?: Contributions;
+    learningPath?: LearningPath;
 }
 
 interface ContributionData {

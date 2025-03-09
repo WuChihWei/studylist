@@ -881,3 +881,79 @@ export const deleteMaterial = async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// 保存學習路徑
+export const saveLearningPath = async (req: Request, res: Response) => {
+  try {
+    const { firebaseUID, topicId } = req.params;
+    const { nodes, edges } = req.body;
+    
+    if (!firebaseUID || !topicId) {
+      return res.status(400).json({ 
+        error: 'Missing required params'
+      });
+    }
+    
+    // 更新主題的學習路徑
+    const user = await User.findOneAndUpdate(
+      { 
+        firebaseUID,
+        'topics._id': topicId
+      },
+      { 
+        $set: { 'topics.$.learningPath': { nodes, edges } }
+      },
+      { new: true }
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User or topic not found' });
+    }
+    
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('保存學習路徑時出錯:', error);
+    return res.status(500).json({ 
+      error: 'Failed to save learning path',
+      details: (error as Error).message
+    });
+  }
+};
+
+// 獲取學習路徑
+export const getLearningPath = async (req: Request, res: Response) => {
+  try {
+    const { userId, topicId } = req.params;
+    
+    if (!userId || !topicId) {
+      return res.status(400).json({ 
+        error: 'Missing required params'
+      });
+    }
+    
+    // 查詢主題的學習路徑
+    const user = await User.findOne(
+      { 
+        firebaseUID: userId,
+        'topics._id': topicId
+      },
+      { 'topics.$': 1 }
+    );
+    
+    if (!user || !user.topics || user.topics.length === 0) {
+      return res.status(404).json({ error: 'User or topic not found' });
+    }
+    
+    const topic = user.topics[0];
+    
+    return res.status(200).json({
+      learningPath: topic.learningPath || { nodes: [], edges: [] }
+    });
+  } catch (error) {
+    console.error('獲取學習路徑時出錯:', error);
+    return res.status(500).json({ 
+      error: 'Failed to get learning path',
+      details: (error as Error).message
+    });
+  }
+};

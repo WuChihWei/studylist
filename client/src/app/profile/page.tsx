@@ -676,6 +676,16 @@ export default function ProfilePage() {
     };
   }, [activeTab, forceUpdate]);
 
+  // 添加導航到學習路徑頁面的函數
+  const handleNavigateToLearningPath = () => {
+    // 如果有活動的主題，則將其作為參數傳遞
+    if (activeTab) {
+      router.push(`/profile/learning-path?topicId=${activeTab}`);
+    } else {
+      router.push('/profile/learning-path');
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!userData) return <div>Please log in</div>;
   
@@ -689,6 +699,7 @@ export default function ProfilePage() {
           onViewChange={(view) => {
             handleSidebarNavigation(view);
           }}
+          onNavigateToLearningPath={handleNavigateToLearningPath}
           className="border-r h-full flex-shrink-0"
           width={sidebarCollapsed ? "var(--sidebar-width-icon)" : "var(--sidebar-width)"}
         />
@@ -725,6 +736,9 @@ export default function ProfilePage() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSidebarNavigation('studylist')}>
                 Study List
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleNavigateToLearningPath}>
+                Learning Path
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

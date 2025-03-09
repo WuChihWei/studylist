@@ -7,6 +7,10 @@ import {
   updateMaterialProgress, 
   deleteMaterial 
 } from '../controllers/materialController';
+import { 
+  saveLearningPath,
+  getLearningPath
+} from '../controllers/userController';
 import { authMiddleware } from '../middleware/auth';
 import { validateMaterialType, validateRating, validateTopicName } from '../middleware/validator';
 
@@ -36,6 +40,10 @@ router.post('/:topicId/materials', validateMaterialType, validateRating, addMate
 router.put('/:topicId/materials/:materialId/complete', completeMaterial);
 router.put('/:topicId/materials/:materialId/uncomplete', uncompleteMaterial);
 router.put('/:topicId/materials/:materialId/progress', updateMaterialProgress);
+
+// 學習路徑相關路由
+router.post('/:topicId/learning-path', saveLearningPath);
+router.get('/:topicId/learning-path', getLearningPath);
 
 // Debug DELETE route - MUST be before the main DELETE route
 router.delete('/:topicId/materials/:materialId/debug', (req, res) => {

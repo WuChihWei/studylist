@@ -48,24 +48,15 @@ const request = async <T>(
   try {
     const { requiresAuth = true, params, ...fetchConfig } = config;
     
-    // 默认请求配置
-    const defaultConfig: RequestInit = {
+    // 合并请求配置
+    const mergedConfig: RequestInit = {
+      ...fetchConfig,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
       mode: 'cors',
       credentials: 'include',
-    };
-    
-    // 合并请求配置
-    const mergedConfig: RequestInit = {
-      ...defaultConfig,
-      ...fetchConfig,
-      headers: {
-        ...defaultConfig.headers,
-        ...(fetchConfig.headers || {}),
-      },
     };
     
     // 添加认证头
@@ -78,7 +69,10 @@ const request = async <T>(
       }
       
       const token = await user.getIdToken(true);
-      (mergedConfig.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+      mergedConfig.headers = {
+        ...mergedConfig.headers,
+        Authorization: `Bearer ${token}`,
+      };
     }
     
     // 执行请求
@@ -99,6 +93,16 @@ const request = async <T>(
         errorData = await response.json();
       } catch (e) {
         errorData = await response.text();
+      }
+      
+      // 特殊處理 404 錯誤，尤其是對於學習路徑的請求
+      if (response.status === 404) {
+        console.warn(`Resource not found: ${endpoint}`);
+        
+        // 對於學習路徑請求，返回空的學習路徑而不是拋出錯誤
+        if (endpoint.includes('learning-path')) {
+          return { learningPath: { nodes: [], edges: [] } } as T;
+        }
       }
       
       throw new ApiError(
