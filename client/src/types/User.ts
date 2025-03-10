@@ -1,16 +1,24 @@
 export interface Material {
     _id?: string;
-    type: 'webpage' | 'book' | 'video' | 'podcast';
     title: string;
     url?: string;
-    rating: number;
-    dateAdded: Date;
-    completed?: boolean;
-    readingTime?: number;
-    note?: string;
-    completedUnits?: number;
-    order: number;
+    type: 'webpage' | 'video' | 'book' | 'podcast';
+    topicId?: string;
+    dateAdded?: string;
+    order?: number;
+    progress?: {
+        completed: number;
+        total: number;
+    };
     favicon?: string;
+    readingTime?: number;
+    completedUnits?: number;
+    completed?: boolean;
+    isCompleted?: boolean;
+    note?: string;
+    rating?: number;
+    isMainResource?: boolean;
+    index?: number;
 }
 
 // 學習路徑節點
@@ -77,10 +85,14 @@ export interface Contributions {
 export interface Topic {
     _id?: string;
     name: string;
-    participants: Participant[];
-    categories?: Categories;
+    order?: number;
+    tags?: string[];
+    deadline?: string;
     materials: Material[];
-    createdAt?: Date;
+    createdAt?: string;
+    updatedAt?: string;
+    categories?: Categories;
+    participants?: Participant[];
     contributors?: Contributor[];
     contributions?: Contributions;
     learningPath?: LearningPath;
@@ -99,34 +111,40 @@ interface StudyRecord {
 
 export interface User {
     _id?: string;
-    firebaseUID: string;
     name: string;
     email: string;
-    bio?: string;
-    isPremium: boolean;
-    topics: Topic[];
-    createdAt?: Date;
     photoURL?: string;
+    bio?: string;
+    topics: Topic[];
+    materials: Material[];
+    createdAt?: Date;
     contributions?: ContributionData[];
     studyRecords?: StudyRecord[];
 }
 
+export interface EnhancedUser extends Omit<User, 'materials' | 'topics'> {
+    materials: Material[];
+    topics: Topic[];
+}
+
+export type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
+
 export interface MaterialInput {
-    type: 'webpage' | 'book' | 'video' | 'podcast';
     title: string;
+    type: 'webpage' | 'video' | 'book' | 'podcast';
     url?: string;
     rating?: number;
-    dateAdded?: Date;
+    dateAdded: string;
     order?: number;
     favicon?: string;
 }
 
 export interface MaterialPayload {
-    type: 'webpage' | 'book' | 'video' | 'podcast';
     title: string;
-    url: string | null;
-    rating: number;
+    type: 'webpage' | 'video' | 'book' | 'podcast';
+    url?: string | null;
+    rating?: number;
     dateAdded: string;
-    order: number;
+    order?: number;
     favicon?: string;
 }

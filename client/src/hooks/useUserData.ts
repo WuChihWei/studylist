@@ -1,20 +1,13 @@
-import { useState, useEffect } from 'react';
-import { User, MaterialInput } from '../types/User';
+import { useState, useEffect, useCallback } from 'react';
+import { User, Topic, Material, EnhancedUser, MaterialPayload, MaterialInput } from '@/types/User';
 import { useFirebase } from '../app/firebase/FirebaseProvider';
 import userApi from '../lib/api/userApi';
 import { handleApiError } from '../lib/api/errorHandler';
+import { toast } from 'sonner';
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4001').replace(/\/+$/, '');
 
 type MaterialType = 'webpage' | 'book' | 'video' | 'podcast';
-
-interface MaterialPayload {
-  type: MaterialType;
-  title: string;
-  url: string | null;
-  rating: number;
-  dateAdded: string;
-}
 
 interface MongoContribution {
   date: string;
@@ -32,9 +25,9 @@ const isOnline = () => {
   return typeof navigator !== 'undefined' && navigator.onLine;
 };
 
-export const useUserData = () => {
+export function useUserData() {
   const { auth } = useFirebase();
-  const [userData, setUserData] = useState<User | null>(null);
+  const [userData, setUserData] = useState<EnhancedUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -48,7 +41,7 @@ export const useUserData = () => {
       setIsLoading(true);
       const data = await userApi.getUserData(currentUser.uid);
       console.log('Received user data:', data);
-      setUserData(data);
+      updateUserData(data);
     } catch (error) {
       handleApiError(error, 'Failed to fetch user data');
       setUserData(null);
@@ -82,47 +75,39 @@ export const useUserData = () => {
     };
   }, [auth]);
 
-  const addMaterial = async (materialData: MaterialInput, topicId: string) => {
-    // 只在開發環境中輸出日誌
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 materialData.favicon:', materialData.favicon);
+  const transformToEnhancedUser = (user: User): EnhancedUser => {
+    return {
+      ...user,
+      materials: user.materials || [],
+      topics: user.topics || []
+    };
+  };
+
+  const updateUserData = (user: User | null) => {
+    if (user) {
+      setUserData(transformToEnhancedUser(user));
+    } else {
+      setUserData(null);
     }
-    
+  };
+
+  const addMaterial = async (material: MaterialPayload, topicId: string) => {
     try {
       const user = auth.currentUser;
-      if (!user) {
-        console.log('🔧 沒有用戶登錄');
-        throw new Error('No user logged in');
-      }
+      if (!user) throw new Error('No user logged in');
 
-      console.log('🔧 準備調用 API', { uid: user.uid, topicId, materialData });
-      const updatedUser = await userApi.addMaterial(user.uid, topicId, materialData);
-      console.log('🔧 API 返回結果', updatedUser);
+      const materialInput: MaterialInput = {
+        ...material,
+        url: material.url || undefined
+      };
       
-      // 檢查返回的用戶數據
-      if (!updatedUser) {
-        console.log('🔧 API 沒有返回用戶數據');
-        throw new Error('API did not return user data');
-      }
+      const updatedUser = await userApi.addMaterial(user.uid, topicId, materialInput);
+      if (!updatedUser) throw new Error('Failed to add material');
       
-      // 檢查返回的主題是否包含新添加的材料
-      const topic = updatedUser.topics?.find(t => t._id === topicId);
-      if (topic) {
-        if (topic.materials) {
-          console.log('🔧 新數據結構 - 主題材料數量:', topic.materials.length);
-        } else if (topic.categories) {
-          const categoryType = materialData.type as keyof typeof topic.categories;
-          console.log('🔧 舊數據結構 - 類別材料數量:', topic.categories[categoryType]?.length || 0);
-        }
-      } else {
-        console.log('🔧 在返回的用戶數據中找不到主題:', topicId);
-      }
-      
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
-      console.error('🔧 添加材料錯誤:', error);
-      handleApiError(error, 'Failed to add material');
+      console.error('Error adding material:', error);
       return false;
     }
   };
@@ -134,7 +119,7 @@ export const useUserData = () => {
       
       console.log('Updating profile with data:', data);
       const updatedUser = await userApi.updateProfile(user.uid, data);
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
       handleApiError(error, 'Failed to update profile');
@@ -180,7 +165,7 @@ export const useUserData = () => {
       }
       
       const updatedUser = await response.json();
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
       console.error('Error updating topic name:', error);
@@ -222,7 +207,7 @@ export const useUserData = () => {
       }
 
       const updatedUser = await response.json();
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
       console.error('Error adding topic:', error);
@@ -252,7 +237,7 @@ export const useUserData = () => {
   
       console.log('Completing material:', { materialId, topicId });
       const updatedUser = await userApi.completeMaterial(user.uid, topicId, materialId);
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
     } catch (error) {
       handleApiError(error, 'Failed to complete material');
       throw error;
@@ -281,7 +266,7 @@ export const useUserData = () => {
       }
 
       const updatedUser = await response.json();
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
     } catch (error) {
       console.error('Error uncompleting material:', error);
       throw error;
@@ -295,7 +280,7 @@ export const useUserData = () => {
       
       console.log('Deleting topic:', topicId);
       const updatedUser = await userApi.deleteTopic(user.uid, topicId);
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
       handleApiError(error, 'Failed to delete topic');
@@ -323,7 +308,7 @@ export const useUserData = () => {
         materialId, 
         updates
       );
-      setUserData(updatedUser);
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
       handleApiError(error, 'Failed to update material progress');
@@ -335,18 +320,46 @@ export const useUserData = () => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
-      
-      console.log('Deleting material:', { materialId, topicId });
+
       const updatedUser = await userApi.deleteMaterial(user.uid, topicId, materialId);
-      setUserData(updatedUser);
+      if (!updatedUser) throw new Error('Failed to delete material');
+
+      updateUserData(updatedUser);
       return true;
     } catch (error) {
-      handleApiError(error, 'Failed to delete material');
+      console.error('Error deleting material:', error);
       return false;
     }
   };
 
-  // 保存學習路徑
+  // Create a separate function for updating state with a callback
+  const updateStateWithCallback = (callback: (prevData: EnhancedUser | null) => EnhancedUser | null) => {
+    setUserData(callback);
+  };
+
+  // Update local data for learning path
+  const updateLearningPathLocally = (topicId: string, nodes: any[], edges: any[]) => {
+    updateStateWithCallback((prevData) => {
+      if (!prevData) return prevData;
+      
+      const updatedTopics = prevData.topics.map(topic => {
+        if (topic._id === topicId) {
+          return {
+            ...topic,
+            learningPath: { nodes, edges }
+          };
+        }
+        return topic;
+      });
+      
+      return {
+        ...prevData,
+        topics: updatedTopics
+      };
+    });
+  }
+
+  // Update saveLearningPath to use the new function
   const saveLearningPath = async (topicId: string, nodes: any[], edges: any[]): Promise<boolean> => {
     try {
       const user = auth.currentUser;
@@ -356,25 +369,8 @@ export const useUserData = () => {
 
       await userApi.saveLearningPath(user.uid, topicId, { nodes, edges });
       
-      // 更新本地數據
-      setUserData(prevData => {
-        if (!prevData) return prevData;
-        
-        const updatedTopics = prevData.topics?.map(topic => {
-          if (topic._id === topicId) {
-            return {
-              ...topic,
-              learningPath: { nodes, edges }
-            };
-          }
-          return topic;
-        });
-        
-        return {
-          ...prevData,
-          topics: updatedTopics
-        };
-      });
+      // Update local data using the new function
+      updateLearningPathLocally(topicId, nodes, edges);
       
       return true;
     } catch (error) {
@@ -383,22 +379,28 @@ export const useUserData = () => {
     }
   };
 
-  // 獲取學習路徑
+  // getLearningPath function
   const getLearningPath = async (topicId: string): Promise<{ nodes: any[], edges: any[] }> => {
     try {
       const user = auth.currentUser;
       if (!user) {
-        console.warn('No user logged in when trying to get learning path');
-        return { nodes: [], edges: [] };
+        throw new Error('No user logged in');
       }
-
+      
       const response = await userApi.getLearningPath(user.uid, topicId);
-      // 確保返回值有正確的結構
-      return response.learningPath || { nodes: [], edges: [] };
+      // Fix the response handling based on actual API structure
+      if (response && response.learningPath) {
+        return {
+          nodes: response.learningPath.nodes || [],
+          edges: response.learningPath.edges || []
+        };
+      }
+      // Return default empty structure if no learning path
+      return { nodes: [], edges: [] };
     } catch (error) {
-      // 記錄錯誤但不向用戶顯示
+      // 记录错误但不向用户显示
       console.error('Failed to get learning path:', error);
-      // 返回空的學習路徑而不是 null
+      // 出错时返回空数组
       return { nodes: [], edges: [] };
     }
   };
@@ -421,4 +423,4 @@ export const useUserData = () => {
     saveLearningPath,
     getLearningPath
   };
-};
+}

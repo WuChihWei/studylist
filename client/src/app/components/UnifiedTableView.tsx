@@ -18,6 +18,7 @@ import {
 import DraggableList, { DraggableListHandle } from './DraggableList';
 import DragHandle from './DragHandle';
 import Image from 'next/image';
+import { ListSubMode } from '@/types/ViewMode';
 
 export const TYPE_ICONS = {
   video: FiVideo,
@@ -29,20 +30,20 @@ export const TYPE_ICONS = {
 interface UnifiedTableViewProps {
   materials: (Material & { index: number })[];
   viewType: 'materials' | 'studylist';
-  viewMode?: 'list' | 'grid';
-  onEdit?: (material: Material) => void;
-  onDelete?: (materialId: string) => Promise<boolean>;
-  onComplete?: (materialId: string, isCompleted: boolean) => Promise<void>;
-  onUpdateProgress?: (materialId: string, updates: Partial<Material>) => Promise<boolean>;
+  viewMode: ListSubMode;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onComplete: (id: string, isCompleted: boolean) => void;
+  onUpdateProgress: (id: string, completed: number, total: number) => void;
   unitMinutes?: number;
-  onReorderItems?: (items: (Material & { index: number })[]) => void;
-  onUnitMinutesChange?: (newMinutes: number) => void;
+  onReorderItems?: (items: Material[]) => void;
+  onUnitMinutesChange?: (minutes: number) => void;
 }
 
 export default function UnifiedTableView({
   materials,
   viewType,
-  viewMode = 'list',
+  viewMode,
   onEdit,
   onDelete,
   onComplete,
@@ -108,24 +109,15 @@ export default function UnifiedTableView({
     
     // If clicking on a completed unit, mark it and all after it as incomplete
     if (clickedIndex < currentCompleted) {
-      await onUpdateProgress(material._id, {
-        completedUnits: clickedIndex,
-        completed: false
-      });
+      onUpdateProgress(material._id, clickedIndex, totalUnits);
     } 
     // If clicking on the last uncompleted unit, mark all as complete
     else if (clickedIndex === totalUnits - 1) {
-      await onUpdateProgress(material._id, {
-        completedUnits: totalUnits,
-        completed: true
-      });
+      onUpdateProgress(material._id, totalUnits, totalUnits);
     } 
     // Otherwise mark up to the clicked unit as complete
     else {
-      await onUpdateProgress(material._id, {
-        completedUnits: clickedIndex + 1,
-        completed: false
-      });
+      onUpdateProgress(material._id, clickedIndex + 1, totalUnits);
     }
   };
 
@@ -366,7 +358,7 @@ export default function UnifiedTableView({
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {onEdit && (
-                  <DropdownMenuItem onSelect={() => onEdit(material)}>
+                  <DropdownMenuItem onSelect={() => onEdit(material._id || '')}>
                     <Pencil className="h-4 w-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
@@ -489,9 +481,8 @@ export default function UnifiedTableView({
                     onChange={(e) => {
                       const value = parseInt(e.target.value) || 1;
                       if (value > 0 && value <= 100 && onUpdateProgress) {
-                        onUpdateProgress(material._id!, {
-                          readingTime: value * (unitMinutes || 20)
-                        });
+                        const total = material.readingTime || (unitMinutes || 20);
+                        onUpdateProgress(material._id!, value, total);
                       }
                     }}
                     onBlur={() => setEditingUnitId(null)}

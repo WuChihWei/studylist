@@ -8,7 +8,7 @@ import LearningPathFlow from '@/app/components/LearningPathFlow';
 import UnifiedTableView from '@/app/components/UnifiedTableView';
 import AddNewMaterial from '@/app/components/AddNewMaterial';
 import { Plus, ChevronLeft, Link as LinkIcon, Edit, Trash2, MoreHorizontal } from 'lucide-react';
-import { Material, MaterialInput } from '@/types/User';
+import { Material, MaterialPayload, Topic } from '@/types/User';
 import ContributionGraph from '@/app/components/ContributionGraph';
 import { Button } from '@/app/components/ui/button';
 import Image from 'next/image';
@@ -16,6 +16,10 @@ import { FiVideo, FiBook } from 'react-icons/fi';
 import { HiOutlineMicrophone } from 'react-icons/hi';
 import { BiWorld } from 'react-icons/bi';
 import { BsListUl, BsGrid } from 'react-icons/bs';
+import PathView from '../components/PathView';
+import ListView from '../components/ListView';
+import { ViewMode, ListSubMode } from '@/types/ViewMode';
+import PathLayout from '../components/PathLayout';
 
 export default function DatabasePage() {
   const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress, updateProfile } = useUserData();
@@ -23,7 +27,8 @@ export default function DatabasePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const topicId = searchParams?.get('topic');
-  const mode = searchParams?.get('mode') as 'list' | 'path' | null;
+  const modeParam = searchParams?.get('mode');
+  const mode = modeParam === 'list' || modeParam === 'path' ? modeParam as ViewMode : undefined;
   
   const [currentTopic, setCurrentTopic] = useState<any>(null);
   const [materials, setMaterials] = useState<any[]>([]);
@@ -34,8 +39,12 @@ export default function DatabasePage() {
   const [editedBio, setEditedBio] = useState('');
   const [activeView, setActiveView] = useState('materials'); // 'materials' or 'contributions'
   
-  // 新增视图模式状态
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  // 使用 mode 或 globalViewMode 作为当前模式
+  const currentMode: ViewMode = mode || globalViewMode;
+  
+  // 列表视图的子模式：列表或网格
+  const [listSubMode, setListSubMode] = useState<ListSubMode>('list');
+  
   const [reorderCounter, setReorderCounter] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -104,9 +113,6 @@ export default function DatabasePage() {
     }
   }, [userData]);
   
-  // Determine which view to show based on the current mode
-  const currentMode = mode || globalViewMode;
-  
   // Handle add material
   const handleAddMaterial = (materialData: {
     title: string;
@@ -116,17 +122,24 @@ export default function DatabasePage() {
   }) => {
     if (!topicId) return;
     
-    // Convert to MaterialInput format that API expects
-    const input: MaterialInput = {
+    // 获取当前主题的材料计数
+    const topicMaterials = userData?.materials 
+      ? userData.materials.filter(m => m.topicId === currentTopic?._id)
+      : [];
+    
+    // Convert form data to MaterialPayload
+    const payload: MaterialPayload = {
       title: materialData.title,
-      type: materialData.type as "webpage" | "book" | "video" | "podcast",
-      url: materialData.url || '',
-      rating: 5,
-      favicon: materialData.favicon === null ? undefined : materialData.favicon
+      type: materialData.type as 'webpage' | 'video' | 'book' | 'podcast',
+      url: materialData.url,
+      favicon: materialData.favicon || undefined,
+      rating: 0,
+      dateAdded: new Date().toISOString(),
+      order: materials.length + 1,
     };
     
-    // Call the API - note: the order of parameters is different in the hook
-    addMaterial(input, topicId);
+    // Call the API
+    addMaterial(payload, topicId);
   };
   
   // Handle delete material
@@ -155,16 +168,21 @@ export default function DatabasePage() {
   };
   
   // Handle update material progress
-  const handleUpdateProgress = async (materialId: string, updates: any) => {
+  const handleUpdateProgress = async (materialId: string, completed: number, total: number) => {
     if (!topicId) return false;
+    
     try {
-      return await updateMaterialProgress(materialId, topicId, {
-        completedUnits: updates.completedUnits || 0,
-        completed: updates.completed || false,
-        readingTime: updates.readingTime || 0
-      });
+      // 转换为旧的参数格式，保持兼容性
+      const updates = {
+        completedUnits: completed,
+        completed: completed >= total,
+        readingTime: total
+      };
+      
+      // 调用API更新进度
+      return await updateMaterialProgress(materialId, topicId, updates);
     } catch (error) {
-      console.error('Error updating material progress:', error);
+      console.error('Error updating progress:', error);
       return false;
     }
   };
@@ -175,7 +193,7 @@ export default function DatabasePage() {
   };
   
   // Handle reorder materials
-  const handleReorderMaterials = async (reorderedItems: any[]) => {
+  const handleReorderMaterials = async (reorderedItems: Material[]) => {
     console.log('🔄 handleReorderMaterials 开始执行，收到项目数量:', reorderedItems.length);
     
     // 确保所有项目都有正确的order属性
@@ -219,11 +237,8 @@ export default function DatabasePage() {
         setReorderCounter(prev => prev + 1);
         console.log('🔄 刷新UI完成');
       }, 100);
-      
-      return itemsWithOrder;
     } catch (error) {
       console.error('🔄 更新后端数据失败:', error);
-      return reorderedItems; // 失败时返回原始顺序
     }
   };
   
@@ -284,45 +299,68 @@ export default function DatabasePage() {
       [category]: !prev[category]
     }));
   };
-
-  // Filter materials based on category filters
-  const filteredMaterials = materials.filter(material => {
-    if (material.type === 'webpage' && categoryFilters.web) return true;
-    if (material.type === 'video' && categoryFilters.video) return true;
-    if (material.type === 'podcast' && categoryFilters.podcast) return true;
-    if (material.type === 'book' && categoryFilters.book) return true;
-    return false;
-  });
   
   // 输出调试信息
   useEffect(() => {
     console.log('当前主题:', currentTopic?.name);
     console.log('原始材料数据:', materials);
-    console.log('过滤后的材料数据:', filteredMaterials);
-  }, [currentTopic, materials, filteredMaterials]);
+  }, [currentTopic, materials]);
   
+  // Handle edit material
+  const handleEditMaterial = (id: string) => {
+    // TODO: Implement edit functionality
+    console.log('编辑材料:', id);
+  };
+
+  // 渲染主要内容
+  const renderMainContent = () => {
+    if (!currentTopic) {
+      return <div className="text-center p-8 text-gray-500">请选择一个主题</div>;
+    }
+
+    // 根据 currentMode 渲染不同的视图组件
+    if (currentMode === 'path') {
+      return (
+        <PathView
+          topic={currentTopic}
+          materials={materials}
+          contributions={userData?.contributions}
+          unitMinutes={unitMinutes}
+          setUnitMinutes={setUnitMinutes}
+          onUpdateProgress={handleUpdateProgress}
+          onComplete={handleToggleCompletion}
+          onDelete={handleDeleteMaterial}
+          onReorderItems={handleReorderMaterials}
+        />
+      );
+    } else {
+      return (
+        <ListView
+          materials={materials}
+          categoryFilters={categoryFilters}
+          listSubMode={listSubMode}
+          setListSubMode={setListSubMode}
+          showAddNewMaterial={showAddNewMaterial}
+          setShowAddNewMaterial={setShowAddNewMaterial}
+          topicId={topicId || ''}
+          refreshKey={refreshKey}
+          unitMinutes={unitMinutes}
+          setUnitMinutes={setUnitMinutes}
+          onUpdateProgress={handleUpdateProgress}
+          onComplete={handleToggleCompletion}
+          onEdit={handleEditMaterial}
+          onDelete={handleDeleteMaterial}
+          onReorderItems={handleReorderMaterials}
+        />
+      );
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       {/* 顶部导航栏 */}
       <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-        <div className="flex items-center">
-          <div className="flex items-center">
-            {userData?.photoURL ? (
-              <img
-                className="h-8 w-8 rounded-full mr-2"
-                src={userData.photoURL}
-                alt={userData.name || 'User'}
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                <span className="text-blue-800 font-medium text-sm">
-                  {userData?.name?.substring(0, 1) || 'U'}
-                </span>
-              </div>
-            )}
-            <span className="font-medium">{userData?.name || 'User'}</span>
-          </div>
-        </div>
+        
 
         {/* 所在位置面包屑 */}
         <div className="flex items-center">
@@ -352,19 +390,28 @@ export default function DatabasePage() {
               <AddNewMaterial onSubmit={handleAddMaterial} />
             </div>
           )}
-          <button className="p-2 text-gray-500 hover:text-gray-700">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-          <button className="ml-2 p-2 text-gray-500 hover:text-gray-700">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-            </svg>
-          </button>
+         
         </div>
+
+        <div className="flex items-center">
+          <div className="flex items-center">
+            {userData?.photoURL ? (
+              <img
+                className="h-8 w-8 rounded-full mr-2"
+                src={userData.photoURL}
+                alt={userData.name || 'User'}
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                <span className="text-blue-800 font-medium text-sm">
+                  {userData?.name?.substring(0, 1) || 'U'}
+                </span>
+              </div>
+            )}
+            <span className="font-medium">{userData?.name || 'User'}</span>
+          </div>
+        </div>
+
       </div>
     
       {/* 用户资料和贡献图表区域 */}
@@ -461,9 +508,7 @@ export default function DatabasePage() {
       </div>
 
       {currentTopic ? (
-        <>
-          
-          
+        <>    
           {/* Topic navigation tabs */}
           <div className="flex flex-col items-stretch mb-8">
             <div className="mb-2 border-b border-gray-200">
@@ -616,17 +661,21 @@ export default function DatabasePage() {
               <div className="flex bg-gray-100 p-1 rounded-md">
                 <button
                   className={`p-2 rounded ${
-                    viewMode === 'list' ? 'bg-white shadow-sm' : 'text-gray-700'
+                    currentMode === ('list' as ViewMode) ? 'bg-white shadow-sm' : 'text-gray-700'
                   }`}
-                  onClick={() => setViewMode('list')}
+                  onClick={() => {
+                    router.push(`/database?topic=${topicId}&mode=list`);
+                  }}
                 >
                   <BsListUl className="h-4 w-4" />
                 </button>
                 <button
                   className={`p-2 rounded ${
-                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-gray-700'
+                    currentMode === ('path' as ViewMode) ? 'bg-white shadow-sm' : 'text-gray-700'
                   }`}
-                  onClick={() => setViewMode('grid')}
+                  onClick={() => {
+                    router.push(`/database?topic=${topicId}&mode=path`);
+                  }}
                 >
                   <BsGrid className="h-4 w-4" />
                 </button>
@@ -634,59 +683,8 @@ export default function DatabasePage() {
             </div>
           )}
           
-          {currentMode === 'list' ? (
-            // 使用UnifiedTableView替换自定义表格
-            <>
-              {filteredMaterials.length > 0 ? (
-                <UnifiedTableView
-                  key={`${topicId}-${refreshKey}`}
-                  materials={filteredMaterials.map((material, index) => ({
-                    ...material,
-                    index: index + 1
-                  }))}
-                  viewType="materials"
-                  viewMode={viewMode}
-                  onEdit={() => {}} // 实现编辑功能
-                  onDelete={handleDeleteMaterial}
-                  onComplete={handleToggleCompletion}
-                  onUpdateProgress={handleUpdateProgress}
-                  onReorderItems={handleReorderMaterials}
-                  unitMinutes={unitMinutes}
-                  onUnitMinutesChange={setUnitMinutes}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow text-center">
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 mb-4">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="12" y1="18" x2="12" y2="12"></line>
-                    <line x1="9" y1="15" x2="15" y2="15"></line>
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">没有材料</h3>
-                  <p className="text-gray-500 mb-6 max-w-md">
-                    在这个主题下没有找到任何学习材料。点击上方的"Add New Material..."按钮添加您的第一个材料。
-                  </p>
-                  <Button 
-                    onClick={() => setShowAddNewMaterial(true)}
-                    className="flex items-center"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    添加学习材料
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : (
-            // Path view
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <LearningPathFlow 
-                materials={materials}
-                onSavePath={() => {}} // Implement if needed
-                savedNodes={undefined}
-                savedEdges={undefined}
-              />
-            </div>
-          )}
+          {/* 使用renderMainContent来显示主要内容 */}
+          {renderMainContent()}
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow-sm">

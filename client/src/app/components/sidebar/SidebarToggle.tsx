@@ -46,7 +46,7 @@ export default function SidebarToggle({ viewMode, onChange }: SidebarToggleProps
         onClick={() => handleModeChange('path')}
       >
         <GitGraph className="h-3.5 w-3.5 mr-1" />
-        <span>Plan</span>
+        <span>Path</span>
       </button>
     </div>
   );
