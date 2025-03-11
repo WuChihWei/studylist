@@ -11,6 +11,7 @@ import PathView from './PathView';
 import ListLayout from './ListLayout';
 import AddNewMaterial from '../components/AddNewMaterial';
 import { ViewMode } from '@/types/ViewMode';
+import ContributionGraph from '../components/ContributionGraph';
 
 export default function DatabasePage() {
   const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } = useUserData();
@@ -336,6 +337,7 @@ export default function DatabasePage() {
 
       {currentTopic ? (
         <>    
+          {/* User Profile and Contribution Graph Section */}
           {renderMainContent()}
         </>
       ) : (

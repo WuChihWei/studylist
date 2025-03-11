@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import ListLayout from '../database/ListLayout';
 
 export interface ContributionData {
   date: string;
@@ -29,7 +28,7 @@ interface MonthData {
 }
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const weekdays = ['S', 'S', 'M', 'T', 'W', 'T', 'F'];
+const weekdays = [ 'Sat','Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
 const ContributionGraph: React.FC<ContributionGraphProps> = ({ 
   data, 
@@ -145,7 +144,7 @@ const ContributionGraph: React.FC<ContributionGraphProps> = ({
           <div className="flex flex-col gap-[2px] mr-2">
             {weekdays.map((day) => (
               <div key={day} className="h-[13px] text-xs text-[#767676] pr-2 flex items-center justify-end w-6">
-                {day}
+                {day[0]}
               </div>
             ))}
           </div>
@@ -181,90 +180,60 @@ const ContributionGraph: React.FC<ContributionGraphProps> = ({
   };
 
   return (
-    <div className="mb-10">
-      {/* View Toggle */}
-      <div className="flex justify-end mb-4">
-        <div className="inline-flex rounded-lg border border-gray-200 p-1">
-          <button
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              activeView === 'month' 
-                ? 'bg-gray-100 text-gray-900' 
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-            onClick={() => onViewChange?.('month')}
+    <div className="w-full">
+      {/* First row: Title and Color Legend */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-600">Total Contribution mins</span>
+        {activeView === 'month' && (
+          <div className="flex items-center gap-1 text-xs text-[#767676]">
+            <span>Less</span>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[#ebedf0]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[#9be9a8]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[#40c463]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[#30a14e]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[#216e39]"></div>
+            <span>More</span>
+          </div>
+        )}
+      </div>
+
+      {/* Second row: Total value and Year Navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">{totalContributions}</h2>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handlePrevYear}
+            className="p-1 hover:bg-gray-100 rounded-full"
+            aria-label="Previous Year"
           >
-            Graph
+            <ChevronLeft className="h-5 w-5" />
           </button>
-          <button
-            className={`px-3 py-1 text-sm rounded-md transition-colors ${
-              activeView === 'year' 
-                ? 'bg-gray-100 text-gray-900' 
-                : 'text-gray-500 hover:text-gray-900'
-            }`}
-            onClick={() => onViewChange?.('year')}
+          <span className="text-lg font-medium">{year}</span>
+          <button 
+            onClick={handleNextYear}
+            className="p-1 hover:bg-gray-100 rounded-full"
+            aria-label="Next Year"
           >
-            List
+            <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       </div>
       
       {/* Calendar Container */}
-      <div className="relative mt-4">
-        {activeView === 'month' ? (
-          <>
-            {generateContributionGraph()}
-            {showTooltip && (
-              <div 
-                className="fixed z-50 bg-black bg-opacity-80 text-white px-2 py-1 rounded text-xs pointer-events-none transform -translate-x-1/2"
-                style={{ 
-                  left: `${tooltipPosition.x}px`, 
-                  top: `${tooltipPosition.y}px`,
-                }}
-              >
-                {tooltipContent}
-              </div>
-            )}
-          </>
-        ) : (
-          <ListLayout 
-            data={data} 
-            year={year}
-            userData={userData}
-            onEditProfile={onEditProfile}
-            totalContributions={totalContributions}
-          />
+      <div className="relative">
+        {generateContributionGraph()}
+        {showTooltip && (
+          <div 
+            className="fixed z-50 bg-black bg-opacity-80 text-white px-2 py-1 rounded text-xs pointer-events-none transform -translate-x-1/2"
+            style={{ 
+              left: `${tooltipPosition.x}px`, 
+              top: `${tooltipPosition.y}px`,
+            }}
+          >
+            {tooltipContent}
+          </div>
         )}
       </div>
-      
-      {/* Year navigation */}
-      <div className="flex justify-between mt-4">
-        <button 
-          onClick={handlePrevYear}
-          className="p-1 hover:bg-gray-100 rounded-full"
-          aria-label="Previous Year"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <button 
-          onClick={handleNextYear}
-          className="p-1 hover:bg-gray-100 rounded-full"
-          aria-label="Next Year"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      </div>
-      
-      {activeView === 'month' && (
-        <div className="flex items-center gap-1 mt-4 justify-end text-xs text-[#767676]">
-          <span>Less</span>
-          <div className="w-[13px] h-[13px] rounded-sm bg-[#ebedf0]"></div>
-          <div className="w-[13px] h-[13px] rounded-sm bg-[#9be9a8]"></div>
-          <div className="w-[13px] h-[13px] rounded-sm bg-[#40c463]"></div>
-          <div className="w-[13px] h-[13px] rounded-sm bg-[#30a14e]"></div>
-          <div className="w-[13px] h-[13px] rounded-sm bg-[#216e39]"></div>
-          <span>More</span>
-        </div>
-      )}
     </div>
   );
 };

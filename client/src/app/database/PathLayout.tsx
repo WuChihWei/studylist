@@ -9,6 +9,7 @@ import CircleProgress from '../components/ui/circleProgress';
 import LearningPathTab from '../components/LearningPathTab';
 import { FiBook, FiVideo, FiGlobe } from 'react-icons/fi';
 import { HiOutlineMicrophone } from 'react-icons/hi';
+import { renderFavicon, TYPE_ICONS, FAVICON_STYLES } from '@/utils/favicon';
 
 interface PathLayoutProps {
   topic: Topic;
@@ -162,22 +163,16 @@ const PathLayout: React.FC<PathLayoutProps> = ({
 
   // Get material type icon
   const getMaterialTypeIcon = (type: string) => {
-    switch(type) {
-      case 'video':
-        return <FiVideo className="h-4 w-4" />;
-      case 'webpage':
-        return <FiGlobe className="h-4 w-4" />;
-      case 'podcast':
-        return <HiOutlineMicrophone className="h-4 w-4" />;
-      case 'book':
-        return <FiBook className="h-4 w-4" />;
-      default:
-        return <FiGlobe className="h-4 w-4" />;
-    }
+    const IconComponent = TYPE_ICONS[type] || TYPE_ICONS.webpage;
+    return <IconComponent className="h-4 w-4" />;
   };
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Add favicon styles */}
+      <style dangerouslySetInnerHTML={{ __html: FAVICON_STYLES.fallbackIcon }} />
+      <style dangerouslySetInnerHTML={{ __html: FAVICON_STYLES.showFallback }} />
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
         {/* Left Column - Topic Profile */}
         <div className="lg:col-span-1">
@@ -239,31 +234,17 @@ const PathLayout: React.FC<PathLayoutProps> = ({
         {/* Right Column - Contribution Graph */}
         <div className="lg:col-span-2">
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Contribution Graph</h2>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-500 text-sm">No Collect</span>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded-sm border border-gray-300"></div>
-                    <div className="w-3 h-3 rounded-sm bg-blue-200"></div>
-                    <div className="w-3 h-3 rounded-sm bg-blue-300"></div>
-                    <div className="w-3 h-3 rounded-sm bg-blue-400"></div>
-                    <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
-                  </div>
-                  <span className="text-gray-500 text-sm">Great Collect</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-4 border border-gray-100 rounded-lg">
-              <div className="flex justify-between mb-2">
-                <div className="text-gray-500 text-sm">2025</div>
-                <div className="text-4xl font-bold">
-                  {contributions?.totalMinutes || 120}
-                </div>
-              </div>
-              <ContributionGraph data={contributions?.data || []} activeView="month" />
+            <div className="bg-white rounded-lg overflow-hidden">
+              {contributions && (
+                <ContributionGraph 
+                  data={contributions.map(c => ({
+                    date: c.date,
+                    count: c.count || 0,
+                    studyCount: 0
+                  })) || []} 
+                  activeView="month"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -633,16 +614,19 @@ const PathLayout: React.FC<PathLayoutProps> = ({
                       
                       {/* 名称 */}
                       <div className="col-span-5">
-                        <div className="font-medium text-gray-800 hover:text-blue-600 truncate cursor-pointer" 
-                             onClick={() => material.url && handleOpenContent(material)}>
-                          {material.title}
-                          {material.url && (
-                            <span className="inline-block ml-1 text-blue-500">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </span>
-                          )}
+                        <div className="flex items-center">
+                          {renderFavicon(material)}
+                          <div className="font-medium text-gray-800 hover:text-blue-600 truncate cursor-pointer" 
+                               onClick={() => material.url && handleOpenContent(material)}>
+                            {material.title}
+                            {material.url && (
+                              <span className="inline-block ml-1 text-blue-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </span>
+                            )}
+                          </div>
                         </div>
                         
                         {/* 单元格进度条 */}
