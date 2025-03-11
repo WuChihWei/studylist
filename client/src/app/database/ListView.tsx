@@ -1,8 +1,8 @@
 import React from 'react';
 import { Material } from '@/types/User';
 import { ListSubMode } from '@/types/ViewMode';
-import UnifiedTableView from './UnifiedTableView';
-import { Button } from './ui/button';
+import UnifiedTableView from '../components/UnifiedTableView';
+import { Button } from '../components/ui/button';
 import { BsListUl, BsGrid } from 'react-icons/bs';
 import { Plus } from 'lucide-react';
 

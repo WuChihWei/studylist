@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Topic, Material } from '@/types/User';
-import ContributionGraph from './ContributionGraph';
-import UnifiedTableView from './UnifiedTableView';
+import ContributionGraph from '../components/ContributionGraph';
+import UnifiedTableView from '../components/UnifiedTableView';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { Button } from './ui/button';
-import { Plus, Database, GitGraph, BarChart, Check, Clock, Play } from 'lucide-react';
-import CircleProgress from './ui/circleProgress';
-import LearningPathTab from './LearningPathTab';
+import { Button } from '../components/ui/button';
+import { Plus, Database, GitGraph, BarChart, Check, Clock, Play, Calendar, Tag } from 'lucide-react';
+import CircleProgress from '../components/ui/circleProgress';
+import LearningPathTab from '../components/LearningPathTab';
 import { FiBook, FiVideo, FiGlobe } from 'react-icons/fi';
 import { HiOutlineMicrophone } from 'react-icons/hi';
 
@@ -85,29 +85,29 @@ const PathLayout: React.FC<PathLayoutProps> = ({
     title: ''
   });
 
-  // 基于进度分类材料
+  // Categorize materials based on progress
   const todoMaterials = materials.filter(m => !m.progress || m.progress.completed === 0);
   const doingMaterials = materials.filter(m => m.progress && m.progress.completed > 0 && m.progress.completed < m.progress.total);
   const doneMaterials = materials.filter(m => m.progress && m.progress.completed === m.progress.total);
 
-  // 添加额外的状态和函数来处理状态间移动
+  // Handle status change
   const [isDragging, setIsDragging] = useState<string | null>(null);
 
-  // 处理材料状态变更
+  // Handle material status change
   const handleStatusChange = (material: Material, newStatus: 'todo' | 'doing' | 'done') => {
     if (!material._id) return;
     
-    // 根据新状态计算完成进度
+    // Calculate new progress based on status
     switch (newStatus) {
       case 'todo':
-        // 设置为0进度
+        // Set progress to 0
         onUpdateProgress(material._id, 0, material.progress?.total || 10);
         if (material.completed) {
           onComplete(material._id, false);
         }
         break;
       case 'doing':
-        // 如果之前是未开始，设置为一半进度；如果是已完成，设置为一半进度
+        // If previously not started or completed, set to halfway progress
         const total = material.progress?.total || 10;
         const halfProgress = Math.floor(total / 2);
         onUpdateProgress(material._id, halfProgress, total);
@@ -116,40 +116,40 @@ const PathLayout: React.FC<PathLayoutProps> = ({
         }
         break;
       case 'done':
-        // 设置为已完成
+        // Mark as completed
         onComplete(material._id, true);
         break;
     }
   };
 
-  // 处理单元格点击事件
+  // Handle unit click to update progress
   const handleUnitClick = (material: Material, unitIndex: number) => {
     if (!material._id) return;
 
     const readingTime = material.readingTime || 10;
     const totalUnits = Math.ceil(readingTime / unitMinutes);
     
-    // 如果点击已完成的单元格，不做任何操作
+    // If clicked on already completed unit, do nothing
     const completedUnits = material.completedUnits || 0;
     if (unitIndex < completedUnits) return;
     
-    // 计算新的完成单元数
+    // Calculate new completed units
     const newCompletedUnits = unitIndex + 1;
     
-    // 更新进度
+    // Update progress
     onUpdateProgress(
       material._id, 
       newCompletedUnits * unitMinutes, 
       readingTime
     );
     
-    // 如果全部完成，标记为已完成
+    // If all units completed, mark as done
     if (newCompletedUnits === totalUnits) {
       onComplete(material._id, true);
     }
   };
 
-  // 打开内容弹窗
+  // Open content popup for viewing
   const handleOpenContent = (material: Material) => {
     if (!material.url) return;
     
@@ -160,7 +160,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
     });
   };
 
-  // 获取材料类型图标
+  // Get material type icon
   const getMaterialTypeIcon = (type: string) => {
     switch(type) {
       case 'video':
@@ -177,33 +177,403 @@ const PathLayout: React.FC<PathLayoutProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Topic信息 */}
-      
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
+        {/* Left Column - Topic Profile */}
+        <div className="lg:col-span-1">
+          <div className="flex items-start gap-4">
+            {/* Topic Icon/Avatar */}
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-2xl font-bold text-gray-500">
+              {topic.name.charAt(0).toUpperCase()}
+            </div>
+            
+            {/* Topic Info */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{topic.name}</h1>
+              <p className="text-gray-600 mt-1">
+                Total contribution: {contributions?.totalMinutes || 0} mins
+              </p>
+              
+              {/* Tags */}
+              {topic.tags && topic.tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {topic.tags.map((tag, index) => (
+                    <span key={index} className="px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Topic Metadata */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center text-gray-700">
+              <Clock className="h-5 w-5 mr-3 text-gray-500" />
+              <span className="font-medium">Mins / Unit</span>
+              <span className="ml-auto">
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={unitMinutes}
+                  onChange={(e) => onUnitMinutesChange(parseInt(e.target.value) || unitMinutes)}
+                  className="w-16 p-1 border rounded text-center"
+                />
+              </span>
+            </div>
+            
+            {topic.deadline && (
+              <div className="flex items-center text-gray-700">
+                <Calendar className="h-5 w-5 mr-3 text-gray-500" />
+                <span className="font-medium">Deadline</span>
+                <span className="ml-auto">
+                  {new Date(topic.deadline).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Right Column - Contribution Graph */}
+        <div className="lg:col-span-2">
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-lg font-semibold">Contribution Graph</h2>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500 text-sm">No Collect</span>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 rounded-sm border border-gray-300"></div>
+                    <div className="w-3 h-3 rounded-sm bg-blue-200"></div>
+                    <div className="w-3 h-3 rounded-sm bg-blue-300"></div>
+                    <div className="w-3 h-3 rounded-sm bg-blue-400"></div>
+                    <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
+                  </div>
+                  <span className="text-gray-500 text-sm">Great Collect</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-4 border border-gray-100 rounded-lg">
+              <div className="flex justify-between mb-2">
+                <div className="text-gray-500 text-sm">2025</div>
+                <div className="text-4xl font-bold">
+                  {contributions?.totalMinutes || 120}
+                </div>
+              </div>
+              <ContributionGraph data={contributions?.data || []} activeView="month" />
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* 三个选项卡 */}
+      {/* Tabs Section */}
       <div className="bg-white rounded-lg shadow">
-        <Tabs defaultValue="database" onValueChange={setActiveTab} value={activeTab}>
+        <Tabs defaultValue="progress" onValueChange={setActiveTab} value={activeTab}>
           <TabsList className="w-full border-b p-0">
-            <TabsTrigger value="database" className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500">
-              <Database className="h-4 w-4 mr-2" />
-              Database
-            </TabsTrigger>
             <TabsTrigger value="progress" className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500">
               <BarChart className="h-4 w-4 mr-2" />
               Progress
             </TabsTrigger>
+            <TabsTrigger value="database" className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500">
+              <Database className="h-4 w-4 mr-2" />
+              Materials
+            </TabsTrigger>
             <TabsTrigger value="path" className="flex-1 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500">
               <GitGraph className="h-4 w-4 mr-2" />
-              Path
+              Learning Path
             </TabsTrigger>
           </TabsList>
 
+          {/* Tab Contents (keep existing tab contents but reorder them) */}
+          <TabsContent value="progress" className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* To Do section */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
+                  <span>To Do</span>
+                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{todoMaterials.length}</span>
+                </h3>
+                
+                <div 
+                  className="space-y-3 min-h-[200px]"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('bg-blue-50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('bg-blue-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('bg-blue-50');
+                    if (isDragging) {
+                      const material = materials.find(m => m._id === isDragging);
+                      if (material) {
+                        handleStatusChange(material, 'todo');
+                      }
+                      setIsDragging(null);
+                    }
+                  }}
+                >
+                  {todoMaterials.length > 0 ? (
+                    todoMaterials.map((material, index) => {
+                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
+                      const progress = 0;
+                      
+                      return (
+                        <div 
+                          key={material._id || index} 
+                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
+                          draggable
+                          onDragStart={() => setIsDragging(material._id || null)}
+                          onDragEnd={() => setIsDragging(null)}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-full bg-gray-100">
+                                {getMaterialTypeIcon(material.type)}
+                              </div>
+                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
+                                {material.title}
+                              </h4>
+                            </div>
+                            <span className="text-sm text-gray-500">0%</span>
+                          </div>
+                          
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div className="bg-blue-600 h-2 rounded-full w-0"></div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-sm text-gray-500">
+                            <span>0/{totalUnits} units</span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleStatusChange(material, 'doing')}
+                                className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                              >
+                                Start Learning
+                              </button>
+                              <button 
+                                onClick={() => handleStatusChange(material, 'done')}
+                                className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                              >
+                                Mark Complete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-gray-400">
+                      <p>No items to do</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Doing section */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
+                  <span>In Progress</span>
+                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{doingMaterials.length}</span>
+                </h3>
+                
+                <div 
+                  className="space-y-3 min-h-[200px]"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('bg-blue-50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('bg-blue-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('bg-blue-50');
+                    if (isDragging) {
+                      const material = materials.find(m => m._id === isDragging);
+                      if (material) {
+                        handleStatusChange(material, 'doing');
+                      }
+                      setIsDragging(null);
+                    }
+                  }}
+                >
+                  {doingMaterials.length > 0 ? (
+                    doingMaterials.map((material, index) => {
+                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
+                      const completedUnits = material.completedUnits || 
+                        Math.floor((material.progress?.completed || 0) / unitMinutes);
+                      const progress = totalUnits > 0 ? completedUnits / totalUnits : 0;
+                      const progressPercent = Math.round(progress * 100);
+                      
+                      return (
+                        <div 
+                          key={material._id || index} 
+                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
+                          draggable
+                          onDragStart={() => setIsDragging(material._id || null)}
+                          onDragEnd={() => setIsDragging(null)}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-full bg-gray-100">
+                                {getMaterialTypeIcon(material.type)}
+                              </div>
+                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
+                                {material.title}
+                              </h4>
+                            </div>
+                            <span className="text-sm text-blue-600">{progressPercent}%</span>
+                          </div>
+                          
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div 
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${progressPercent}%` }}
+                            ></div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-sm text-gray-500">
+                            <span>{completedUnits}/{totalUnits} units</span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleStatusChange(material, 'todo')}
+                                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                              >
+                                Move to To Do
+                              </button>
+                              <button 
+                                onClick={() => handleStatusChange(material, 'done')}
+                                className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                              >
+                                Mark Complete
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {/* Clickable progress bar */}
+                          <div className="flex mt-2 gap-1">
+                            {Array.from({ length: totalUnits }).map((_, i) => (
+                              <div 
+                                key={i}
+                                onClick={() => handleUnitClick(material, i)}
+                                className={`w-full h-2 rounded cursor-pointer transition-colors ${
+                                  i < completedUnits 
+                                    ? 'bg-blue-500 hover:bg-blue-600' 
+                                    : 'bg-gray-200 hover:bg-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-gray-400">
+                      <p>No items in progress</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Done section */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
+                  <span>Completed</span>
+                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{doneMaterials.length}</span>
+                </h3>
+                
+                <div 
+                  className="space-y-3 min-h-[200px]"
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('bg-green-50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.currentTarget.classList.remove('bg-green-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('bg-green-50');
+                    if (isDragging) {
+                      const material = materials.find(m => m._id === isDragging);
+                      if (material) {
+                        handleStatusChange(material, 'done');
+                      }
+                      setIsDragging(null);
+                    }
+                  }}
+                >
+                  {doneMaterials.length > 0 ? (
+                    doneMaterials.map((material, index) => {
+                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
+                      
+                      return (
+                        <div 
+                          key={material._id || index} 
+                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
+                          draggable
+                          onDragStart={() => setIsDragging(material._id || null)}
+                          onDragEnd={() => setIsDragging(null)}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-full bg-gray-100">
+                                {getMaterialTypeIcon(material.type)}
+                              </div>
+                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
+                                {material.title}
+                              </h4>
+                            </div>
+                            <span className="text-sm text-green-600">100%</span>
+                          </div>
+                          
+                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div className="bg-green-600 h-2 rounded-full w-full"></div>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-sm text-gray-500">
+                            <span>{totalUnits}/{totalUnits} units</span>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={() => handleStatusChange(material, 'todo')}
+                                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                              >
+                                Move to To Do
+                              </button>
+                              <button 
+                                onClick={() => handleStatusChange(material, 'doing')}
+                                className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                              >
+                                Continue Learning
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-gray-400">
+                      <p>No completed items</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Materials Tab Content */}
           <TabsContent value="database" className="p-4">
+            {/* Database tab content */}
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">学习资源 ({materials.length})</h3>
+              <h3 className="text-lg font-semibold">Learning Resources ({materials.length})</h3>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-600">每单元分钟：</span>
+                <span className="text-gray-600">Minutes/Unit:</span>
                 <input
                   type="number"
                   min="1"
@@ -215,15 +585,17 @@ const PathLayout: React.FC<PathLayoutProps> = ({
               </div>
             </div>
 
+            {/* Materials table */}
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {/* Table headers */}
               <div className="grid grid-cols-12 bg-gray-50 text-gray-600 text-sm py-2 px-4 border-b">
                 <div className="col-span-1">#</div>
-                <div className="col-span-1">进度</div>
-                <div className="col-span-1">类型</div>
-                <div className="col-span-5">名称</div>
-                <div className="col-span-2">单元</div>
-                <div className="col-span-1">完成度</div>
-                <div className="col-span-1">操作</div>
+                <div className="col-span-1">Progress</div>
+                <div className="col-span-1">Type</div>
+                <div className="col-span-5">Name</div>
+                <div className="col-span-2">Units</div>
+                <div className="col-span-1">Completion</div>
+                <div className="col-span-1">Actions</div>
               </div>
 
               <div className="divide-y">
@@ -308,7 +680,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
                           }}
                           className="w-16 p-1 border rounded text-center"
                         />
-                        <span className="text-gray-500 text-sm">单元</span>
+                        <span className="text-gray-500 text-sm">units</span>
                       </div>
                       
                       {/* 完成度百分比 */}
@@ -322,7 +694,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
                           <button 
                             onClick={() => handleOpenContent(material)}
                             className="p-1 rounded-full bg-blue-500 text-white hover:bg-blue-600"
-                            title="查看内容"
+                            title="View Content"
                           >
                             <Play className="h-3 w-3" />
                           </button>
@@ -330,7 +702,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
                         <button 
                           onClick={() => onComplete(material._id || '', !material.completed)}
                           className={`p-1 rounded-full ${material.completed ? 'bg-green-500' : 'bg-gray-200'} text-white hover:opacity-90`}
-                          title={material.completed ? "标记为未完成" : "标记为已完成"}
+                          title={material.completed ? "Mark as incomplete" : "Mark as completed"}
                         >
                           <Check className="h-3 w-3" />
                         </button>
@@ -342,285 +714,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
             </div>
           </TabsContent>
 
-          <TabsContent value="progress" className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* To Do 部分 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
-                  <span>待学习</span>
-                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{todoMaterials.length}</span>
-                </h3>
-                
-                <div 
-                  className="space-y-3 min-h-[200px]"
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.add('bg-blue-50');
-                  }}
-                  onDragLeave={(e) => {
-                    e.currentTarget.classList.remove('bg-blue-50');
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove('bg-blue-50');
-                    if (isDragging) {
-                      const material = materials.find(m => m._id === isDragging);
-                      if (material) {
-                        handleStatusChange(material, 'todo');
-                      }
-                      setIsDragging(null);
-                    }
-                  }}
-                >
-                  {todoMaterials.length > 0 ? (
-                    todoMaterials.map((material, index) => {
-                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
-                      const progress = 0;
-                      
-                      return (
-                        <div 
-                          key={material._id || index} 
-                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
-                          draggable
-                          onDragStart={() => setIsDragging(material._id || null)}
-                          onDragEnd={() => setIsDragging(null)}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-full bg-gray-100">
-                                {getMaterialTypeIcon(material.type)}
-                              </div>
-                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
-                                {material.title}
-                              </h4>
-                            </div>
-                            <span className="text-sm text-gray-500">0%</span>
-                          </div>
-                          
-                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div className="bg-blue-600 h-2 rounded-full w-0"></div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-sm text-gray-500">
-                            <span>0/{totalUnits} 单元</span>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => handleStatusChange(material, 'doing')}
-                                className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                              >
-                                开始学习
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(material, 'done')}
-                                className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                              >
-                                标记完成
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex items-center justify-center h-32 text-gray-400">
-                      <p>暂无待学习项目</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Doing 部分 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
-                  <span>进行中</span>
-                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{doingMaterials.length}</span>
-                </h3>
-                
-                <div 
-                  className="space-y-3 min-h-[200px]"
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.add('bg-blue-50');
-                  }}
-                  onDragLeave={(e) => {
-                    e.currentTarget.classList.remove('bg-blue-50');
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove('bg-blue-50');
-                    if (isDragging) {
-                      const material = materials.find(m => m._id === isDragging);
-                      if (material) {
-                        handleStatusChange(material, 'doing');
-                      }
-                      setIsDragging(null);
-                    }
-                  }}
-                >
-                  {doingMaterials.length > 0 ? (
-                    doingMaterials.map((material, index) => {
-                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
-                      const completedUnits = material.completedUnits || 
-                        Math.floor((material.progress?.completed || 0) / unitMinutes);
-                      const progress = totalUnits > 0 ? completedUnits / totalUnits : 0;
-                      const progressPercent = Math.round(progress * 100);
-                      
-                      return (
-                        <div 
-                          key={material._id || index} 
-                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
-                          draggable
-                          onDragStart={() => setIsDragging(material._id || null)}
-                          onDragEnd={() => setIsDragging(null)}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-full bg-gray-100">
-                                {getMaterialTypeIcon(material.type)}
-                              </div>
-                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
-                                {material.title}
-                              </h4>
-                            </div>
-                            <span className="text-sm text-blue-600">{progressPercent}%</span>
-                          </div>
-                          
-                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${progressPercent}%` }}
-                            ></div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-sm text-gray-500">
-                            <span>{completedUnits}/{totalUnits} 单元</span>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => handleStatusChange(material, 'todo')}
-                                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
-                              >
-                                移至待学习
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(material, 'done')}
-                                className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                              >
-                                标记完成
-                              </button>
-                            </div>
-                          </div>
-                          
-                          {/* 点击进度条更新进度 */}
-                          <div className="flex mt-2 gap-1">
-                            {Array.from({ length: totalUnits }).map((_, i) => (
-                              <div 
-                                key={i}
-                                onClick={() => handleUnitClick(material, i)}
-                                className={`w-full h-2 rounded cursor-pointer transition-colors ${
-                                  i < completedUnits 
-                                    ? 'bg-blue-500 hover:bg-blue-600' 
-                                    : 'bg-gray-200 hover:bg-gray-300'
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex items-center justify-center h-32 text-gray-400">
-                      <p>暂无进行中项目</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Done 部分 */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4 text-gray-700 flex items-center justify-between">
-                  <span>已完成</span>
-                  <span className="text-sm bg-gray-200 px-2 py-1 rounded-full">{doneMaterials.length}</span>
-                </h3>
-                
-                <div 
-                  className="space-y-3 min-h-[200px]"
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.add('bg-green-50');
-                  }}
-                  onDragLeave={(e) => {
-                    e.currentTarget.classList.remove('bg-green-50');
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.currentTarget.classList.remove('bg-green-50');
-                    if (isDragging) {
-                      const material = materials.find(m => m._id === isDragging);
-                      if (material) {
-                        handleStatusChange(material, 'done');
-                      }
-                      setIsDragging(null);
-                    }
-                  }}
-                >
-                  {doneMaterials.length > 0 ? (
-                    doneMaterials.map((material, index) => {
-                      const totalUnits = Math.ceil((material.readingTime || 10) / unitMinutes);
-                      
-                      return (
-                        <div 
-                          key={material._id || index} 
-                          className="bg-white p-4 rounded-lg shadow-sm group transition-all hover:shadow-md"
-                          draggable
-                          onDragStart={() => setIsDragging(material._id || null)}
-                          onDragEnd={() => setIsDragging(null)}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-full bg-gray-100">
-                                {getMaterialTypeIcon(material.type)}
-                              </div>
-                              <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors truncate max-w-[150px]">
-                                {material.title}
-                              </h4>
-                            </div>
-                            <span className="text-sm text-green-600">100%</span>
-                          </div>
-                          
-                          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                            <div className="bg-green-600 h-2 rounded-full w-full"></div>
-                          </div>
-                          
-                          <div className="flex justify-between items-center text-sm text-gray-500">
-                            <span>{totalUnits}/{totalUnits} 单元</span>
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => handleStatusChange(material, 'todo')}
-                                className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
-                              >
-                                移至待学习
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(material, 'doing')}
-                                className="px-2 py-0.5 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                              >
-                                继续学习
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex items-center justify-center h-32 text-gray-400">
-                      <p>暂无已完成项目</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
+          {/* Learning Path Tab */}
           <TabsContent value="path" className="p-4">
             <LearningPathTab 
               materials={materials.map((material, index) => ({
@@ -633,7 +727,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
         </Tabs>
       </div>
 
-      {/* 视频弹窗 */}
+      {/* Video Popup */}
       <VideoPopup 
         isOpen={contentPopup.isOpen}
         onClose={() => setContentPopup(prev => ({ ...prev, isOpen: false }))}

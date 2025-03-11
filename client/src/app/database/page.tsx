@@ -4,26 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useUserData } from '@/hooks/useUserData';
 import { useViewMode } from '@/hooks/useViewMode';
-import LearningPathFlow from '@/app/components/LearningPathFlow';
-import UnifiedTableView from '@/app/components/UnifiedTableView';
-import AddNewMaterial from '@/app/components/AddNewMaterial';
-import { Plus, ChevronLeft, Link as LinkIcon, Edit, Trash2, MoreHorizontal } from 'lucide-react';
 import { Material, MaterialPayload, Topic } from '@/types/User';
-import ContributionGraph from '@/app/components/ContributionGraph';
+import { Plus, ChevronLeft } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import Image from 'next/image';
-import { FiVideo, FiBook } from 'react-icons/fi';
-import { HiOutlineMicrophone } from 'react-icons/hi';
-import { BiWorld } from 'react-icons/bi';
-import { BsListUl, BsGrid } from 'react-icons/bs';
-import PathView from '../components/PathView';
-import ListView from '../components/ListView';
-import { ViewMode, ListSubMode } from '@/types/ViewMode';
-import PathLayout from '../components/PathLayout';
+import PathView from './PathView';
+import ListLayout from './ListLayout';
+import AddNewMaterial from '../components/AddNewMaterial';
+import { ViewMode } from '@/types/ViewMode';
 
 export default function DatabasePage() {
-  const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress, updateProfile } = useUserData();
-  const { viewMode: globalViewMode, setViewMode: setGlobalViewMode } = useViewMode();
+  const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } = useUserData();
+  const { viewMode: globalViewMode } = useViewMode();
   const searchParams = useSearchParams();
   const router = useRouter();
   const topicId = searchParams?.get('topic');
@@ -34,21 +25,9 @@ export default function DatabasePage() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [showAddNewMaterial, setShowAddNewMaterial] = useState(false);
   const [unitMinutes, setUnitMinutes] = useState(20);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [editedBio, setEditedBio] = useState('');
-  const [activeView, setActiveView] = useState('materials'); // 'materials' or 'contributions'
-  
-  // 使用 mode 或 globalViewMode 作为当前模式
-  const currentMode: ViewMode = mode || globalViewMode;
-  
-  // 列表视图的子模式：列表或网格
-  const [listSubMode, setListSubMode] = useState<ListSubMode>('list');
-  
+  const [listSubMode, setListSubMode] = useState<'list' | 'grid'>('list');
   const [reorderCounter, setReorderCounter] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
-  
-  // State for category filters
   const [categoryFilters, setCategoryFilters] = useState({
     web: true,
     video: true,
@@ -56,15 +35,13 @@ export default function DatabasePage() {
     book: true
   });
 
-  // Design tags based on user screenshot
-  const designTags = ['Design', 'System Design'];
+  // 使用 mode 或 globalViewMode 作为当前模式
+  const currentMode: ViewMode = mode || globalViewMode;
   
   // Effect to fetch topic data when the topicId changes
   useEffect(() => {
     if (userData && topicId) {
-      console.log('获取到的userData:', userData);
       const topic = userData.topics?.find((t) => t._id === topicId);
-      console.log('当前选择的主题:', topic);
       
       if (topic) {
         setCurrentTopic(topic);
@@ -72,15 +49,10 @@ export default function DatabasePage() {
         // Extract materials from topic
         let topicMaterials: any[] = [];
         
-        // 检查新数据结构
         if (topic.materials && topic.materials.length > 0) {
-          console.log('使用新数据结构 - materials数组:', topic.materials);
           topicMaterials = [...topic.materials];
         } 
-        // 检查旧数据结构
         else if (topic.categories) {
-          console.log('使用旧数据结构 - categories对象:', topic.categories);
-          // 从categories中提取所有materials
           topicMaterials = [
             ...(topic.categories.webpage || []).map(m => ({ ...m, type: 'webpage' as const })),
             ...(topic.categories.video || []).map(m => ({ ...m, type: 'video' as const })),
@@ -89,14 +61,12 @@ export default function DatabasePage() {
           ];
         }
         
-        // 添加索引并排序
         const materialsWithIndex = topicMaterials.map((material, index) => ({
           ...material,
           index: index + 1,
-          order: material.order || index // 确保有order属性
+          order: material.order || index
         })).sort((a, b) => (a.order || 0) - (b.order || 0));
         
-        console.log('处理后的材料数据:', materialsWithIndex);
         setMaterials(materialsWithIndex);
       }
     } else {
@@ -104,14 +74,6 @@ export default function DatabasePage() {
       setMaterials([]);
     }
   }, [userData, topicId]);
-
-  // 初始化用户资料编辑表单
-  useEffect(() => {
-    if (userData) {
-      setEditedName(userData.name || '');
-      setEditedBio(userData.bio || '');
-    }
-  }, [userData]);
   
   // Handle add material
   const handleAddMaterial = (materialData: {
@@ -122,12 +84,6 @@ export default function DatabasePage() {
   }) => {
     if (!topicId) return;
     
-    // 获取当前主题的材料计数
-    const topicMaterials = userData?.materials 
-      ? userData.materials.filter(m => m.topicId === currentTopic?._id)
-      : [];
-    
-    // Convert form data to MaterialPayload
     const payload: MaterialPayload = {
       title: materialData.title,
       type: materialData.type as 'webpage' | 'video' | 'book' | 'podcast',
@@ -138,7 +94,6 @@ export default function DatabasePage() {
       order: materials.length + 1,
     };
     
-    // Call the API
     addMaterial(payload, topicId);
   };
   
@@ -172,14 +127,12 @@ export default function DatabasePage() {
     if (!topicId) return false;
     
     try {
-      // 转换为旧的参数格式，保持兼容性
       const updates = {
         completedUnits: completed,
         completed: completed >= total,
         readingTime: total
       };
       
-      // 调用API更新进度
       return await updateMaterialProgress(materialId, topicId, updates);
     } catch (error) {
       console.error('Error updating progress:', error);
@@ -194,19 +147,14 @@ export default function DatabasePage() {
   
   // Handle reorder materials
   const handleReorderMaterials = async (reorderedItems: Material[]) => {
-    console.log('🔄 handleReorderMaterials 开始执行，收到项目数量:', reorderedItems.length);
-    
-    // 确保所有项目都有正确的order属性
     const itemsWithOrder = reorderedItems.map((item, idx) => ({
       ...item,
-      order: idx // 确保order属性与当前位置一致
+      order: idx
     }));
     
-    // 立即更新本地UI状态
     setMaterials(itemsWithOrder);
     setReorderCounter(prev => prev + 1);
     
-    // 保存当前重新排序的项目到localStorage
     try {
       const orderMap = new Map<string, number>();
       itemsWithOrder.forEach((item, index) => {
@@ -215,78 +163,37 @@ export default function DatabasePage() {
         }
       });
       localStorage.setItem(`temp_order_${topicId}`, JSON.stringify(Array.from(orderMap.entries())));
-      console.log('🔄 保存临时顺序到localStorage:', topicId);
     } catch (error) {
-      console.error('🔄 保存临时顺序到localStorage失败:', error);
+      console.error('Error saving temporary order:', error);
     }
     
-    // 触发materialReordered事件
     const event = new CustomEvent('materialReordered', { 
       detail: { topicId } 
     });
     window.dispatchEvent(event);
-    
-    // 更新后端数据
-    try {
-      // 这里实现实际的后端更新逻辑
-      console.log('🔄 更新后端数据');
-      
-      // 模拟后端处理延迟
-      setTimeout(() => {
-        // 再次强制刷新UI
-        setReorderCounter(prev => prev + 1);
-        console.log('🔄 刷新UI完成');
-      }, 100);
-    } catch (error) {
-      console.error('🔄 更新后端数据失败:', error);
-    }
   };
   
-  // 监听materialReordered事件
+  // Listen for materialReordered event
   useEffect(() => {
     const handleMaterialReorder = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail && customEvent.detail.topicId === topicId) {
-        console.log('🔄 收到materialReordered事件，强制刷新UI');
         setRefreshKey(prev => prev + 1);
       }
     };
     
     window.addEventListener('materialReordered', handleMaterialReorder as EventListener);
-    
     return () => {
       window.removeEventListener('materialReordered', handleMaterialReorder as EventListener);
     };
   }, [topicId]);
   
-  // 强制刷新UI
-  useEffect(() => {
-    if (reorderCounter > 0) {
-      console.log('🔄 强制刷新UI，reorderCounter:', reorderCounter);
-    }
-  }, [reorderCounter]);
-  
-  // Navigate back to topics list
-  const handleBackToTopics = () => {
-    router.push('/database');
+  // Handle edit material
+  const handleEditMaterial = (id: string) => {
+    console.log('Edit material:', id);
   };
 
-  // 处理编辑个人资料
-  const handleEditProfile = () => {
-    setIsEditingProfile(true);
-  };
-
-  // 处理保存个人资料
-  const handleSaveProfile = async () => {
-    try {
-      await updateProfile({ name: editedName, bio: editedBio });
-      setIsEditingProfile(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-
-  // 计算总贡献时间
+  // Calculate total contribution minutes
   const totalContributionMins = userData?.contributions?.reduce(
     (total, item) => total + (item.count || 0), 
     0
@@ -300,25 +207,18 @@ export default function DatabasePage() {
     }));
   };
   
-  // 输出调试信息
+  // Output debug information
   useEffect(() => {
-    console.log('当前主题:', currentTopic?.name);
-    console.log('原始材料数据:', materials);
+    console.log('Current topic:', currentTopic?.name);
+    console.log('Original material data:', materials);
   }, [currentTopic, materials]);
   
-  // Handle edit material
-  const handleEditMaterial = (id: string) => {
-    // TODO: Implement edit functionality
-    console.log('编辑材料:', id);
-  };
-
-  // 渲染主要内容
+  // Render main content
   const renderMainContent = () => {
     if (!currentTopic) {
-      return <div className="text-center p-8 text-gray-500">请选择一个主题</div>;
+      return <div className="text-center p-8 text-gray-500">Please select a topic</div>;
     }
 
-    // 根据 currentMode 渲染不同的视图组件
     if (currentMode === 'path') {
       return (
         <PathView
@@ -335,9 +235,16 @@ export default function DatabasePage() {
       );
     } else {
       return (
-        <ListView
+        <ListLayout 
+          data={userData?.contributions || []}
+          year={new Date().getFullYear()}
+          userData={userData || undefined}
+          onEditProfile={() => {}}
+          totalContributions={totalContributionMins}
+          contributions={userData?.contributions}
           materials={materials}
           categoryFilters={categoryFilters}
+          setCategoryFilters={setCategoryFilters}
           listSubMode={listSubMode}
           setListSubMode={setListSubMode}
           showAddNewMaterial={showAddNewMaterial}
@@ -351,6 +258,9 @@ export default function DatabasePage() {
           onEdit={handleEditMaterial}
           onDelete={handleDeleteMaterial}
           onReorderItems={handleReorderMaterials}
+          onTopicChange={handleTopicChange}
+          onAddTopic={() => router.push('/database/add-topic')}
+          currentTopic={currentTopic}
         />
       );
     }
@@ -358,332 +268,74 @@ export default function DatabasePage() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* 顶部导航栏 */}
+      {/* Top Navigation Bar */}
       <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-        
+        {/* Left: Breadcrumb */}
+        <div className="flex items-center space-x-2">
+          <button 
+            className="text-gray-600 hover:text-gray-900 flex items-center"
+            onClick={() => router.push('/database')}
+          >
+            <span className="font-medium">
+              {currentMode === 'path' ? 'Learning Path' : 'Materials List'}
+            </span>
+          </button>
+          {currentTopic && (
+            <>
+              <span className="text-gray-400">/</span>
+              <span className="text-gray-900">{currentTopic.name}</span>
+            </>
+          )}
+        </div>
 
-        {/* 所在位置面包屑 */}
+        {/* Center: Search and Add Material */}
+        <div className="flex-1 max-w-2xl mx-4">
+          <div className="flex items-center justify-center">
+            <AddNewMaterial onSubmit={handleAddMaterial} />
+          </div>
+        </div>
+
+        {/* Right: User Account */}
         <div className="flex items-center">
-          <div className="flex items-center">
-            <button 
-              className="p-1 rounded-md hover:bg-gray-100 flex items-center"
-              onClick={handleBackToTopics}
-            >
-              <ChevronLeft className="h-4 w-4 text-gray-500" />
-              <span className="ml-1 text-gray-600 text-sm">返回</span>
+          <div className="relative group">
+            <button className="flex items-center space-x-2">
+              {userData?.photoURL ? (
+                <img
+                  className="h-8 w-8 rounded-full"
+                  src={userData.photoURL}
+                  alt={userData.name || 'User'}
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-blue-800 font-medium text-sm">
+                    {userData?.name?.substring(0, 1) || 'U'}
+                  </span>
+                </div>
+              )}
+              <span className="font-medium hidden md:inline">{userData?.name || 'User'}</span>
             </button>
             
-            {currentTopic && (
-              <>
-                <span className="text-gray-400 mx-2">/</span>
-                <span className="text-sm font-medium">{currentTopic.name}</span>
-                <span className="text-gray-400 mx-2">{'>'}</span>
-                <span className="text-sm text-gray-600">Materials</span>
-              </>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex items-center">
-          {currentTopic && (
-            <div className="mr-4">
-              <AddNewMaterial onSubmit={handleAddMaterial} />
+            {/* Dropdown Menu */}
+            <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <button
+                onClick={() => {}} // TODO: Add edit profile handler
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={() => {}} // TODO: Add logout handler
+                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+              >
+                Logout
+              </button>
             </div>
-          )}
-         
-        </div>
-
-        <div className="flex items-center">
-          <div className="flex items-center">
-            {userData?.photoURL ? (
-              <img
-                className="h-8 w-8 rounded-full mr-2"
-                src={userData.photoURL}
-                alt={userData.name || 'User'}
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                <span className="text-blue-800 font-medium text-sm">
-                  {userData?.name?.substring(0, 1) || 'U'}
-                </span>
-              </div>
-            )}
-            <span className="font-medium">{userData?.name || 'User'}</span>
-          </div>
-        </div>
-
-      </div>
-    
-      {/* 用户资料和贡献图表区域 */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 用户资料区域 */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 mr-4">
-                {userData?.photoURL ? (
-                  <img
-                    className="h-20 w-20 rounded-full"
-                    src={userData.photoURL}
-                    alt={userData.name || 'User'}
-                  />
-                ) : (
-                  <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-800 font-medium text-2xl">
-                      {userData?.name?.substring(0, 1) || 'U'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <div>
-                {isEditingProfile ? (
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                    />
-                    <textarea
-                      value={editedBio}
-                      onChange={(e) => setEditedBio(e.target.value)}
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                      rows={3}
-                    ></textarea>
-                    <div className="flex space-x-2">
-                      <Button onClick={handleSaveProfile}>Save</Button>
-                      <Button variant="outline" onClick={() => setIsEditingProfile(false)}>Cancel</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center">
-                      <h1 className="text-2xl font-bold">{userData?.name || 'User'}</h1>
-                      <button 
-                        onClick={handleEditProfile}
-                        className="ml-2 p-1 rounded-full hover:bg-gray-100"
-                      >
-                        <Edit className="h-4 w-4 text-gray-500" />
-                      </button>
-                    </div>
-                    <p className="text-gray-600 mt-1">{userData?.bio || 'No bio yet'}</p>
-                    <div className="flex items-center mt-2 text-gray-600">
-                      <span className="text-sm">
-                        Total contribution: <span className="font-semibold">{totalContributionMins}</span> mins
-                      </span>
-                    </div>
-                    
-                    {/* 用户设计标签 */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {designTags.map((tag, index) => (
-                        <span 
-                          key={index} 
-                          className="px-3 py-1 text-sm bg-gray-100 rounded-full text-gray-600"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* 贡献图表区域 */}
-          <div className="lg:col-span-2">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-lg font-semibold">Contribution Graph</h2>
-            </div>
-            <ContributionGraph 
-              data={userData?.contributions?.map(c => ({
-                date: c.date,
-                count: c.count || 0,
-                studyCount: 0 // 默认为0，因为userData中的contributions没有studyCount属性
-              })) || []} 
-              activeView={activeView} 
-            />
           </div>
         </div>
       </div>
 
       {currentTopic ? (
         <>    
-          {/* Topic navigation tabs */}
-          <div className="flex flex-col items-stretch mb-8">
-            <div className="mb-2 border-b border-gray-200">
-              <div className="flex items-center space-x-1">
-                {userData?.topics?.map((topic) => (
-                  <button
-                    key={topic._id}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                      topicId === topic._id
-                        ? 'border-blue-600 text-blue-600' 
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleTopicChange(topic._id || '')}
-                  >
-                    {topic.name}
-                  </button>
-                ))}
-                
-                <button
-                  className="p-2 text-gray-500 hover:text-blue-500"
-                  onClick={() => router.push('/database/add-topic')}
-                >
-                  <Plus className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold flex items-center">
-                {currentTopic?.name || "Topic"}
-                <button className="ml-2 text-gray-400 hover:text-gray-600">
-                  <Edit className="h-4 w-4" />
-                </button>
-              </h1>
-            </div>
-          </div>
-          
-          {/* Category filters */}
-          {currentMode === 'list' && (
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex space-x-1">
-                <button
-                  className={`px-4 py-2 text-sm rounded-md flex items-center ${
-                    categoryFilters.web && categoryFilters.video && categoryFilters.podcast && categoryFilters.book 
-                      ? 'bg-gray-900 text-white font-medium' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => {
-                    setCategoryFilters({
-                      web: true,
-                      video: true,
-                      podcast: true,
-                      book: true
-                    });
-                  }}
-                >
-                  <span className="flex items-center justify-center w-5 h-5 mr-2">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="7" height="7" />
-                      <rect x="14" y="3" width="7" height="7" />
-                      <rect x="14" y="14" width="7" height="7" />
-                      <rect x="3" y="14" width="7" height="7" />
-                    </svg>
-                  </span>
-                  All ({materials.length})
-                </button>
-                <button
-                  className={`px-4 py-2 text-sm rounded-md flex items-center ${
-                    categoryFilters.web && !categoryFilters.video && !categoryFilters.podcast && !categoryFilters.book
-                      ? 'bg-gray-900 text-white font-medium' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => {
-                    setCategoryFilters({
-                      web: true,
-                      video: false,
-                      podcast: false,
-                      book: false
-                    });
-                  }}
-                >
-                  <span className="flex items-center justify-center w-5 h-5 mr-2">
-                    <BiWorld className="w-4 h-4" />
-                  </span>
-                  Web ({materials.filter(m => m.type === 'webpage').length})
-                </button>
-                <button
-                  className={`px-4 py-2 text-sm rounded-md flex items-center ${
-                    categoryFilters.video && !categoryFilters.web && !categoryFilters.podcast && !categoryFilters.book
-                      ? 'bg-gray-900 text-white font-medium' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => {
-                    setCategoryFilters({
-                      web: false,
-                      video: true,
-                      podcast: false,
-                      book: false
-                    });
-                  }}
-                >
-                  <span className="flex items-center justify-center w-5 h-5 mr-2">
-                    <FiVideo className="w-4 h-4" />
-                  </span>
-                  Video ({materials.filter(m => m.type === 'video').length})
-                </button>
-                <button
-                  className={`px-4 py-2 text-sm rounded-md flex items-center ${
-                    categoryFilters.podcast && !categoryFilters.web && !categoryFilters.video && !categoryFilters.book
-                      ? 'bg-gray-900 text-white font-medium' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => {
-                    setCategoryFilters({
-                      web: false,
-                      video: false,
-                      podcast: true,
-                      book: false
-                    });
-                  }}
-                >
-                  <span className="flex items-center justify-center w-5 h-5 mr-2">
-                    <HiOutlineMicrophone className="w-4 h-4" />
-                  </span>
-                  Podcast ({materials.filter(m => m.type === 'podcast').length})
-                </button>
-                <button
-                  className={`px-4 py-2 text-sm rounded-md flex items-center ${
-                    categoryFilters.book && !categoryFilters.web && !categoryFilters.video && !categoryFilters.podcast
-                      ? 'bg-gray-900 text-white font-medium' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={() => {
-                    setCategoryFilters({
-                      web: false,
-                      video: false,
-                      podcast: false,
-                      book: true
-                    });
-                  }}
-                >
-                  <span className="flex items-center justify-center w-5 h-5 mr-2">
-                    <FiBook className="w-4 h-4" />
-                  </span>
-                  Book ({materials.filter(m => m.type === 'book').length})
-                </button>
-              </div>
-              
-              {/* 视图切换按钮 */}
-              <div className="flex bg-gray-100 p-1 rounded-md">
-                <button
-                  className={`p-2 rounded ${
-                    currentMode === ('list' as ViewMode) ? 'bg-white shadow-sm' : 'text-gray-700'
-                  }`}
-                  onClick={() => {
-                    router.push(`/database?topic=${topicId}&mode=list`);
-                  }}
-                >
-                  <BsListUl className="h-4 w-4" />
-                </button>
-                <button
-                  className={`p-2 rounded ${
-                    currentMode === ('path' as ViewMode) ? 'bg-white shadow-sm' : 'text-gray-700'
-                  }`}
-                  onClick={() => {
-                    router.push(`/database?topic=${topicId}&mode=path`);
-                  }}
-                >
-                  <BsGrid className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {/* 使用renderMainContent来显示主要内容 */}
           {renderMainContent()}
         </>
       ) : (

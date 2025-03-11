@@ -1,202 +1,272 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import styles from './ContributionGraph.module.css';
-import { MdOutlineKeyboardArrowLeft } from "react-icons/md";
-import { MdOutlineKeyboardArrowRight } from "react-icons/md";
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import ListLayout from '../database/ListLayout';
 
-interface ContributionData {
+export interface ContributionData {
   date: string;
   count: number;
-  studyCount: number;
+  studyCount?: number;
 }
 
 interface ContributionGraphProps {
-  data?: ContributionData[];
-  activeView: string;
+  data: ContributionData[];
+  activeView: 'month' | 'year';
+  userData?: {
+    photoURL?: string;
+    name?: string;
+    email?: string;
+  };
+  onEditProfile?: () => void;
+  onViewChange?: (view: 'month' | 'year') => void;
 }
 
-// 將函數移到組件外部
-const generateSquares = (startDate: Date, totalDays: number, contributionData: ContributionData[]) => {
-  return [...Array(totalDays)].map((_, i) => {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-    const dateStr = date.toISOString().split('T')[0];
-    const existingData = contributionData.find(d => d.date === dateStr);
-    return {
-      date: dateStr,
-      count: existingData ? existingData.count : 0,
-      studyCount: existingData ? existingData.studyCount : 0
-    };
-  });
-};
+interface MonthData {
+  month: string;
+  grid: (string | null)[][];
+  firstDayOfWeek: number;
+  weeksCount: number;
+  startPosition: number;
+}
 
-// 添加 memo 包裝器來避免不必要的重渲染
-const ContributionGraph = memo(({ data = [], activeView }: ContributionGraphProps) => {
-  // 移除頻繁的控制台日誌，僅在開發模式下日誌
-  if (process.env.NODE_ENV === 'development') {
-    console.log('5. ContributionGraph received data:', data);
-  }
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const weekdays = ['S', 'S', 'M', 'T', 'W', 'T', 'F'];
+
+const ContributionGraph: React.FC<ContributionGraphProps> = ({ 
+  data, 
+  activeView,
+  userData,
+  onEditProfile,
+  onViewChange
+}) => {
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [tooltipContent, setTooltipContent] = useState('');
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [showTooltip, setShowTooltip] = useState(false);
   
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [squares, setSquares] = useState<ContributionData[]>(() => {
-    const currentYear = new Date().getFullYear();
-    const startDate = new Date(currentYear, 0, 1); // 1月1日
-    const endDate = new Date(currentYear, 11, 31); // 12月31日
-    
-    const weeks = Math.ceil((endDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-    const totalDays = weeks * 7;
-    
-    return generateSquares(startDate, totalDays, data);
-  });
+  // Calculate total contribution minutes
+  const totalContributions = data.reduce((sum, item) => sum + item.count, 0);
+  
+  // Generate contribution map for quick lookup
+  const contributionMap = data.reduce<{[key: string]: number}>((acc, item) => {
+    acc[item.date] = item.count;
+    return acc;
+  }, {});
 
-  useEffect(() => {
-    if (data.length > 0) {
-      const currentYear = new Date().getFullYear();
-      const startDate = new Date(currentYear, 0, 1);
-      const endDate = new Date(currentYear, 11, 31);
-      
-      const weeks = Math.ceil((endDate.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
-      const totalDays = weeks * 7;
-      
-      const newSquares = generateSquares(startDate, totalDays, data);
-      setSquares(newSquares);
-    }
-  }, [data]);
+  const handlePrevYear = () => {
+    setYear(prevYear => prevYear - 1);
+  };
 
-  // 使用 useCallback 優化函數
-  const getContributionColor = useCallback((count: number, studyCount: number = 0) => {
-    // 如果有學習記錄，優先顯示學習顏色
-    if (studyCount > 0) {
-      if (studyCount === 1) return 'var(--study-l1)';
-      if (studyCount === 2) return 'var(--study-l2)';
-      if (studyCount === 3) return 'var(--study-l3)';
-      return 'var(--study-l4)';
-    }
-    
-    // 如果只有收藏記錄
-    if (count === 0) return 'var(--contribution-empty)';
-    if (count <= 1) return 'var(--contribution-l1)';
-    if (count <= 3) return 'var(--contribution-l2)';
-    if (count <= 6) return 'var(--contribution-l3)';
-    return 'var(--contribution-l4)';
-  }, []);
+  const handleNextYear = () => {
+    setYear(prevYear => prevYear + 1);
+  };
 
-  // 使用 useCallback 優化函數  
-  const getMonths = useCallback(() => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-    return months;
-  }, []);
+  const getContributionColor = (count: number): string => {
+    if (count === 0) return 'bg-[#ebedf0]';
+    if (count < 2) return 'bg-[#9be9a8]';
+    if (count < 5) return 'bg-[#40c463]';
+    if (count < 10) return 'bg-[#30a14e]';
+    return 'bg-[#216e39]';
+  };
 
-  const currentYear = new Date().getFullYear();
-  const months = getMonths();
-  const days = ['Mon', '', 'Wed', '', 'Fri', '', ''] as const;
-
-  // 使用 useCallback 優化函數
-  const handleScroll = useCallback((direction: 'left' | 'right') => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    const scrollAmount = container.clientWidth * 0.5; // 滾動半個視窗寬度
-    const newScrollLeft = direction === 'left' 
-      ? container.scrollLeft - scrollAmount
-      : container.scrollLeft + scrollAmount;
-    
-    container.scrollTo({
-      left: newScrollLeft,
-      behavior: 'smooth'
+  const handleCellMouseEnter = (e: React.MouseEvent, date: string, count: number) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipContent(`${new Date(date).toDateString()}: ${count} contributions`);
+    setTooltipPosition({ 
+      x: rect.left + window.scrollX + rect.width / 2, 
+      y: rect.top + window.scrollY - 28 
     });
-  }, []);
+    setShowTooltip(true);
+  };
 
-  // 使用 useCallback 優化函數
-  const getMonthPositions = useCallback(() => {
-    const positions: { [key: string]: number } = {};
-    let currentColumn = 0;
+  const handleCellMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
+  const generateContributionGraph = () => {
+    const monthsData: MonthData[] = [];
+    let totalWeeks = 0;
     
-    squares.forEach((square, index) => {
-      const date = new Date(square.date);
-      if (date.getDate() === 1) {  // 如果是每月第一天
-        const monthKey = months[date.getMonth()];
-        positions[monthKey] = Math.floor(index / 7);  // 計算列位置
+    // Generate data for each month
+    for (let month = 0; month < 12; month++) {
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 6 = Saturday
+      
+      // Calculate number of weeks needed for this month
+      const weeksCount = Math.ceil((daysInMonth + firstDayOfWeek) / 7);
+      
+      // Create a grid for this month (7 days x weeks needed)
+      const monthGrid: (string | null)[][] = Array(7).fill(null).map(() => Array(weeksCount).fill(null));
+      
+      // Fill in the dates for this month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dayOfWeek = date.getDay();
+        const weekInMonth = Math.floor((day + firstDayOfWeek - 1) / 7);
+        const dateStr = date.toISOString().split('T')[0];
+        monthGrid[dayOfWeek][weekInMonth] = dateStr;
       }
-    });
+      
+      monthsData.push({
+        month: months[month],
+        grid: monthGrid,
+        firstDayOfWeek,
+        weeksCount,
+        startPosition: totalWeeks
+      });
+      
+      totalWeeks += weeksCount;
+    }
     
-    return positions;
-  }, [squares, months]);
-
-  const monthPositions = getMonthPositions();
+    const cellSize = 13;
+    const cellGap = 2;
+    const cellWithGap = cellSize + cellGap;
+    
+    return (
+      <div className="relative pl-2">
+        {/* Month labels */}
+        <div className="flex mb-4">
+          {monthsData.map(({ month, weeksCount, startPosition }) => (
+            <div
+              key={month}
+              className="text-xs text-[#767676] absolute"
+              style={{
+                left: `${startPosition * cellWithGap + 52}px`,
+              }}
+            >
+              {month}
+            </div>
+          ))}
+        </div>
+        
+        <div className="flex">
+          {/* Weekday labels */}
+          <div className="flex flex-col gap-[2px] mr-2">
+            {weekdays.map((day) => (
+              <div key={day} className="h-[13px] text-xs text-[#767676] pr-2 flex items-center justify-end w-6">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          {/* All months grid */}
+          <div className="flex gap-[2px]">
+            {monthsData.map(({ month, grid }) => (
+              <div key={month} className="flex gap-[2px] ml-1">
+                {grid[0].map((_, weekIndex) => (
+                  <div key={`${month}-week-${weekIndex}`} className="flex flex-col gap-[2px]">
+                    {Array(7).fill(null).map((_, dayIndex) => {
+                      const dateStr = grid[dayIndex][weekIndex];
+                      const count = dateStr ? (contributionMap[dateStr] || 0) : 0;
+                      const isEmpty = dateStr === null;
+                      
+                      return (
+                        <div
+                          key={`${month}-${weekIndex}-${dayIndex}`}
+                          className={`w-[13px] h-[13px] rounded-sm ${isEmpty ? '' : getContributionColor(count)}`}
+                          onMouseEnter={dateStr ? (e) => handleCellMouseEnter(e, dateStr, count) : undefined}
+                          onMouseLeave={dateStr ? handleCellMouseLeave : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className={styles.graphContainer}>
-      <div className={styles.header}>
-        <div className={styles.yearInfo}>
-          <div className={styles.yearNavigation}>
-            <button className={styles.navButton} onClick={() => handleScroll('left')}>
-              <MdOutlineKeyboardArrowLeft />
-            </button>
-            <h5 className={styles.yearLabel}>{currentYear}</h5>
-            <button className={styles.navButton} onClick={() => handleScroll('right')}>
-              <MdOutlineKeyboardArrowRight />
-            </button>
-          </div>
-          {activeView === 'materials' ? (
-            <div className={styles.collectLegend}>
-              <span>No Collect</span>
-              <div className={`${styles.collectScale} ${styles.materialsScale}`}>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-              </div>
-              <span>Great Collect</span>
-            </div>
-          ) : (
-            <div className={styles.collectLegend}>
-              <span>Only Collect</span>
-              <div className={`${styles.collectScale} ${styles.studyScale}`}>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-                <div className={styles.collectDot}></div>
-              </div>
-              <span>Finished</span>
-            </div>
-          )}
+    <div className="mb-10">
+      {/* View Toggle */}
+      <div className="flex justify-end mb-4">
+        <div className="inline-flex rounded-lg border border-gray-200 p-1">
+          <button
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              activeView === 'month' 
+                ? 'bg-gray-100 text-gray-900' 
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+            onClick={() => onViewChange?.('month')}
+          >
+            Graph
+          </button>
+          <button
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${
+              activeView === 'year' 
+                ? 'bg-gray-100 text-gray-900' 
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+            onClick={() => onViewChange?.('year')}
+          >
+            List
+          </button>
         </div>
       </div>
-      <div className={styles.graphScrollContainer} ref={scrollContainerRef}>
-        <div className={styles.graph}>
-          <ul className={styles.months}>
-            {months.map(month => (
-              <li 
-                key={month} 
+      
+      {/* Calendar Container */}
+      <div className="relative mt-4">
+        {activeView === 'month' ? (
+          <>
+            {generateContributionGraph()}
+            {showTooltip && (
+              <div 
+                className="fixed z-50 bg-black bg-opacity-80 text-white px-2 py-1 rounded text-xs pointer-events-none transform -translate-x-1/2"
                 style={{ 
-                  gridColumn: monthPositions[month] + 1,
-                  gridColumnEnd: 'span 1'
+                  left: `${tooltipPosition.x}px`, 
+                  top: `${tooltipPosition.y}px`,
                 }}
               >
-                {month}
-              </li>
-            ))}
-          </ul>
-          <ul className={styles.days}>
-            {days.map((day, index) => (
-              <li key={index}>{day}</li>
-            ))}
-          </ul>
-          <ul className={styles.squares}>
-            {squares.map((square, i) => (
-              <li
-                key={i}
-                style={{ backgroundColor: getContributionColor(square.count, square.studyCount) }}
-                title={`${square.date}: ${square.count} collections, ${square.studyCount || 0} studies`}
-              />
-            ))}
-          </ul>
-        </div>
+                {tooltipContent}
+              </div>
+            )}
+          </>
+        ) : (
+          <ListLayout 
+            data={data} 
+            year={year}
+            userData={userData}
+            onEditProfile={onEditProfile}
+            totalContributions={totalContributions}
+          />
+        )}
       </div>
+      
+      {/* Year navigation */}
+      <div className="flex justify-between mt-4">
+        <button 
+          onClick={handlePrevYear}
+          className="p-1 hover:bg-gray-100 rounded-full"
+          aria-label="Previous Year"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button 
+          onClick={handleNextYear}
+          className="p-1 hover:bg-gray-100 rounded-full"
+          aria-label="Next Year"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+      
+      {activeView === 'month' && (
+        <div className="flex items-center gap-1 mt-4 justify-end text-xs text-[#767676]">
+          <span>Less</span>
+          <div className="w-[13px] h-[13px] rounded-sm bg-[#ebedf0]"></div>
+          <div className="w-[13px] h-[13px] rounded-sm bg-[#9be9a8]"></div>
+          <div className="w-[13px] h-[13px] rounded-sm bg-[#40c463]"></div>
+          <div className="w-[13px] h-[13px] rounded-sm bg-[#30a14e]"></div>
+          <div className="w-[13px] h-[13px] rounded-sm bg-[#216e39]"></div>
+          <span>More</span>
+        </div>
+      )}
     </div>
   );
-});
+};
 
 export default ContributionGraph;

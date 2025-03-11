@@ -1,0 +1,348 @@
+import React from 'react';
+import { ContributionData } from '../components/ContributionGraph';
+import ContributionGraph from '../components/ContributionGraph';
+import UnifiedTableView from '../components/UnifiedTableView';
+import { Material, Topic } from '@/types/User';
+import { Plus, Edit } from 'lucide-react';
+import { BiWorld } from 'react-icons/bi';
+import { FiVideo, FiBook } from 'react-icons/fi';
+import { HiOutlineMicrophone } from 'react-icons/hi';
+
+interface ListLayoutProps {
+  data: ContributionData[];
+  year: number;
+  userData?: {
+    photoURL?: string;
+    name?: string;
+    email?: string;
+    topics?: Topic[];
+  };
+  onEditProfile?: () => void;
+  totalContributions: number;
+  contributions?: ContributionData[];
+  materials: Material[];
+  categoryFilters: {
+    web: boolean;
+    video: boolean;
+    podcast: boolean;
+    book: boolean;
+  };
+  setCategoryFilters: (filters: {
+    web: boolean;
+    video: boolean;
+    podcast: boolean;
+    book: boolean;
+  }) => void;
+  listSubMode: 'list' | 'grid';
+  setListSubMode: (mode: 'list' | 'grid') => void;
+  showAddNewMaterial: boolean;
+  setShowAddNewMaterial: (show: boolean) => void;
+  topicId: string;
+  refreshKey: number;
+  unitMinutes: number;
+  setUnitMinutes: (minutes: number) => void;
+  onUpdateProgress: (materialId: string, completed: number, total: number) => Promise<boolean>;
+  onComplete: (materialId: string, isCompleted: boolean) => Promise<void>;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => Promise<boolean>;
+  onReorderItems: (items: Material[]) => Promise<void>;
+  onTopicChange: (id: string) => void;
+  onAddTopic: () => void;
+  currentTopic?: Topic;
+}
+
+const ListLayout: React.FC<ListLayoutProps> = ({ 
+  data, 
+  year, 
+  userData, 
+  onEditProfile, 
+  totalContributions,
+  contributions,
+  materials,
+  categoryFilters,
+  setCategoryFilters,
+  listSubMode,
+  setListSubMode,
+  showAddNewMaterial,
+  setShowAddNewMaterial,
+  topicId,
+  refreshKey,
+  unitMinutes,
+  setUnitMinutes,
+  onUpdateProgress,
+  onComplete,
+  onEdit,
+  onDelete,
+  onReorderItems,
+  onTopicChange,
+  onAddTopic,
+  currentTopic
+}) => {
+  // Group contributions by month
+  const groupedByMonth = data.reduce<{ [key: string]: ContributionData[] }>((acc, item) => {
+    const date = new Date(item.date);
+    if (date.getFullYear() === year) {
+      const monthKey = date.toLocaleString('default', { month: 'long' });
+      if (!acc[monthKey]) {
+        acc[monthKey] = [];
+      }
+      acc[monthKey].push(item);
+    }
+    return acc;
+  }, {});
+
+  // Sort contributions within each month by date
+  Object.values(groupedByMonth).forEach(monthData => {
+    monthData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  });
+
+  return (
+    <div>
+      {/* User Profile and Contribution Graph Section */}
+      <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* User Profile Section */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 mr-4">
+                {userData?.photoURL ? (
+                  <img
+                    className="h-20 w-20 rounded-full"
+                    src={userData.photoURL}
+                    alt={userData.name || 'User'}
+                  />
+                ) : (
+                  <div className="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center">
+                    <span className="text-blue-800 font-medium text-2xl">
+                      {userData?.name?.substring(0, 1) || 'U'}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {userData?.name || 'Anonymous User'}
+                </h2>
+                <p className="text-gray-500">
+                  {userData?.email || 'No email available'}
+                </p>
+                <div className="mt-2">
+                  <button
+                    onClick={onEditProfile}
+                    className="text-blue-600 text-sm font-medium hover:text-blue-800"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Contribution Graph Section */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg overflow-hidden">
+              {contributions && (
+                <ContributionGraph 
+                  data={contributions.map(c => ({
+                    date: c.date,
+                    count: c.count || 0,
+                    studyCount: 0
+                  })) || []} 
+                  activeView="month"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Topic Navigation */}
+      <div className="flex flex-col items-stretch mb-8">
+        <div className="mb-2 border-b border-gray-200">
+          <div className="flex items-center space-x-1">
+            {userData?.topics?.map((topic) => (
+              <button
+                key={topic._id}
+                className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                  topicId === topic._id
+                    ? 'border-blue-600 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                onClick={() => onTopicChange(topic._id || '')}
+              >
+                {topic.name}
+              </button>
+            ))}
+            
+            <button
+              className="p-2 text-gray-500 hover:text-blue-500"
+              onClick={onAddTopic}
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold flex items-center">
+            {currentTopic?.name || "Topic"}
+            <button className="ml-2 text-gray-400 hover:text-gray-600">
+              <Edit className="h-4 w-4" />
+            </button>
+          </h1>
+        </div>
+      </div>
+
+      {/* Category Filters */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex space-x-1">
+          <button
+            className={`px-4 py-2 text-sm rounded-md flex items-center ${
+              categoryFilters.web && categoryFilters.video && categoryFilters.podcast && categoryFilters.book 
+                ? 'bg-gray-900 text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setCategoryFilters({
+                web: true,
+                video: true,
+                podcast: true,
+                book: true
+              });
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 mr-2">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+            </span>
+            All ({materials.length})
+          </button>
+          <button
+            className={`px-4 py-2 text-sm rounded-md flex items-center ${
+              categoryFilters.web && !categoryFilters.video && !categoryFilters.podcast && !categoryFilters.book
+                ? 'bg-gray-900 text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setCategoryFilters({
+                web: true,
+                video: false,
+                podcast: false,
+                book: false
+              });
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 mr-2">
+              <BiWorld className="w-4 h-4" />
+            </span>
+            Web ({materials.filter(m => m.type === 'webpage').length})
+          </button>
+          <button
+            className={`px-4 py-2 text-sm rounded-md flex items-center ${
+              categoryFilters.video && !categoryFilters.web && !categoryFilters.podcast && !categoryFilters.book
+                ? 'bg-gray-900 text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setCategoryFilters({
+                web: false,
+                video: true,
+                podcast: false,
+                book: false
+              });
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 mr-2">
+              <FiVideo className="w-4 h-4" />
+            </span>
+            Video ({materials.filter(m => m.type === 'video').length})
+          </button>
+          <button
+            className={`px-4 py-2 text-sm rounded-md flex items-center ${
+              categoryFilters.podcast && !categoryFilters.web && !categoryFilters.video && !categoryFilters.book
+                ? 'bg-gray-900 text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setCategoryFilters({
+                web: false,
+                video: false,
+                podcast: true,
+                book: false
+              });
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 mr-2">
+              <HiOutlineMicrophone className="w-4 h-4" />
+            </span>
+            Podcast ({materials.filter(m => m.type === 'podcast').length})
+          </button>
+          <button
+            className={`px-4 py-2 text-sm rounded-md flex items-center ${
+              categoryFilters.book && !categoryFilters.web && !categoryFilters.video && !categoryFilters.podcast
+                ? 'bg-gray-900 text-white font-medium' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            onClick={() => {
+              setCategoryFilters({
+                web: false,
+                video: false,
+                podcast: false,
+                book: true
+              });
+            }}
+          >
+            <span className="flex items-center justify-center w-5 h-5 mr-2">
+              <FiBook className="w-4 h-4" />
+            </span>
+            Book ({materials.filter(m => m.type === 'book').length})
+          </button>
+        </div>
+      </div>
+
+      {/* Materials List */}
+      <UnifiedTableView
+        materials={materials
+          .filter(material => {
+            if (categoryFilters.web && categoryFilters.video && categoryFilters.podcast && categoryFilters.book) {
+              return true; // Show all if all filters are active
+            }
+            return (
+              (categoryFilters.web && material.type === 'webpage') ||
+              (categoryFilters.video && material.type === 'video') ||
+              (categoryFilters.podcast && material.type === 'podcast') ||
+              (categoryFilters.book && material.type === 'book')
+            );
+          })
+          .map((material, index) => ({
+            ...material,
+            index: index + 1
+          }))}
+        viewType="materials"
+        viewMode={listSubMode}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onComplete={onComplete}
+        onUpdateProgress={onUpdateProgress}
+        unitMinutes={unitMinutes}
+        onReorderItems={onReorderItems}
+        onUnitMinutesChange={setUnitMinutes}
+      />
+    </div>
+  );
+};
+
+// Helper function to get contribution color (same as ContributionGraph)
+const getContributionColor = (count: number): string => {
+  if (count === 0) return 'bg-[#ebedf0]';
+  if (count < 2) return 'bg-[#9be9a8]';
+  if (count < 5) return 'bg-[#40c463]';
+  if (count < 10) return 'bg-[#30a14e]';
+  return 'bg-[#216e39]';
+};
+
+export default ListLayout; 
