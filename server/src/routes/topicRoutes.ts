@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { addTopic, updateTopicName, deleteTopic } from '../controllers/topicController';
+import { addTopic, updateTopic, deleteTopic } from '../controllers/topicController';
 import { 
   addMaterial, 
   completeMaterial, 
@@ -32,7 +32,7 @@ router.use((req, res, next) => {
 
 // 主題相關路由
 router.post('/', validateTopicName, addTopic);
-router.put('/:topicId', validateTopicName, updateTopicName);
+router.put('/:topicId', validateTopicName, updateTopic);
 router.delete('/:topicId', deleteTopic);
 
 // 材料相關路由

@@ -74,6 +74,15 @@ const topicSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  tags: {
+    type: [String],
+    default: []
+  },
+  deadline: {
+    type: Date,
+    default: null,
+    required: false
+  },
   categories: categorySchema,
   materials: [MaterialSchema],
   learningPath: {

@@ -12,6 +12,7 @@ interface PathViewProps {
   onComplete: (id: string, isCompleted: boolean) => Promise<void>;
   onDelete: (id: string) => Promise<boolean>;
   onReorderItems: (items: Material[]) => Promise<void>;
+  isAllTopics?: boolean;
 }
 
 const PathView: React.FC<PathViewProps> = ({
@@ -23,7 +24,8 @@ const PathView: React.FC<PathViewProps> = ({
   onUpdateProgress,
   onComplete,
   onDelete,
-  onReorderItems
+  onReorderItems,
+  isAllTopics
 }) => {
   return (
     <PathLayout
@@ -37,6 +39,7 @@ const PathView: React.FC<PathViewProps> = ({
       onReorderItems={onReorderItems}
       unitMinutes={unitMinutes}
       onUnitMinutesChange={setUnitMinutes}
+      isAllTopics={isAllTopics}
     />
   );
 };

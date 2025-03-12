@@ -75,10 +75,10 @@ a {
 
     /* Study list colors (學習) */
     --studylist-empty: #f3f3f3;
-    --studylist-l1: #9be9b4;
-    --studylist-l2: #5ed183;
-    --studylist-l3: #30a150;
-    --studylist-l4: #095c35;
+    --studylist-l1: #bac8f6;
+    --studylist-l2: #829bed;
+    --studylist-l3: #5478ef;
+    --studylist-l4: #0c3dde;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;

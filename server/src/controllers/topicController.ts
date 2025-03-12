@@ -5,7 +5,7 @@ import { catchAsync, AppError } from '../middleware/appError';
 // 添加主题
 export const addTopic = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
-  const { name } = req.body;
+  const { name, tags, deadline } = req.body;
 
   if (!name) {
     throw new AppError('Topic name is required', 400);
@@ -18,6 +18,8 @@ export const addTopic = catchAsync(async (req: Request, res: Response) => {
 
   const newTopic = {
     name,
+    tags: tags || [],
+    deadline: deadline ? new Date(deadline) : null,
     categories: {
       webpage: [],
       video: [],
@@ -43,10 +45,10 @@ export const addTopic = catchAsync(async (req: Request, res: Response) => {
   res.status(201).json(user);
 });
 
-// 更新主题名称
-export const updateTopicName = catchAsync(async (req: Request, res: Response) => {
+// 更新主题
+export const updateTopic = catchAsync(async (req: Request, res: Response) => {
   const { userId, topicId } = req.params;
-  const { name } = req.body;
+  const { name, tags, deadline } = req.body;
 
   if (!name) {
     throw new AppError('Topic name is required', 400);
@@ -63,6 +65,17 @@ export const updateTopicName = catchAsync(async (req: Request, res: Response) =>
   }
 
   topic.name = name;
+  
+  // 更新标签
+  if (tags !== undefined) {
+    topic.tags = tags;
+  }
+  
+  // 更新截止日期
+  if (deadline !== undefined) {
+    topic.deadline = deadline ? new Date(deadline) : undefined;
+  }
+  
   await user.save();
   res.status(200).json(user);
 });

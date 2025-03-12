@@ -51,6 +51,7 @@ interface ListLayoutProps {
   onTopicChange: (id: string) => void;
   onAddTopic: () => void;
   currentTopic?: Topic;
+  isAllTopics?: boolean;
 }
 
 const ListLayout: React.FC<ListLayoutProps> = ({ 
@@ -78,7 +79,8 @@ const ListLayout: React.FC<ListLayoutProps> = ({
   onReorderItems,
   onTopicChange,
   onAddTopic,
-  currentTopic
+  currentTopic,
+  isAllTopics
 }) => {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   
@@ -199,10 +201,10 @@ const ListLayout: React.FC<ListLayoutProps> = ({
   return (
     <div>
       {/* User Profile and Contribution Graph Section */}
-      <div className="bg-white shadow-sm w-full">
+      <div className="bg-white shadow-sm w-full pb-4">
         <div className="flex flex-col lg:flex-row">
           {/* User Profile Section */}
-          <div className="w-full lg:w-1/2 p-6">
+          <div className="w-full lg:w-1/2">
             <div className="flex items-start">
               <div className="flex-shrink-0 mr-4">
                 {userData?.photoURL ? (
@@ -223,12 +225,9 @@ const ListLayout: React.FC<ListLayoutProps> = ({
                 <h2 className="text-xl font-bold text-gray-900">
                   {userData?.name || 'Anonymous User'}
                 </h2>
-                <p className="text-gray-500">
-                  {userData?.email || 'No email available'}
-                </p>
-                <p className="text-gray-600 mt-2 text-sm">
+                <h5 className="text-gray-600 pr-4">
                   {userData?.bio || 'No bio available'}
-                </p>
+                </h5>
                 {userData?.topics && userData.topics.map(topic => topic.tags).flat().filter(Boolean).length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
                     {Array.from(new Set(userData.topics.map(topic => topic.tags).flat().filter(Boolean)))
@@ -273,34 +272,10 @@ const ListLayout: React.FC<ListLayoutProps> = ({
       </div>
 
       {/* Topic Navigation */}
-      <div className="flex flex-col items-stretch mb-8">
-        {/* <div className="mb-2 border-b border-gray-200">
-          <div className="flex items-center space-x-1">
-            {userData?.topics?.map((topic) => (
-              <button
-                key={topic._id}
-                className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                  topicId === topic._id
-                    ? 'border-blue-600 text-blue-600' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                onClick={() => onTopicChange(topic._id || '')}
-              >
-                {topic.name}
-              </button>
-            ))}
-            
-            <button
-              className="p-2 text-gray-500 hover:text-blue-500"
-              onClick={onAddTopic}
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
-        </div> */}
+      <div className="flex flex-col items-stretch mb-8 mt-4">
         
         <div className="flex justify-between items-center">
-          <h1 className="font-bold flex items-center">
+          <h1 className="flex items-center">
             {currentTopic?.name || "Topic"}
             <button className="ml-2 text-gray-400 hover:text-gray-600">
               <Edit className="h-4 w-4" />
@@ -364,11 +339,11 @@ const ListLayout: React.FC<ListLayoutProps> = ({
 
 // Helper function to get contribution color (same as ContributionGraph)
 const getContributionColor = (count: number): string => {
-  if (count === 0) return 'bg-[#ebedf0]';
-  if (count < 2) return 'bg-[#9be9a8]';
-  if (count < 5) return 'bg-[#40c463]';
-  if (count < 10) return 'bg-[#30a14e]';
-  return 'bg-[#216e39]';
+  if (count === 0) return 'bg-[var(--materials-empty)]';
+  if (count < 2) return 'bg-[var(--materials-l1)]';
+  if (count < 5) return 'bg-[var(--materials-l2)]';
+  if (count < 10) return 'bg-[var(--materials-l3)]';
+  return 'bg-[var(--materials-l4)]';
 };
 
 export default ListLayout; 

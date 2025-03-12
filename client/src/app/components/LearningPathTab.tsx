@@ -78,32 +78,34 @@ const LearningPathTab: React.FC<LearningPathTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg p-4">
+    <div className="space-y-4 md:space-y-6 max-w-full overflow-x-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 transition-all">
         {isLoading ? (
-          <div className="flex justify-center items-center h-[600px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <div className="flex justify-center items-center h-[50vh] md:h-[60vh] lg:h-[70vh]">
+            <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-10 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <LearningPathFlow 
-            materials={materials}
-            onSavePath={handleSavePath}
-            savedNodes={savedNodes.length > 0 ? savedNodes : undefined}
-            savedEdges={savedEdges.length > 0 ? savedEdges : undefined}
-          />
+          <div className="h-[50vh] md:h-[60vh] lg:h-[70vh] w-full">
+            <LearningPathFlow 
+              materials={materials}
+              onSavePath={handleSavePath}
+              savedNodes={savedNodes.length > 0 ? savedNodes : undefined}
+              savedEdges={savedEdges.length > 0 ? savedEdges : undefined}
+            />
+          </div>
         )}
       </div>
       
-      <div className="text-sm text-gray-500">
-        <p>提示：</p>
-        <ul className="list-disc pl-5 mt-2">
+      {/* <div className="text-sm text-gray-500 bg-white rounded-lg p-3 md:p-4 shadow-sm border border-gray-100 transition-all">
+        <p className="font-medium">提示：</p>
+        <ul className="list-disc pl-4 md:pl-5 mt-2 space-y-1">
           <li>拖动节点可以调整位置</li>
           <li>连接节点：点击节点底部的小圆点并拖动到另一个节点顶部的小圆点</li>
           <li>删除连接：选中连接线并按 Delete 键</li>
           <li>自动布局：点击右上角的「自动布局」按钮</li>
           <li>完成后点击「保存路径」按钮保存您的学习路径</li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 };

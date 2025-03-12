@@ -28,6 +28,7 @@ interface PathLayoutProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => Promise<boolean>;
   onComplete: (id: string, isCompleted: boolean) => Promise<void>;
+  isAllTopics?: boolean;
 }
 
 // A simple video popup component
@@ -79,7 +80,8 @@ const PathLayout: React.FC<PathLayoutProps> = ({
   onUpdateProgress,
   onEdit,
   onDelete,
-  onComplete
+  onComplete,
+  isAllTopics
 }) => {
   const [activeTab, setActiveTab] = useState("database");
   const [contentPopup, setContentPopup] = useState<{
@@ -166,71 +168,56 @@ const PathLayout: React.FC<PathLayoutProps> = ({
           {/* Topic Info - Simplified header */}
           <h1 className="py-2 border-b border-t border-gray-200">{topic.name}</h1>
           {/* Topic Metadata - Simple list style */}
-          <div className="gap-4">
+          <div className="flex flex-col gap-2">
             {/* Mins / Unit */}
-            <div className="flex items-center justify-between  border-gray-200">
+            <div className="flex items-center justify-between pt-2  border-gray-200">
               <div className="flex items-center">
                 <CalendarIcon className="h-5 w-5 mr-3 text-gray-500" />
-                <span className="font-medium">Mins / Unit</span>
-          </div>
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={unitMinutes}
-                  onChange={(e) => onUnitMinutesChange(parseInt(e.target.value) || unitMinutes)}
-                  className="w-16 p-1 border rounded text-center"
-                />
+                <h6 className="">Mins / Unit</h6>
+              </div>
+              <h6 className="font-medium text-gray-600 border-b border-gray-300">
+                {unitMinutes}
+              </h6>
             </div>
 
             {/* Deadline */}
-            <div className="flex items-center justify-between  w-full">
+            <div className="flex items-center justify-between border-gray-200">
               <div className="flex items-center">
                 <CalendarIcon className="h-5 w-5 mr-3 text-gray-500" />
-                <span className="text-gray-700">Deadline</span>
+                <h6 className="">Deadline</h6>
               </div>
-              <div className="flex items-center">
-                <DatePicker 
-                  date={date}
-                  setDate={handleDateChange}
-                  placeholder="No deadline"
-                />
-              </div>
+              <h6 className="font-medium text-gray-600 border-b border-gray-300">
+                {date ? format(date, 'MMM dd, yyyy') : 'No deadline'}
+              </h6>
             </div>
             
             {/* Tags */}
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between  border-gray-200">
               <div className="flex items-center">
                 <Tag className="h-5 w-5 mr-3 text-gray-500" />
-                <span className="text-gray-700">Tags</span>
+                <h6 className="">Tags</h6>
               </div>
-              <div className="flex items-center">
-                <div className="flex flex-wrap gap-1">
-                  {currentTags.length > 0 ? 
-                    currentTags.map((tag, index) => (
-                      <span key={index} className="px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-600 inline-flex items-center">
+              <div className="flex items-center gap-2">
+                {currentTags.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {currentTags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                      >
                         {tag}
-                        <button 
-                          onClick={() => handleRemoveTag(index)} 
-                          className="ml-1 text-gray-400 hover:text-gray-600"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                </span>
-                    )) 
-                    : 
-                    <span className="text-gray-400">No tags</span>
-                  }
-                </div>
-                <Button
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <h6 className="font-medium text-gray-600 border-b border-gray-300">No tags</h6>
+                )}
+                <button
                   onClick={() => setShowTagDialog(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="ml-2 text-blue-500 hover:text-blue-700"
+                  className=" text-blue-500 hover:text-blue-600"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
-                  <span className="text-xs">Edit</span>
-                </Button>
+                  <Plus className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -256,7 +243,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
       {/* Tabs Section */}
       <div className="bg-white">
         <Tabs defaultValue="progress" onValueChange={setActiveTab} value={activeTab} className="mt-2">
-          <div className="border-b border-gray-200 mb-4">
+          <div className="border-b border-gray-200 mb-6">
             <TabsList className="flex justify-start w-full h-auto bg-transparent p-0">
               <TabsTrigger 
                 value="progress" 
@@ -294,7 +281,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
           </TabsContent>
 
           {/* Materials Tab Content */}
-          <TabsContent value="database" className="pt-4">
+          <TabsContent value="database" className="">
             <MaterialsTab 
               materials={materials}
               unitMinutes={unitMinutes}
@@ -305,7 +292,7 @@ const PathLayout: React.FC<PathLayoutProps> = ({
           </TabsContent>
 
           {/* Learning Path Tab */}
-          <TabsContent value="path" className="p-4">
+          <TabsContent value="path" className="">
             <LearningPathTab 
               materials={materials.map((material, index) => ({
                 ...material,

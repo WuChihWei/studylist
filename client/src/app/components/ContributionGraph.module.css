@@ -9,10 +9,10 @@
   --contribution-l3: #888888;
   --contribution-l4: rgb(137, 137, 137);
   /* Study colors */
-  --study-l1: #9be9b4;
-  --study-l2: #5ed183;
-  --study-l3: #30a150;
-  --study-l4: #095c35;
+  --study-l1: #bac8f6;
+  --study-l2: #829bed;
+  --study-l3: #5478ef;
+  --study-l4: #0c3dde;
   position: relative;
   padding-left: 2rem;
 }

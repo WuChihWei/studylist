@@ -1,7 +1,7 @@
 import React from 'react';
-import { ViewMode } from '@/types/ViewMode';
-import { List, GitGraph } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ViewMode } from '@/types/ViewMode';
+import { List, GitBranch } from 'lucide-react';
 
 interface SidebarToggleProps {
   viewMode: ViewMode;
@@ -11,42 +11,39 @@ interface SidebarToggleProps {
 export default function SidebarToggle({ viewMode, onChange }: SidebarToggleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentTopicId = searchParams?.get('topic');
+  const topicId = searchParams?.get('topic');
   
   const handleModeChange = (mode: ViewMode) => {
     onChange(mode);
-    
-    // Update URL if we're on a topic page
-    if (currentTopicId) {
-      router.push(`/database?topic=${currentTopicId}&mode=${mode}`);
-    }
+    router.push(`/database?mode=${mode}`);
   };
   
   return (
-    <div className="flex rounded-md bg-gray-100 p-1">
+    <div className="flex p-1 bg-gray-100 rounded-lg">
       <button
-        type="button"
-        className={`flex-1 flex items-center justify-center py-1 px-2 text-xs font-medium rounded ${
-          viewMode === 'list'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-700 hover:text-gray-900'
-        }`}
+        className={`
+          flex-1 flex items-center justify-center py-1.5 px-3 text-xs font-medium rounded transition-all
+          ${viewMode === 'list' 
+            ? 'bg-white text-gray-800 shadow-sm' 
+            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'}
+        `}
         onClick={() => handleModeChange('list')}
       >
-        <List className="h-3.5 w-3.5 mr-1" />
-        <span>List</span>
+        <List size={14} className={`mr-1.5 ${viewMode === 'list' ? 'text-blue-600' : 'text-gray-500'}`} />
+        List
       </button>
+      
       <button
-        type="button"
-        className={`flex-1 flex items-center justify-center py-1 px-2 text-xs font-medium rounded ${
-          viewMode === 'path'
-            ? 'bg-white text-gray-900 shadow-sm'
-            : 'text-gray-700 hover:text-gray-900'
-        }`}
+        className={`
+          flex-1 flex items-center justify-center py-1.5 px-3 text-xs font-medium rounded transition-all
+          ${viewMode === 'path' 
+            ? 'bg-white text-gray-800 shadow-sm' 
+            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'}
+        `}
         onClick={() => handleModeChange('path')}
       >
-        <GitGraph className="h-3.5 w-3.5 mr-1" />
-        <span>Path</span>
+        <GitBranch size={14} className={`mr-1.5 ${viewMode === 'path' ? 'text-blue-600' : 'text-gray-500'}`} />
+        Path
       </button>
     </div>
   );

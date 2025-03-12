@@ -60,11 +60,11 @@ const ContributionGraph: React.FC<ContributionGraphProps> = ({
   };
 
   const getContributionColor = (count: number): string => {
-    if (count === 0) return 'bg-[#ebedf0]';
-    if (count < 2) return 'bg-[#9be9a8]';
-    if (count < 5) return 'bg-[#40c463]';
-    if (count < 10) return 'bg-[#30a14e]';
-    return 'bg-[#216e39]';
+    if (count === 0) return 'bg-[var(--materials-empty)]';
+    if (count < 2) return 'bg-[var(--materials-l1)]';
+    if (count < 5) return 'bg-[var(--materials-l2)]';
+    if (count < 10) return 'bg-[var(--materials-l3)]';
+    return 'bg-[var(--materials-l4)]';
   };
 
   const handleCellMouseEnter = (e: React.MouseEvent, date: string, count: number) => {
@@ -187,11 +187,11 @@ const ContributionGraph: React.FC<ContributionGraphProps> = ({
         {activeView === 'month' && (
           <div className="flex items-center gap-1 text-xs text-[#767676]">
             <span>Less</span>
-            <div className="w-[13px] h-[13px] rounded-sm bg-[#ebedf0]"></div>
-            <div className="w-[13px] h-[13px] rounded-sm bg-[#9be9a8]"></div>
-            <div className="w-[13px] h-[13px] rounded-sm bg-[#40c463]"></div>
-            <div className="w-[13px] h-[13px] rounded-sm bg-[#30a14e]"></div>
-            <div className="w-[13px] h-[13px] rounded-sm bg-[#216e39]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[var(--materials-empty)]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[var(--materials-l1)]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[var(--materials-l2)]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[var(--materials-l3)]"></div>
+            <div className="w-[13px] h-[13px] rounded-sm bg-[var(--materials-l4)]"></div>
             <span>More</span>
           </div>
         )}

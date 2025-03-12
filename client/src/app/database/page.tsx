@@ -216,15 +216,28 @@ export default function DatabasePage() {
   
   // Render main content
   const renderMainContent = () => {
-    if (!currentTopic) {
-      return <div className="text-center p-8 text-gray-500">Please select a topic</div>;
-    }
+    // 準備 topics 資料
+    const topicsAsMaterials = userData?.topics?.map(topic => ({
+      ...topic,
+      type: 'topic',
+      isCompleted: false,
+      title: topic.name,
+      url: null,
+      dateAdded: topic.createdAt || new Date().toISOString(),
+      order: topic.order || 0
+    })) || [];
 
     if (currentMode === 'path') {
       return (
         <PathView
-          topic={currentTopic}
-          materials={materials}
+          topic={currentTopic || {
+            name: 'All Topics',
+            materials: topicsAsMaterials,
+            _id: 'all-topics',
+            createdAt: new Date().toISOString(),
+            order: 0
+          }}
+          materials={currentTopic ? materials : topicsAsMaterials}
           contributions={userData?.contributions}
           unitMinutes={unitMinutes}
           setUnitMinutes={setUnitMinutes}
@@ -232,6 +245,7 @@ export default function DatabasePage() {
           onComplete={handleToggleCompletion}
           onDelete={handleDeleteMaterial}
           onReorderItems={handleReorderMaterials}
+          isAllTopics={!currentTopic}
         />
       );
     } else {
@@ -243,7 +257,7 @@ export default function DatabasePage() {
           onEditProfile={() => {}}
           totalContributions={totalContributionMins}
           contributions={userData?.contributions}
-          materials={materials}
+          materials={currentTopic ? materials : topicsAsMaterials}
           categoryFilters={categoryFilters}
           setCategoryFilters={setCategoryFilters}
           listSubMode={listSubMode}
@@ -261,116 +275,94 @@ export default function DatabasePage() {
           onReorderItems={handleReorderMaterials}
           onTopicChange={handleTopicChange}
           onAddTopic={() => router.push('/database/add-topic')}
-          currentTopic={currentTopic}
+          currentTopic={currentTopic || {
+            name: 'All Topics',
+            materials: topicsAsMaterials,
+            _id: 'all-topics',
+            createdAt: new Date().toISOString(),
+            order: 0
+          }}
+          isAllTopics={!currentTopic}
         />
       );
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="">
       {/* Top Navigation Bar */}
-      <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
-        {/* Left: Breadcrumb */}
-        <div className="flex items-center space-x-2">
-          <button 
-            className="text-gray-600 hover:text-gray-900 flex items-center"
-            onClick={() => router.push('/database')}
-          >
-            <span className="font-medium">
-              {currentMode === 'path' ? 'Learning Path' : 'Materials List'}
-            </span>
-          </button>
-          {currentTopic && (
-            <>
-              <span className="text-gray-400">/</span>
-              <span className="text-gray-900">{currentTopic.name}</span>
-            </>
-          )}
-        </div>
-
-        {/* Center: Search and Add Material */}
-        <div className="flex-1 max-w-2xl mx-4">
-          <div className="flex items-center justify-center">
-            <AddNewMaterial onSubmit={handleAddMaterial} />
-          </div>
-        </div>
-
-        {/* Right: User Account */}
-        <div className="flex items-center">
-          <div className="relative group">
-            <button className="flex items-center space-x-2">
-              {userData?.photoURL ? (
-                <img
-                  className="h-8 w-8 rounded-full"
-                  src={userData.photoURL}
-                  alt={userData.name || 'User'}
-                />
-              ) : (
-                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-blue-800 font-medium text-sm">
-                    {userData?.name?.substring(0, 1) || 'U'}
-                  </span>
-                </div>
+      <div className="border-b border-gray-200">
+        <div className="container mx-auto py-4">
+          <div className="flex justify-between items-center">
+            {/* Left: Breadcrumb */}
+            <div className="flex items-center">
+              <button 
+                className="text-gray-600 hover:text-gray-900 flex items-center"
+                onClick={() => router.push('/database')}
+              >
+                <span className="font-medium">
+                  {currentMode === 'path' ? 'Learning Path' : 'Materials List'}
+                </span>
+              </button>
+              {currentTopic && (
+                <>
+                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-900">{currentTopic.name}</span>
+                </>
               )}
-              <span className="font-medium hidden md:inline">{userData?.name || 'User'}</span>
-            </button>
-            
-            {/* Dropdown Menu */}
-            <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-              <button
-                onClick={() => {}} // TODO: Add edit profile handler
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Edit Profile
-              </button>
-              <button
-                onClick={() => {}} // TODO: Add logout handler
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Logout
-              </button>
+            </div>
+
+            {/* Center: Search and Add Material */}
+            <div className="flex-1 max-w-2xl mx-4">
+              <div className="flex items-center justify-center">
+                <AddNewMaterial onSubmit={handleAddMaterial} />
+              </div>
+            </div>
+
+            {/* Right: User Account */}
+            <div className="flex items-center">
+              <div className="relative group">
+                <button className="flex items-center space-x-2">
+                  {userData?.photoURL ? (
+                    <img
+                      className="h-8 w-8 rounded-full"
+                      src={userData.photoURL}
+                      alt={userData.name || 'User'}
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-800 font-medium text-sm">
+                        {userData?.name?.substring(0, 1) || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  <span className="font-medium hidden md:inline">{userData?.name || 'User'}</span>
+                </button>
+                
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <button
+                    onClick={() => {}} // TODO: Add edit profile handler
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => {}} // TODO: Add logout handler
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {currentTopic ? (
-        <>    
-          {/* User Profile and Contribution Graph Section */}
-          {renderMainContent()}
-        </>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 bg-white rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-2">Select a Topic</h2>
-          <p className="text-gray-500 mb-6">Choose a topic from the sidebar to view its materials</p>
-          
-          {userData?.topics && userData.topics.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
-              {userData.topics.slice(0, 6).map((topic) => (
-                <button
-                  key={topic._id}
-                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-                  onClick={() => handleTopicChange(topic._id || '')}
-                >
-                  <h3 className="font-medium">{topic.name}</h3>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center">
-              <p className="text-gray-500 mb-4">You don't have any topics yet.</p>
-              <Button 
-                onClick={() => router.push('/database/add-topic')}
-                className="inline-flex items-center"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add your first topic
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="container mx-auto py-4">
+        {renderMainContent()}
+      </div>
     </div>
   );
 } 
