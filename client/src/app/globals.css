@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import react-day-picker styles */
+@import 'react-day-picker/dist/style.css';
+
 html,
 body {
   max-width: 100vw;
@@ -14,6 +17,8 @@ body {
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
 * {
@@ -166,7 +171,7 @@ a {
     @apply scroll-m-20 text-xl font-semibold tracking-normal;  /* 20px */
   }
   h5, .h5 {
-    @apply scroll-m-14 text-lg font-semibold tracking-tight;  /* 18px */
+    @apply scroll-m-14 text-base font-semibold tracking-tight;  /* 18px */
   }
   h6, .h6 {
     @apply scroll-m-14 text-sm font-semibold tracking-tight;  /* 16px */
@@ -204,4 +209,18 @@ a {
   .text-button-sm {
     @apply text-sm font-medium;  /* 14px */
   }
+}
+
+/* 隐藏滚动条样式 */
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* 应用到所有滚动容器的类 */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -16,12 +16,16 @@ const userApi = {
     api.put<User>(`${USERS_ENDPOINT}/${userId}/profile`, data),
   
   // 创建主题
-  createTopic: (userId: string, topicName: string) => 
-    api.post<User>(`${USERS_ENDPOINT}/${userId}/topics`, { name: topicName }),
+  createTopic: (userId: string, topicName: string, deadline?: string, tags?: string[]) => 
+    api.post<User>(`${USERS_ENDPOINT}/${userId}/topics`, { 
+      name: topicName,
+      deadline,
+      tags
+    }),
   
-  // 更新主题名称
-  updateTopicTitle: (userId: string, topicId: string, title: string) => 
-    api.put<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}`, { name: title }),
+  // 更新主题
+  updateTopic: (userId: string, topicId: string, data: { name: string; deadline?: string; tags?: string[] }) => 
+    api.put<User>(`${USERS_ENDPOINT}/${userId}/topics/${topicId}`, data),
   
   // 删除主题
   deleteTopic: (userId: string, topicId: string) => 

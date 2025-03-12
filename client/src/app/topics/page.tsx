@@ -21,7 +21,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 
 export default function TopicsPage() {
-  const { userData, addTopic, updateTopicName, deleteTopic } = useUserData();
+  const { userData, addTopic, updateTopic, deleteTopic } = useUserData();
   const { viewMode, setViewMode } = useViewMode('list');
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,7 +98,7 @@ export default function TopicsPage() {
     
     setIsLoading(true);
     try {
-      await updateTopicName(selectedTopic._id || '', newTopicName.trim());
+      await updateTopic(selectedTopic._id || '', newTopicName.trim());
       setShowEditDialog(false);
       setNewTopicName('');
     } catch (error) {

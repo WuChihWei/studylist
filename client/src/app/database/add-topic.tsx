@@ -3,12 +3,15 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserData } from '@/hooks/useUserData';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 
 export default function AddTopicPage() {
   const { addTopic } = useUserData();
   const router = useRouter();
   const [topicName, setTopicName] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -24,7 +27,7 @@ export default function AddTopicPage() {
     setError(null);
     
     try {
-      const topicId = await addTopic(topicName.trim());
+      const topicId = await addTopic(topicName.trim(), deadline, tags);
       if (topicId) {
         router.push(`/database?topic=${topicId}`);
       } else {
@@ -36,6 +39,17 @@ export default function AddTopicPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleAddTag = () => {
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
+    }
+  };
+  
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
   
   return (
@@ -72,6 +86,67 @@ export default function AddTopicPage() {
               disabled={isLoading}
               autoFocus
             />
+          </div>
+          
+          <div className="mb-4">
+            <label htmlFor="deadline" className="block text-sm font-medium text-gray-700 mb-1">
+              Deadline (Optional)
+            </label>
+            <input
+              type="date"
+              id="deadline"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tags (Optional)
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map((tag, index) => (
+                <span 
+                  key={index} 
+                  className="bg-gray-100 px-2 py-1 rounded-full text-sm text-gray-700 flex items-center"
+                >
+                  {tag}
+                  <button 
+                    type="button"
+                    onClick={() => handleRemoveTag(index)}
+                    className="ml-1 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Add a tag"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={handleAddTag}
+                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-r-md hover:bg-gray-300 focus:outline-none"
+                disabled={isLoading || !newTag.trim()}
+              >
+                Add
+              </button>
+            </div>
           </div>
           
           <div className="flex justify-end space-x-3">

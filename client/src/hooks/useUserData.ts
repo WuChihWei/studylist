@@ -127,7 +127,7 @@ export function useUserData() {
     }
   };
 
-  const updateTopicName = async (topicId: string, name: string) => {
+  const updateTopic = async (topicId: string, name: string, deadline?: string, tags?: string[]) => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
@@ -137,6 +137,8 @@ export function useUserData() {
       console.log('Updating topic:', {
         topicId,
         name,
+        deadline,
+        tags,
         url: `${API_URL}/api/users/${user.uid}/topics/${topicId}`
       });
       
@@ -148,32 +150,24 @@ export function useUserData() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name })
+          body: JSON.stringify({ name, deadline, tags })
         }
       );
 
       if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update topic name');
-        } else {
-          const text = await response.text();
-          console.error('Unexpected response:', text);
-          throw new Error(`Server error: ${response.status}`);
-        }
+        throw new Error('Failed to update topic');
       }
-      
+
       const updatedUser = await response.json();
       updateUserData(updatedUser);
       return true;
     } catch (error) {
-      console.error('Error updating topic name:', error);
+      handleApiError(error, 'Failed to update topic');
       return false;
     }
   };
 
-  const addTopic = async (name: string) => {
+  const addTopic = async (name: string, deadline?: string, tags?: string[]) => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error('No user logged in');
@@ -190,7 +184,11 @@ export function useUserData() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name })
+          body: JSON.stringify({ 
+            name,
+            deadline: deadline || null,
+            tags: tags || []
+          })
         }
       );
 
@@ -208,10 +206,13 @@ export function useUserData() {
 
       const updatedUser = await response.json();
       updateUserData(updatedUser);
-      return true;
+      
+      // 找到新创建的主题并返回其 ID
+      const newTopic = updatedUser.topics.find(t => t.name === name);
+      return newTopic ? newTopic._id : null;
     } catch (error) {
       console.error('Error adding topic:', error);
-      return false;
+      return null;
     }
   };
 
@@ -412,7 +413,7 @@ export function useUserData() {
     fetchUserData,
     addMaterial,
     updateProfile,
-    updateTopicName,
+    updateTopic,
     addTopic,
     getContributionData,
     completeMaterial,
@@ -420,6 +421,7 @@ export function useUserData() {
     deleteTopic,
     updateMaterialProgress,
     deleteMaterial,
+    updateLearningPathLocally,
     saveLearningPath,
     getLearningPath
   };
