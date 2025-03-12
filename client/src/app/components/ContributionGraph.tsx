@@ -198,20 +198,20 @@ const ContributionGraph: React.FC<ContributionGraphProps> = ({
       </div>
 
       {/* Second row: Total value and Year Navigation */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">{totalContributions}</h2>
+      <div className="flex items-center justify-between ">
+        <h2 className="">{totalContributions}</h2>
         <div className="flex items-center gap-2">
           <button 
             onClick={handlePrevYear}
-            className="p-1 hover:bg-gray-100 rounded-full"
+            className="text-sm hover:bg-gray-100 rounded-full"
             aria-label="Previous Year"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <span className="text-lg font-medium">{year}</span>
+          <span className="text-sm font-medium">{year}</span>
           <button 
             onClick={handleNextYear}
-            className="p-1 hover:bg-gray-100 rounded-full"
+            className="text-sm hover:bg-gray-100 rounded-full"
             aria-label="Next Year"
           >
             <ChevronRight className="h-5 w-5" />

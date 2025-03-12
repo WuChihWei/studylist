@@ -252,19 +252,21 @@ const PathLayout: React.FC<PathLayoutProps> = ({
                 <BarChart className="h-4 w-4 mr-2" />
                 Progress
               </TabsTrigger>
-              <TabsTrigger 
-                value="database" 
-                className="flex items-center px-3 py-2 text-sm rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-black text-gray-500 hover:text-gray-800 bg-transparent"
-              >
-                <Database className="h-4 w-4 mr-2" />
-                Materials
-              </TabsTrigger>
+             
               <TabsTrigger 
                 value="path" 
                 className="flex items-center px-3 py-2 text-sm rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-black text-gray-500 hover:text-gray-800 bg-transparent"
               >
                 <GitGraph className="h-4 w-4 mr-2" />
                 Learning Path
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="database" 
+                className="flex items-center px-3 py-2 text-sm rounded-none border-b-2 border-transparent data-[state=active]:border-black data-[state=active]:text-black text-gray-500 hover:text-gray-800 bg-transparent"
+              >
+                <Database className="h-4 w-4 mr-2" />
+                Materials
               </TabsTrigger>
             </TabsList>
           </div>
