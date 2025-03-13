@@ -6,12 +6,16 @@ import { useUserData } from '@/hooks/useUserData';
 import { useViewMode } from '@/hooks/useViewMode';
 import { Material, MaterialPayload, Topic } from '@/types/User';
 import { Plus, ChevronLeft } from 'lucide-react';
+import { MdKeyboardArrowRight } from "react-icons/md";
+import { IoIosArrowDown } from "react-icons/io";
 import { Button } from '@/app/components/ui/button';
 import PathView from './PathView';
 import ListLayout from './ListLayout';
 import AddNewMaterial from '../components/AddNewMaterial';
 import { ViewMode } from '@/types/ViewMode';
 import ContributionGraph from '../components/ContributionGraph';
+import { auth } from '../firebase/firebaseConfig';
+import { signOut } from 'firebase/auth';
 
 export default function DatabasePage() {
   const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } = useUserData();
@@ -90,7 +94,7 @@ export default function DatabasePage() {
       type: materialData.type as 'webpage' | 'video' | 'book' | 'podcast',
       url: materialData.url,
       favicon: materialData.favicon || undefined,
-      rating: 0,
+      rating: 1,
       dateAdded: new Date().toISOString(),
       order: materials.length + 1,
     };
@@ -214,6 +218,17 @@ export default function DatabasePage() {
     console.log('Original material data:', materials);
   }, [currentTopic, materials]);
   
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('userData');
+      router.push('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+  
   // Render main content
   const renderMainContent = () => {
     // 準備 topics 資料
@@ -306,7 +321,7 @@ export default function DatabasePage() {
               </button>
               {currentTopic && (
                 <>
-                  <span className="text-gray-400">/</span>
+                  <MdKeyboardArrowRight className="text-gray-900 w-5 h-5 mx-2" />
                   <span className="text-gray-900">{currentTopic.name}</span>
                 </>
               )}
@@ -323,32 +338,26 @@ export default function DatabasePage() {
             <div className="flex items-center">
               <div className="relative group">
                 <button className="flex items-center space-x-2">
-                  {userData?.photoURL ? (
-                    <img
-                      className="h-8 w-8 rounded-full"
-                      src={userData.photoURL}
-                      alt={userData.name || 'User'}
-                    />
-                  ) : (
-                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span className="text-blue-800 font-medium text-sm">
-                        {userData?.name?.substring(0, 1) || 'U'}
-                      </span>
-                    </div>
-                  )}
-                  <span className="font-medium hidden md:inline">{userData?.name || 'User'}</span>
+                  <span className="font-medium hidden md:inline">Hi, {userData?.name || 'User'}</span>
+                  <IoIosArrowDown className="w-4 h-4 text-gray-600" />
                 </button>
                 
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 mt-2 w-48 py-2 bg-white rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <button
-                    onClick={() => {}} // TODO: Add edit profile handler
+                    onClick={() => router.push('/')}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Home
+                  </button>
+                  <button
+                    onClick={() => router.push('/profile')}
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Edit Profile
                   </button>
                   <button
-                    onClick={() => {}} // TODO: Add logout handler
+                    onClick={handleLogout}
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Logout

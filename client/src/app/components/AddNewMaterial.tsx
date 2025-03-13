@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaSearch } from 'react-icons/fa';
 import { MdWeb } from "react-icons/md";
 import { FiVideo, FiBook } from "react-icons/fi";
@@ -30,9 +30,10 @@ const AddNewMaterial = ({ onSubmit, placeholder = "Add New Material..." }: AddNe
   const [title, setTitle] = useState('');
   const [url, setUrl] = useState('');
   const [favicon, setFavicon] = useState<string | null>(null);
-  const [selectedType, setSelectedType] = useState('webpage');
+  const [selectedType, setSelectedType] = useState<string>('webpage');
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
   const categoryIcons = {
     webpage: <MdWeb size={18} />,
@@ -226,7 +227,7 @@ const AddNewMaterial = ({ onSubmit, placeholder = "Add New Material..." }: AddNe
     setTitle('');
     setUrl('');
     setFavicon(null);
-    setSelectedType('article');
+    setSelectedType('webpage');
   };
 
   // 處理URL貼上事件

@@ -237,11 +237,13 @@ export default function UnifiedTableView({
   // Render material title with link
   const renderMaterialTitle = (material: Material) => {
     return (
-      <div className="font-medium text-gray-800 hover:text-blue-600 truncate cursor-pointer"
+      <div className="font-medium text-gray-800 hover:text-blue-600 truncate max-w-full cursor-pointer"
            onClick={() => material.url && window.open(material.url, '_blank')}>
-        {material.title}
+        <span className="inline-block truncate max-w-[100%]" title={material.title}>
+          {material.title}
+        </span>
         {material.url && (
-          <span className="inline-block ml-1 text-blue-500">
+          <span className="inline-block ml-1 text-blue-500 ">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -273,11 +275,11 @@ export default function UnifiedTableView({
       )}
 
       {/* Table Header */}
-      <div className="grid grid-cols-12 bg-gray-50 text-gray-600 text-sm py-2 px-4 border-b">
-        <div className="col-span-1">#</div>
-        <div className="col-span-1">Type</div>
+      <div className="grid grid-cols-12 bg-gray-50 text-gray-600 text-sm py-2  border-b">
+        <div className="col-span-1 text-center">#</div>
         <div className="col-span-9">Name</div>
-        <div className="col-span-1">Actions</div>
+        <div className="col-span-1 flex justify-center">Type</div>
+        <div className="col-span-1 flex justify-center">Actions</div>
       </div>
 
       {/* Table Body */}
@@ -289,14 +291,10 @@ export default function UnifiedTableView({
           onReorder={handleReorderWithRefresh}
           droppableId={`${viewType}-list`}
           renderItem={(material, index) => (
-            <div key={material._id} className="grid grid-cols-12 py-3 px-4 items-center hover:bg-gray-50">
+            <div key={material._id} className="grid grid-cols-12 py-3 items-center hover:bg-gray-50">
+          
               {/* Number */}
-              <div className="col-span-1 font-medium text-gray-700">{material.index}</div>
-              
-              {/* Type Icon */}
-              <div className="col-span-1">
-                {renderTypeIcon(material)}
-              </div>
+              <div className="col-span-1 text-gray-700 text-center">{material.index}</div>
               
               {/* Name with Favicon */}
               <div className="col-span-9">
@@ -306,8 +304,13 @@ export default function UnifiedTableView({
                 </div>
               </div>
               
+              {/* Type Icon */}
+              <div className="col-span-1 flex justify-center">
+                {renderTypeIcon(material)}
+              </div>
+              
               {/* Actions */}
-              <div className="col-span-1 flex gap-2 justify-end">
+              <div className="col-span-1 flex gap-2 justify-center">
                 {renderActionsDropdown(material)}
               </div>
             </div>

@@ -2,7 +2,9 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
+import { usePathname } from 'next/navigation';
 import { FirebaseProvider } from './firebase/FirebaseProvider';
+import HomeNav from './components/HomeNav';
 
 // Use dynamic import with no SSR to avoid hydration errors
 const Sidebar = dynamic(() => import('./components/sidebar/Sidebar'), { 
@@ -15,6 +17,22 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isPublicPage = pathname === '/' || pathname?.includes('/login') || pathname?.includes('/signup');
+
+  if (isPublicPage) {
+    return (
+      <FirebaseProvider>
+        <div className="min-h-screen">
+          <HomeNav />
+          <main className="pt-14">
+            {children}
+          </main>
+        </div>
+      </FirebaseProvider>
+    );
+  }
+
   return (
     <FirebaseProvider>
       <div className="flex h-screen">
