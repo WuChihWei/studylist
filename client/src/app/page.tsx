@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Youtube, BookOpen, Music2, BarChart2, Clock, Share2, Target, Zap, LineChart, Trophy } from 'lucide-react';
 import Image from 'next/image';
 
 export default function LandingPage() {
@@ -12,17 +12,27 @@ export default function LandingPage() {
   const rightSectionRef = useRef(null);
 
   useEffect(() => {
+    // 初始化時設置元素在視窗外
+    if (leftSectionRef.current) {
+      (leftSectionRef.current as HTMLElement).style.transform = 'translateX(-100%)';
+    }
+    if (rightSectionRef.current) {
+      (rightSectionRef.current as HTMLElement).style.transform = 'translateX(100%)';
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
+          if (entry.isIntersecting) {
+            // 進入視窗時，移動到原位
+            (entry.target as HTMLElement).style.transform = 'translateX(0)';
+          } else {
+            // 離開視窗時，保持在原位
             if (entry.target.classList.contains('left-section')) {
               (entry.target as HTMLElement).style.transform = 'translateX(-100%)';
             } else if (entry.target.classList.contains('right-section')) {
               (entry.target as HTMLElement).style.transform = 'translateX(100%)';
             }
-          } else {
-            (entry.target as HTMLElement).style.transform = 'translateX(0)';
           }
         });
       },
@@ -52,8 +62,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
       {/* Hero Section */}
-      <div className="relative isolate px-8 pt-14 lg:px-2">
-        <div className="grid grid-cols-4 gap-4 h-[900px]">
+      <div className="relative isolate px-8 pt-10">
+        <div className="grid grid-cols-4 gap-4 min-h-[900px]">
           {/* Left Section */}
           <div 
             ref={leftSectionRef}
@@ -75,26 +85,25 @@ export default function LandingPage() {
           </div>
 
           {/* Center Sections Container */}
-          <div className="col-span-2 grid grid-rows-2 gap-2 h-full">
+          <div className="col-span-2 grid grid-rows-[auto_1fr] gap-2">
             {/* Center Top Section */}
-            <div className="relative flex flex-col">
+            <div className="relative flex flex-col py-4">
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center">
-                  <h1 className="text-4xl font-bold tracking-tight text-black sm:text-6xl">
-                    Streamline, Learn, and<br />
-                    Create a Virtual You<br />
-                    with One Click
+                  <h1 className="text-2xl font-bold leading-[2] tracking-normal text-black md:text-4xl lg:text-6xl">
+                  Instant Micro Learning Visibility for Job Seekers<br />
+                  — With One Click
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-gray-600">
-                    Collect learning materials in one site, share and discuss<br />
-                    with your students without burnout
+                    Turn scattered study materials into a clear, visual growth path<br />
+                    recruiters can instantly appreciate
                   </p>
                   <div className="mt-10 flex items-center justify-center">
                     <Link
                       href="/signup"
-                      className="rounded-md bg-gray-900 px-8 py-4 mb-8 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                      className="rounded-md bg-gray-900 px-8 py-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                     >
-                      Download Chrome Plugin
+                      Start Your Learning Journey
                     </Link>
                   </div>
                 </div>
@@ -104,7 +113,7 @@ export default function LandingPage() {
             {/* Center Bottom Section */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-[600px] h-[600px]">
+                <div className="relative w-[600px] h-[400px]">
                   <Image
                     src="/interface-center.png"
                     alt="Interface Center"
@@ -144,9 +153,9 @@ export default function LandingPage() {
       <div className="bg-gray-50 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-black">Better Learning</h2>
+            <h2 className="text-base font-semibold leading-7 text-black">Your Learning Journey</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need to master your studies
+              Transform Your Self-Study Into Career Growth
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
@@ -154,28 +163,180 @@ export default function LandingPage() {
               <div className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                   <CheckCircle2 className="h-5 w-5 flex-none text-black" />
-                  Organized Learning
+                  One-Click Collection
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Keep all your study materials in one place, organized by topics and categories.</p>
+                  <p className="flex-auto">Instantly import from YouTube, Google Books, Spotify, and more—no more endless link-juggling.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                   <CheckCircle2 className="h-5 w-5 flex-none text-black" />
-                  Progress Tracking
+                  Micro-Learning Sessions
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Monitor your learning progress with visual analytics and completion tracking.</p>
+                  <p className="flex-auto">Break big topics into bite-sized lessons. Progress in short bursts, perfect for tight schedules.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                   <CheckCircle2 className="h-5 w-5 flex-none text-black" />
-                  Learning Paths
+                  Visual Growth Path
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Create custom learning paths and follow structured study plans.</p>
+                  <p className="flex-auto">Dynamic charts highlight your daily and weekly achievements, perfect for sharing with recruiters.</p>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* Pain Points Section */}
+      <div className="bg-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-black">Common Challenges</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Why Traditional Self-Study Falls Short
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              <div className="flex flex-col bg-gray-50 p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-lg font-semibold leading-7 text-gray-900">
+                  <div className="rounded-lg bg-gray-100 p-2">
+                    <Share2 className="h-6 w-6 text-blue-600" />
+                  </div>
+                  Scattered Materials
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">YouTube videos, podcasts, e-books—scattered everywhere, hard to manage.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col bg-gray-50 p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-lg font-semibold leading-7 text-gray-900">
+                  <div className="rounded-lg bg-gray-100 p-2">
+                    <Target className="h-6 w-6 text-blue-600" />
+                  </div>
+                  Hidden Effort
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Self-study rarely shows up strongly in résumés, even with countless hours spent learning.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col bg-gray-50 p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-lg font-semibold leading-7 text-gray-900">
+                  <div className="rounded-lg bg-gray-100 p-2">
+                    <Zap className="h-6 w-6 text-blue-600" />
+                  </div>
+                  Weak Motivation
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Without a clear progress overview, it's easy to lose momentum.</p>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* Solution Section */}
+      <div className="bg-gray-50 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-black">Our Solution</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Streamlined Learning, Visible Progress
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-2">
+              <div className="relative pl-16">
+                <dt className="text-base font-semibold leading-7 text-gray-900">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <Youtube className="h-6 w-6 text-white" />
+                  </div>
+                  Single-Click Integration
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">
+                  Import and consolidate learning materials (YouTube, Google Books, Spotify, etc.) in seconds.
+                </dd>
+              </div>
+              <div className="relative pl-16">
+                <dt className="text-base font-semibold leading-7 text-gray-900">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                  Micro-Learning Sessions
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">
+                  Short, focused modules let you progress steadily, perfect for busy schedules.
+                </dd>
+              </div>
+              <div className="relative pl-16">
+                <dt className="text-base font-semibold leading-7 text-gray-900">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <BarChart2 className="h-6 w-6 text-white" />
+                  </div>
+                  Visual Growth Path
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">
+                  Heatmaps, progress bars, or radar charts show your daily and weekly achievements at a glance.
+                </dd>
+              </div>
+              <div className="relative pl-16">
+                <dt className="text-base font-semibold leading-7 text-gray-900">
+                  <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <Share2 className="h-6 w-6 text-white" />
+                  </div>
+                  Easy Sharing for Recruiters
+                </dt>
+                <dd className="mt-2 text-base leading-7 text-gray-600">
+                  Share a link or embed your growth data on LinkedIn or in your résumé, ensuring your dedication is clear.
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* Benefits Section */}
+      <div className="bg-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-black">Benefits</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Why Choose Our Platform
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <LineChart className="h-5 w-5 flex-none text-blue-600" />
+                  Efficiency
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Stop juggling links; gather all resources in one place.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <Target className="h-5 w-5 flex-none text-blue-600" />
+                  Clarity
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Track every small step with intuitive visuals.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <Trophy className="h-5 w-5 flex-none text-blue-600" />
+                  Career Boost
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Impress HR with real, data-driven proof of your learning journey.</p>
                 </dd>
               </div>
             </dl>
@@ -186,12 +347,12 @@ export default function LandingPage() {
       {/* CTA Section */}
       <div className="bg-white">
         <div className="mx-auto max-w-7xl py-24 sm:px-6 sm:py-32 lg:px-8">
-          <div className="relative isolate overflow-hidden bg-gray-900 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
+          <div className="relative isolate overflow-hidden bg-blue-600 px-6 py-24 text-center shadow-2xl sm:rounded-3xl sm:px-16">
             <h2 className="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Start your learning journey today
+              Ready to Shine?
             </h2>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-300">
-              Join thousands of learners who are achieving their goals with StudyList.
+            <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-gray-100">
+              Sign up now and let your micro-learning speak for itself—no more hidden effort.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link

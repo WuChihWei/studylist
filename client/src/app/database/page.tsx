@@ -16,6 +16,7 @@ import { ViewMode } from '@/types/ViewMode';
 import ContributionGraph from '../components/ContributionGraph';
 import { auth } from '../firebase/firebaseConfig';
 import { signOut } from 'firebase/auth';
+import Topics from '../components/Topics';
 
 export default function DatabasePage() {
   const { userData, addMaterial, deleteMaterial, completeMaterial, uncompleteMaterial, updateMaterialProgress } = useUserData();
@@ -242,6 +243,24 @@ export default function DatabasePage() {
       order: topic.order || 0
     })) || [];
 
+    if (!topicId) {
+      return (
+        <Topics
+          topics={userData?.topics || []}
+          contributions={userData?.contributions}
+          viewMode={currentMode}
+          unitMinutes={unitMinutes}
+          setUnitMinutes={setUnitMinutes}
+          listSubMode={listSubMode}
+          setListSubMode={setListSubMode}
+          categoryFilters={categoryFilters}
+          setCategoryFilters={setCategoryFilters}
+          userData={userData}
+          refreshKey={refreshKey}
+        />
+      );
+    }
+
     if (currentMode === 'path') {
       return (
         <PathView
@@ -252,7 +271,7 @@ export default function DatabasePage() {
             createdAt: new Date().toISOString(),
             order: 0
           }}
-          materials={currentTopic ? materials : topicsAsMaterials}
+          materials={materials}
           contributions={userData?.contributions}
           unitMinutes={unitMinutes}
           setUnitMinutes={setUnitMinutes}
@@ -272,7 +291,7 @@ export default function DatabasePage() {
           onEditProfile={() => {}}
           totalContributions={totalContributionMins}
           contributions={userData?.contributions}
-          materials={currentTopic ? materials : topicsAsMaterials}
+          materials={materials}
           categoryFilters={categoryFilters}
           setCategoryFilters={setCategoryFilters}
           listSubMode={listSubMode}
