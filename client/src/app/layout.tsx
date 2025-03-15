@@ -1,9 +1,9 @@
 import React from 'react';
-import { Inter } from 'next/font/google';
+import { Roboto } from 'next/font/google';
 import './globals.css';
 import ClientLayout from '../app/ClientLayout';
 
-const inter = Inter({ subsets: ['latin'] });
+const roboto = Roboto({ subsets: ['latin'], weight: ['400', '500', '700'] });
 
 export default function RootLayout({
   children,
@@ -15,7 +15,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={inter.className} suppressHydrationWarning={true}>
+      <body className={roboto.className} suppressHydrationWarning={true}>
         <ClientLayout>
           {children}
         </ClientLayout>
